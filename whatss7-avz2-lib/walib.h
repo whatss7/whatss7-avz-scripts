@@ -179,13 +179,16 @@ private:
 
 // WARecoverEnd 会在收尾波使用已恢复的炮清理剩余的僵尸。
 // 默认炸9列，为血量最高的巨人僵尸留下600血。
-// 用于收尾的最后一炮会在所有僵尸都走进范围后再开炮（x-757），默认伴舞除外，需要同时考虑伴舞的请使用 `IncludeBackupDancer()`.
+// 用于收尾的最后一炮会在所有僵尸都走进范围后再开炮，默认考虑除伴舞外所有僵尸。
+// 毫无 IO 又有前置植物需要保护时，请使用 `IncludeBackupDancer()` 同时考虑伴舞。
+// IO 较强的阵可以无视一般僵尸时，请使用  `Bucket()`, `Football()` 和 `Giga()` 选择能处理的僵尸等级。
+// 其他情况，可以使用 `setIgnoreList()` 和 `setDangerList()` 进行的手动处理。注意调用其中一个会覆盖之前这两个函数进行的所有设置。
 // 请在最后一个运算量生效后再调用，例如：
 // `AConnect(ATime(20, DPCP + CFT + 1), WARecoverEnd());`
 class WARecoverEnd {
 public:
     WARecoverEnd(float column = 9, int ioDamage = 600): column(column), ioDamage(ioDamage) {
-        includeBD = false;
+        list_is_ignore = true;
     }
     void operator()() {
         ATime time = ANowTime();
@@ -194,12 +197,41 @@ public:
         }
         DoRecoverFire();
     }
-    WARecoverEnd &IncludeBackupDancer() {
-        includeBD = true;
-        return *this;
+    void setIgnoreList(const std::vector<AZombieType> &ignore) {
+        list_is_ignore = true;
+        list = ignore;
+    }
+    void setDangerList(const std::vector<AZombieType> &danger) {
+        list_is_ignore = false;
+        list = danger;
+    }
+    // 无视除白眼、红眼外的所有僵尸
+    void Giga() {
+        setDangerList({ABY_23, AHY_32});
+    }
+    // 无视除橄榄、白眼、红眼外的所有僵尸
+    void Football() {
+        setDangerList({AGL_7, ABY_23, AHY_32});
+    }
+    // 无视除铁桶、橄榄、白眼、红眼外的所有僵尸
+    void Bucket() {
+        setDangerList({ATT_4, AGL_7, ABY_23, AHY_32});
+    }
+    // 考虑除伴舞外的所有僵尸
+    void Default() {
+        setIgnoreList({ABW_9});
+    }
+    // 考虑所有僵尸
+    void IncludeBackupDancer() {
+        setIgnoreList({});
     }
 private:
-    void Fire(float column) {
+    static bool isIncluded(int type, const std::vector<AZombieType> &list, bool list_is_ignore) {
+        if (list_is_ignore && std::find(list.begin(), list.end(), type) != list.end()) return false;
+        if (!list_is_ignore && std::find(list.begin(), list.end(), type) == list.end()) return false;
+        return true;
+    }
+    static void Fire(float column) {
         std::string scene = WAGetCurrentScene();
         if (scene == "PE" || scene == "FE") {
             aCobManager.RecoverFire({{2, column}, {5, column}});
@@ -207,27 +239,28 @@ private:
             aCobManager.RecoverFire({{2, column}, {4, column}});
         }
     }
-    void ScheduleFire(float column) {
-        waRecoverEndRunner.Start([this, column](){
+    static void ScheduleFire(float column, std::vector<AZombieType> list, bool list_is_ignore) {
+        waRecoverEndRunner.Start([column, list, list_is_ignore](){
             ATime now = ANowTime();
+            // 如果此波已过，立即停止
             if (now.wave != 9 && now.wave != 19 && now.wave != 20) {
                 waRecoverEndRunner.Stop();
             }
             if (now.time < 0) {
                 waRecoverEndRunner.Stop();
             }
+            // 检查僵尸位置
             float max_x = 0;
             for (auto &&zombie: aAliveZombieFilter) {
-                if (zombie.Type() == ABW_9 && !includeBD) continue;
+                if (!isIncluded(zombie.Type(), list, list_is_ignore)) continue;
                 max_x = std::max(max_x, zombie.Abscissa() + zombie.BulletAbscissa());
             }
-            #ifdef WALIB_DEBUG
-            waDebugLogger.Info("max_x = " + std::to_string(max_x));
-            #endif
+            // 如果僵尸全灭（或者已经进家）则立即停止
             if (max_x == 0) {
                 waRecoverEndRunner.Stop();
             }
-            if (max_x <= 800) {
+            // 所有僵尸进入范围开炮
+            if (max_x <= 800 - (9 - column) * 80) {
                 waRecoverEndRunner.Stop();
                 Fire(column);
             }
@@ -236,20 +269,26 @@ private:
     void DoRecoverFire() {
         int maxHp = 0;
         for (auto &&zombie: aAliveZombieFilter) {
+            if (!isIncluded(zombie.Type(), list, list_is_ignore)) continue;
             if (zombie.Type() == ABY_23 || zombie.Type() == AHY_32) {
+                // 记录巨人最高血量
                 maxHp = std::max(maxHp, zombie.Hp());
             } else {
+                // 所有未被忽略的非巨人僵尸都需要一炮
                 maxHp = std::max(maxHp, 1800);
-            }
+            } 
         }
         if (maxHp > ioDamage) {
-            ScheduleFire(column);
+            // 其中一炮等所有僵尸走进画面再打（对于炸9列来说）
+            ScheduleFire(column, list, list_is_ignore);
         }
         for (int i = ioDamage + 1800; i < maxHp; i += 1800) {
+            // 其他的立即打
             Fire(column);
         }
     }
-    bool includeBD;
+    std::vector<AZombieType> list;
+    bool list_is_ignore;
     float column;
     int ioDamage;
 };
