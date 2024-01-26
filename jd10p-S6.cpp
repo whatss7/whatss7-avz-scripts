@@ -2,7 +2,7 @@
 #include "whatss7-avz2-lib/walib.h"
 
 void AScript(){
-    WAInit("PE", {AICE_SHROOM, AM_ICE_SHROOM, ACOFFEE_BEAN, ACHERRY_BOMB});
+    WAInit({AICE_SHROOM, AM_ICE_SHROOM, ACOFFEE_BEAN, ACHERRY_BOMB});
     WAAutoManageCob();
     
     // S6: I-PP|PP|PP|PP|PP (12,6,6,6,6)

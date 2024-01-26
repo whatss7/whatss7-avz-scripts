@@ -4,6 +4,14 @@
 #include "avz.h"
 #include <algorithm>
 
+#if __AVZ_VERSION__ <= 221001
+#error "walib is designed for AvZ 2, which is incompatible with AvZ 1."
+#elif __AVZ_VERSION__ < 240113
+#warning "walib is designed for AvZ 2 version 240113. You're using an older version, which might cause issues."
+#elif __AVZ_VERSION__ > 240113
+#warning "walib is designed for AvZ 2 version 240113. You're using an newer version, which might cause issues."
+#endif
+
 // 玉米加农炮发射到生效用时
 const int COB_FLYING_TIME = 373;
 // 灰烬植物和寒冰菇种下到生效用时
@@ -32,10 +40,32 @@ const int CBT = COFFEE_BEAN_TIME;
 // 模仿者种下至生效时间319cd或320cs（此处取319cs）
 const int MDT = IMITATOT_DELAY_TIME;
 
-void WAInit(std::string scene, const std::vector<APlantType> &plants) {
+ALogger<AMsgBox> waLogger;
+
+std::string WAGetCurrentScene() {
+    std::string scenes[] = { "DE", "NE", "PE", "FE", "RE", "ME" };
+    int scene_id = AGetMainObject()->Scene();
+    if (scene_id < 0 || scene_id > 5) { waLogger.Error("未知的场地"); return ""; }
+    else return scenes[scene_id];
+}
+
+// 初始化选卡，并根据场地选择合理的僵尸。
+// 选卡剩下的格子会用一些常用的植物填充防止漏选。
+// 场地支持传入的参数：
+// `"Manual"`: 或其他任意下方未提到的参数: 不进行僵尸选择，使用自然出怪
+// `"Cycle"`: 不进行僵尸选择，使用自然出怪，并开启脚本挂机循环
+// `"Auto"` 或不传入参数: 自动根据场地选择下面的组合
+// `"DE"`: 撑杆 橄榄 舞王 冰车 小丑 气球 矿工 蹦极 投篮 白眼 红眼
+// `"NE"`: 撑杆 橄榄 舞王 小丑 气球 矿工 跳跳 蹦极 投篮 白眼 红眼
+// `"PE"` 或 `"FE"`: 撑杆 橄榄 舞王 冰车 海豚 小丑 气球 矿工 蹦极 白眼 红眼
+// `"RE"` 或 `"ME"`: 撑杆 橄榄 冰车 小丑 气球 跳跳 蹦极 扶梯 投篮 白眼 红眼
+void WAInit(const std::vector<APlantType> &plants, std::string scene="Auto") {
     // 为各场地选择常见的出怪组合
     for (int i = 0; i < scene.length(); i++) {
         scene[i] = toupper(scene[i]);
+    }
+    if (scene == "AUTO") {
+        scene = WAGetCurrentScene();
     }
     if (scene == "PE" || scene == "FE") {
         ASetZombies({
@@ -81,7 +111,7 @@ void WAInit(std::string scene, const std::vector<APlantType> &plants) {
             ABY_23, // 白眼
             AHY_32, // 红眼
         });
-    } else if (scene == "RE" || scene == "FE") {
+    } else if (scene == "RE" || scene == "ME") {
         // RE和FE没有水路僵尸、舞王和矿工
         ASetZombies({
             ACG_3,  // 撑杆
@@ -96,7 +126,7 @@ void WAInit(std::string scene, const std::vector<APlantType> &plants) {
             ABY_23, // 白眼
             AHY_32, // 红眼
         });
-    } else if (scene == "AUTOCYCLE") {
+    } else if (scene == "CYCLE") {
         // 不设置，并循环执行脚本
         ASetReloadMode(AReloadMode::MAIN_UI_OR_FIGHT_UI);
     }
@@ -162,6 +192,39 @@ public:
     iterator end() { return l.end(); }
 private:
     std::vector<int> l;
+};
+
+// WARecoverEnd 会在收尾波使用已恢复的炮清理剩余的僵尸。
+// 默认炸8.5列，为血量最高的巨人僵尸留下600血。
+// 请在最后一个运算量生效后再调用，例如：
+// `AConnect(ATime(20, DPCP + CFT + 1), WARecoverEnd());`
+struct WARecoverEnd {
+    WARecoverEnd(float column = 8.5, int ioDamage = 600): column(column), ioDamage(ioDamage) { CM = &aCobManager; }
+    WARecoverEnd &setCobManager(ACobManager &cobManager) {
+        CM = &cobManager;
+        return *this;
+    }
+    void operator()() {
+        int maxHp = 0;
+        for (auto &&zombie: aAliveZombieFilter) {
+            if (zombie.Type() == ABY_23 || zombie.Type() == AHY_32) {
+                maxHp = std::max(maxHp, zombie.Hp());
+            } else {
+                maxHp = std::max(maxHp, 1800);
+            }
+        }
+        for (int i = ioDamage; i < maxHp; i += 1800) {
+            std::string scene = WAGetCurrentScene();
+            if (scene == "PE" || scene == "FE") {
+                CM->RecoverFire({{2, column}, {5, column}});
+            } else {
+                CM->RecoverFire({{2, column}, {4, column}});
+            }
+        }
+    }
+    float column;
+    int ioDamage;
+    ACobManager *CM;
 };
 
 /*

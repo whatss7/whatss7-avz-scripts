@@ -2,7 +2,7 @@
 #include "whatss7-avz2-lib/walib.h"
 
 void AScript(){
-    WAInit("PE", {AICE_SHROOM, AM_ICE_SHROOM, ACOFFEE_BEAN, ACHERRY_BOMB, ADOOM_SHROOM, ALILY_PAD, APUMPKIN});
+    WAInit({AICE_SHROOM, AM_ICE_SHROOM, ACOFFEE_BEAN, ACHERRY_BOMB, ADOOM_SHROOM, ALILY_PAD, APUMPKIN});
     WAAutoManageCob();
     aIceFiller.Start({{2, 7}, {5, 7}});
     aPlantFixer.Start(APUMPKIN);
