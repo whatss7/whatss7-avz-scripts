@@ -59,6 +59,17 @@ std::string WAGetCurrentScene() {
     else return scenes[scene_id];
 }
 
+bool WAHasZombie(std::vector<AZombieType> types) {
+    for (auto &&zombie: aAliveZombieFilter) {
+        if (std::find(types.begin(), types.end(), zombie.Type()) != types.end()) return true;
+    }
+    return false;
+}
+
+bool WAHasZombie(AZombieType type) {   
+    return WAHasZombie(std::vector<AZombieType>({type}));
+}
+
 // 初始化选卡并指定僵尸。传入空数组不指定僵尸，使用自然生成的僵尸。
 // 选卡剩下的格子会用一些常用的植物填充防止漏选。
 void WAInit(const std::vector<APlantType> &plants, const std::vector<AZombieType> &zombies, bool cycle = false) {
@@ -177,25 +188,26 @@ private:
     std::vector<int> l;
 };
 
-// WARecoverEnd 会在收尾波使用已恢复的炮清理剩余的僵尸。
+// WAEndCobber 会在收尾波使用已恢复的炮清理剩余的僵尸。
 // 默认炸9列，为血量最高的巨人僵尸留下600血。
 // 用于收尾的最后一炮会在所有僵尸都走进范围后再开炮，默认考虑除伴舞外所有僵尸。
 // 毫无 IO 又有前置植物需要保护时，请使用 `IncludeBackupDancer()` 同时考虑伴舞。
 // IO 较强的阵可以无视一般僵尸时，请使用  `Bucket()`, `Football()` 和 `Giga()` 选择能处理的僵尸等级。
 // 其他情况，可以使用 `setIgnoreList()` 和 `setDangerList()` 进行的手动处理。注意调用其中一个会覆盖之前这两个函数进行的所有设置。
 // 请在最后一个运算量生效后再调用，例如：
-// `AConnect(ATime(20, DPCP + CFT + 1), WARecoverEnd());`
-class WARecoverEnd {
+// `AConnect(ATime(20, DPCP + CFT + 1), WAEndCobber());`
+class WAEndCobber {
 public:
-    WARecoverEnd(float column = 9, int ioDamage = 600): column(column), ioDamage(ioDamage) {
-        list_is_ignore = true;
+    WAEndCobber() {
+        column = 9;
+        ioDamage = 600;
+        Default();
     }
-    void operator()() {
-        ATime time = ANowTime();
-        if (time.wave != 9 && time.wave != 19 && time.wave != 20) {
-            waLogger.Error("当前波次不是收尾波，不能使用 WARecoverEnd");
-        }
-        DoRecoverFire();
+    void setColumn(float col) {
+        column = col;
+    }
+    void setIODamage(int io) {
+        ioDamage = io;
     }
     void setIgnoreList(const std::vector<AZombieType> &ignore) {
         list_is_ignore = true;
@@ -224,6 +236,13 @@ public:
     // 考虑所有僵尸
     void IncludeBackupDancer() {
         setIgnoreList({});
+    }
+    void operator()() {
+        ATime time = ANowTime();
+        if (time.wave != 9 && time.wave != 19 && time.wave != 20) {
+            waLogger.Error("当前波次不是收尾波，不能使用 WAEndCobber");
+        }
+        DoRecoverFire();
     }
 private:
     static bool isIncluded(int type, const std::vector<AZombieType> &list, bool list_is_ignore) {
@@ -291,48 +310,6 @@ private:
     bool list_is_ignore;
     float column;
     int ioDamage;
-};
-
-/*
-// WAWaitEnd 会尽量自动拖住一波收尾。
-// 默认场上存在持续减速，2垫拖巨人
-// WAWaitEnd 假定所有其他僵尸已被清理，可能留下的有巨人、撑杆或伴舞。
-// 对于留下巨人的情况，使用垫材拖住其中一路；
-// 对于留下撑杆的情况，使用高坚果拦住。
-struct WAEndWaiter {
-    WAEndWaiter(int wave, int start_time, int column = 9, bool slow=true): column(column), slow(slow) {
-        CM = &aCobManager;
-    }
-    void SetCobManager(ACobManager &cobManager) {
-        CM = &cobManager;
-    }
-    void Start() {
-        // 先尝试巨人拖收尾
-        bool hasGiga[6], hasGiga2[6], hasGiga3[6], hasPole[6];
-        memset(hasGiga, 0, sizeof(hasGiga));
-        memset(hasGiga2, 0, sizeof(hasGiga2));
-        memset(hasGiga3, 0, sizeof(hasGiga3));
-        memset(hasPole, 0, sizeof(hasPole));
-        for (auto &&zombie: aAliveZombieFilter) {
-            if (zombie.Type() == ABY_23 || zombie.Type() == AHY_32) {
-                hasGiga[zombie.Row()] = true;
-                if (zombie.Hp() > 1800) hasGiga2[zombie.Row()] = true;
-                if (zombie.Hp() > 3600) hasGiga3[zombie.Row()] = true;
-            }
-            if (zombie.Type() == ACG_3) hasPole[zombie.Row()] = true;
-        }
-        // 模式一：一列有巨人无撑杆
-        if (hasGiga[1]) {
-            if (hasGiga[2]) {
-                if (hasGiga2[1]) CM->Fire(2, column);
-            }
-        }
-    }
-    bool slow;
-    int wave;
-    int column;
-    ACobManager *CM;
-};
-*/
+} waEndCobber;
 
 #endif // WHATSS7_WALIB_H

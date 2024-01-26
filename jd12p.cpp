@@ -1,8 +1,6 @@
 #include <avz.h>
 #include "whatss7-avz2-lib/walib.h"
 
-WARecoverEnd wre;
-
 void AScript() {
     WAInit({AICE_SHROOM, ACOFFEE_BEAN, ACHERRY_BOMB}, "Cycle");
     WAAutoManageCob();
@@ -12,7 +10,7 @@ void AScript() {
             aCobManager.Fire({{2, 9}, {5, 9}});
         });
         if (w == 9 || w == 19) {
-            AConnect(ATime(w, PCP + CFT + 1), wre);
+            AConnect(ATime(w, PCP + CFT + 1), waEndCobber);
         }
     }
     // w10: PPA 消延迟
@@ -33,6 +31,6 @@ void AScript() {
         AConnect(ATime(w, PCP), [](){
             aCobManager.Fire({{2, 9}, {5, 9}});
         });
-        AConnect(ATime(w, PCP + CFT + 1), wre);
+        AConnect(ATime(w, PCP + CFT + 1), waEndCobber);
     }
 }

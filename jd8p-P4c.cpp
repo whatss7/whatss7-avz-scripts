@@ -1,15 +1,14 @@
 #include <avz.h>
 #include "whatss7-avz2-lib/walib.h"
 
-WARecoverEnd wre(8.5, 900);
-
 void AScript(){
     WAInit({APUFF_SHROOM, ASUN_SHROOM, ASCAREDY_SHROOM, AFLOWER_POT, APUMPKIN}, "Cycle");
     WACheck();
     WAAutoManageCob();
     aPlantFixer.Start(APUMPKIN);
     aPlantFixer.SetHp(4000 / 3 * 2);
-    wre.Bucket();
+    waEndCobber.Bucket();
+    waEndCobber.setColumn(8.5);
     
     // P4: ccccPP|ccccPP|ccccPP|ccccPP (875,875,875,875)
     for (int w: WaveList(1, 20)) {
@@ -41,7 +40,7 @@ void AScript(){
             aCobManager.Fire({{2, 8.5}, {5, 8.5}});
         });
         if (w == 9 || w == 19 || w == 20) {
-            AConnect(ATime(w, 875 - 200 + 1), wre);
+            AConnect(ATime(w, 875 - 200 + 1), waEndCobber);
         }
     }
 }
