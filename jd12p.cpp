@@ -4,6 +4,7 @@
 void AScript() {
     WAInit({AICE_SHROOM, ACOFFEE_BEAN, ACHERRY_BOMB}, "Cycle");
     WAAutoManageCob();
+    // ASetGameSpeed(10);
     // 非旗帜波: PP
     for (int w: WaveList(1, 9) + WaveList(11, 19)) {
         AConnect(ATime(w, PCP), [](){
