@@ -42,9 +42,14 @@ const int MDT = IMITATOT_DELAY_TIME;
 
 #ifdef WALIB_DEBUG
 ALogger<AConsole> waDebugLogger;
+#define DEBUG_LOG(x) waDebugLogger.Info(x)
+#else
+#define DEBUG_LOG(x)
 #endif
 ALogger<AMsgBox> waLogger;
 ATickRunner waRecoverEndRunner;
+ATickRunner waCheckRunner;
+std::vector<APlantType> waCheckPlants = { ACOB_CANNON, AGLOOM_SHROOM, AWINTER_MELON };
 
 // 获得当前所处的场地。
 std::string WAGetCurrentScene() {
@@ -133,6 +138,21 @@ void WASkipTo(int wave, int time = -199) {
     });
 }
 
+void WACheck() {
+    ASetGameSpeed(10);
+    waCheckRunner.Start([](){
+        for (auto &&plant: aAlivePlantFilter) {
+            if (std::find(waCheckPlants.begin(), waCheckPlants.end(), plant.Type()) != waCheckPlants.end()) {
+                if (plant.Hp() != plant.HpMax()) {
+                    waLogger.Error("第" + std::to_string(plant.Row() + 1) + "行第" + std::to_string(plant.Col() + 1) + "列植物受损");
+                    waCheckRunner.Stop();
+                    break;
+                }
+            }
+        }
+    });
+}
+
 class WaveList {
 public:
     using iterator = std::vector<int>::iterator;
@@ -162,14 +182,10 @@ private:
 // 用于收尾的最后一炮会在所有僵尸都走进范围后再开炮（x-757），默认伴舞除外，需要同时考虑伴舞的请使用 `IncludeBackupDancer()`.
 // 请在最后一个运算量生效后再调用，例如：
 // `AConnect(ATime(20, DPCP + CFT + 1), WARecoverEnd());`
-struct WARecoverEnd {
+class WARecoverEnd {
+public:
     WARecoverEnd(float column = 9, int ioDamage = 600): column(column), ioDamage(ioDamage) {
-        CM = &aCobManager;
         includeBD = false;
-    }
-    WARecoverEnd &setCobManager(ACobManager &cobManager) {
-        CM = &cobManager;
-        return *this;
     }
     void operator()() {
         ATime time = ANowTime();
@@ -183,16 +199,16 @@ struct WARecoverEnd {
         return *this;
     }
 private:
-    void Fire() {
+    void Fire(float column) {
         std::string scene = WAGetCurrentScene();
         if (scene == "PE" || scene == "FE") {
-            CM->RecoverFire({{2, column}, {5, column}});
+            aCobManager.RecoverFire({{2, column}, {5, column}});
         } else {
-            CM->RecoverFire({{2, column}, {4, column}});
+            aCobManager.RecoverFire({{2, column}, {4, column}});
         }
     }
-    void ScheduleFire() {
-        waRecoverEndRunner.Start([this](){
+    void ScheduleFire(float column) {
+        waRecoverEndRunner.Start([this, column](){
             ATime now = ANowTime();
             if (now.wave != 9 && now.wave != 19 && now.wave != 20) {
                 waRecoverEndRunner.Stop();
@@ -211,9 +227,9 @@ private:
             if (max_x == 0) {
                 waRecoverEndRunner.Stop();
             }
-            if (max_x <= 757) {
+            if (max_x <= 800) {
                 waRecoverEndRunner.Stop();
-                Fire();
+                Fire(column);
             }
         });
     }
@@ -227,16 +243,15 @@ private:
             }
         }
         if (maxHp > ioDamage) {
-            ScheduleFire();
+            ScheduleFire(column);
         }
         for (int i = ioDamage + 1800; i < maxHp; i += 1800) {
-            Fire();
+            Fire(column);
         }
     }
     bool includeBD;
     float column;
     int ioDamage;
-    ACobManager *CM;
 };
 
 /*
