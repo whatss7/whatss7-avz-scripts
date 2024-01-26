@@ -2,7 +2,7 @@
 #include "whatss7-avz2-lib/walib.h"
 
 void AScript(){
-    WAInit({ASCAREDY_SHROOM, AFLOWER_POT, AGARLIC, ASUNFLOWER, APUMPKIN}, "AutoCycle");
+    WAInit("AutoCycle", {ASCAREDY_SHROOM, AFLOWER_POT, AGARLIC, ASUNFLOWER, APUMPKIN});
     WAAutoManageCob();
     aPlantFixer.Start(APUMPKIN);
     aPlantFixer.SetHp(4000 / 3 * 2);
