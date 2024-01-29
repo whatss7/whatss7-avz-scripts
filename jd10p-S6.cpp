@@ -1,19 +1,63 @@
 #include <avz.h>
 #include "whatss7-avz2-lib/walib.h"
 
+ATickRunner bloverTickRunner;
+APlantFixer sneakSunFixer;
+
 void AScript(){
-    WAInit({AICE_SHROOM, AM_ICE_SHROOM, ACOFFEE_BEAN, ACHERRY_BOMB});
+    // WACheck();
+    WAInit({AICE_SHROOM, ACOFFEE_BEAN, ACHERRY_BOMB, ALILY_PAD, AUMBRELLA_LEAF, ABLOVER, ASUNFLOWER, ATALL_NUT}, "Cycle");
     WAAutoManageCob();
-    aIceFiller.Start({{2, 7}});
+    waEndCobber.setColumn(8.5);
+    waEndCobber.Bucket();
+    sneakSunFixer.Start(ASUNFLOWER, {{5, 1}, {6, 1}}, 0);
+
+    // 有概率收尾漏气球，加上三叶草保险
+    bloverTickRunner.Start([](){
+        bool needBlow = false;
+        for (auto &&zombie: aAliveZombieFilter) {
+            if (zombie.Type() == AQQ_16 && zombie.Abscissa() < 50) {
+                needBlow = true;
+            }
+        }
+        if (needBlow) {
+            auto bloverSeed = AGetSeedPtr(ABLOVER);
+            if (bloverSeed->IsUsable()) {
+                ACard(ABLOVER, 1, 1);
+            }
+        }
+    });
+
+    // 2-1 存蓝冰，w5/w11/w19种，w6/w15/w20用，避开矿工并合理安排冷却
+    AConnect(ATime(5, 0), [](){ ACard(AICE_SHROOM, 2, 1); });
+    AConnect(ATime(11, 0), [](){ ACard(AICE_SHROOM, 2, 1); });
+    AConnect(ATime(19, 0), [](){ ACard(AICE_SHROOM, 2, 1); });
+
+    aPlantFixer.Start(ATALL_NUT, {}, 8000 / 3 * 2);
     
     // S6: I-PP|PP|PP|PP|PP (12,6,6,6,6)
     // w1-w9: PP|PP|PP|PP|PP|I-PP|PP|PP|PP
-    // w10-w19: PP|PP|PP|PP|I-PP|PP|PP|PP|PP|I-PP
+    // w10-w19: PP|PP|PP|PP|PP|I-PP|PP|PP|PP|PP
     // w20: PP
 
-    for (int w: { 1, 2, 3, 4, 5, 7, 8, 9, 11, 12, 13, 15, 16, 17, 18}) {
+    // 非旗帜波除w6/w15: PP
+    for (int w: WaveList(1, 9) + WaveList(11, 19)) {
+        if (w == 6 || w == 15) continue;
         AConnect(ATime(w, PCP), [](){
             aCobManager.Fire({{2, 9}, {5, 9}});
+        });
+        if (w == 9 || w == 19) {
+            AConnect(ATime(w, 821 - CFT), waEndCobber);
+        }
+    }
+
+    // w6/w15: I-PP
+    for (int w: { 6, 15 }) {
+        AConnect(ATime(w, -199), [](){
+            ACard(ACOFFEE_BEAN, 2, 1);
+        });
+        AConnect(ATime(w, 1200 - 200 - CFT), [](){
+            aCobManager.Fire({{2, 8.75}, {5, 8.75}});
         });
     }
 
@@ -21,39 +65,28 @@ void AScript(){
         AConnect(ATime(w, DPCP), [](){
             aCobManager.Fire({{2, 9}, {5, 9}});
         });
-        // 炮炸珊瑚
-        if (w == 20) {
-            AConnect(ATime(w, 225 - CFT), [](){
-                aCobManager.Fire({{4, 7.5}});
-            });
-        }
-        // 炮炸蹦极
-        AConnect(ATime(w, 400 - CFT), [](){
-            aCobManager.Fire({{4, 7.5}});
+        // 临时保护伞防小偷
+        AConnect(ATime(w, 300), [w](){
+            if (WAExistZombie(ABJ_20)) {
+                ACard({ALILY_PAD, AUMBRELLA_LEAF}, {{3, 8}, {4, 8}});
+                AConnect(ATime(w, 500), [](){
+                    ARemovePlant(3, 8);
+                    ARemovePlant(3, 8, ALILY_PAD);
+                    ARemovePlant(4, 8);
+                    ARemovePlant(4, 8, ALILY_PAD);
+                });
+            }
         });
-        // 消延迟
+        // w10 消延迟
         if (w == 10) {
-            AConnect(ATime(w, DPCP + CFT - ADT), [](){
+            AConnect(ATime(w, 400 - ADT), [](){
                 ACard(ACHERRY_BOMB, 2, 9);
             });
         }
-    }
-
-    for (int w: {6, 14, 19}) {
-        if (w == 19) {
-            AConnect(ATime(w - 1, -199 + 600 - MDT), [](){
-                ACard(AM_ICE_SHROOM, 1, 1);
-            });
-            AConnect(ATime(w, -199), [](){
-                ACard(ACOFFEE_BEAN, 1, 1);
-            });
-        } else {
-            AConnect(ATime(w, -199), [](){
-                ACard({AICE_SHROOM, ACOFFEE_BEAN}, 1, 1);
-            });
+        // w20 冰消珊瑚 收尾
+        if (w == 20) {
+            AConnect(ATime(w, -50 - CBT - ADT), [](){ ACard(ACOFFEE_BEAN, 2, 1); });
+            AConnect(ATime(w, 821 - CFT), waEndCobber);
         }
-        AConnect(ATime(w, 1200 - 200 - CFT), [](){
-            aCobManager.Fire({{2, 8.5}, {5, 8.5}});
-        });
     }
 }

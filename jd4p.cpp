@@ -32,7 +32,7 @@ void AScript() {
         AConnect(ATime(w, DPCP), [](){
             aCobManager.Fire({{2, 9}, {5, 9}});
         });
-        AConnect(ATime(w, DPCP + CFT - ADT), [](){
+        AConnect(ATime(w, 400 - ADT), [](){
             ACard(ACHERRY_BOMB, 2, 9);
         });
     }

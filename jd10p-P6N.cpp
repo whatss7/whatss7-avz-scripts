@@ -9,11 +9,9 @@ void AScript(){
     WAInit({ALILY_PAD, ADOOM_SHROOM, ACOFFEE_BEAN, ACHERRY_BOMB, AUMBRELLA_LEAF, ATALL_NUT, ABLOVER, AICE_SHROOM, ASUNFLOWER}, "Cycle");
     WAAutoManageCob();
     aPlantFixer.Start(ATALL_NUT, {}, 8000 / 3 * 2);
-    waEndCobber.setColumn(9);
-    WACheck();
 
     // 为了求稳并且保高坚果，阳光消耗较大，偷几朵花
-    sneakSunFixer.Start(ASUNFLOWER, {{5, 1}, {6, 1}, {1, 7}, {2, 7}, {5, 7}, {6, 7}}, 0);
+    sneakSunFixer.Start(ASUNFLOWER, {{2, 1}, {5, 1}, {6, 1}}, 0);
 
     // 有概率收尾漏气球，加上三叶草保险
     bloverTickRunner.Start([](){
@@ -57,7 +55,7 @@ void AScript(){
         });
         // 临时保护伞防小偷
         AConnect(ATime(w, 300), [w](){
-            if (WAHasZombie(ABJ_20)) {
+            if (WAExistZombie(ABJ_20)) {
                 ACard({ALILY_PAD, AUMBRELLA_LEAF}, {{3, 8}, {4, 8}});
                 AConnect(ATime(w, 500), [](){
                     ARemovePlant(3, 8);
@@ -76,7 +74,7 @@ void AScript(){
         // w20 冰消珊瑚 收尾
         if (w == 20) {
             AConnect(ATime(w, -50 - CBT - ADT), [](){
-                ACard({AICE_SHROOM, ACOFFEE_BEAN}, {{2, 1}});
+                ACard({AICE_SHROOM, ACOFFEE_BEAN}, {{1, 7}});
             });
             AConnect(ATime(w, DPCP + CFT + 1), waEndCobber);
         }

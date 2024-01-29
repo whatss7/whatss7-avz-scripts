@@ -11,7 +11,7 @@ void AScript(){
 
     // w1-w9: N|PP|PP|I-PP|PP|I-PP|PP|I-PP|PP
     // w10-w19: PPA|I-PP|PP|I-PP|PP|I-PP|PP|I-PP|PP|I-PP
-    // w20: PP
+    // w20: I-PP
 
     // w1: N
     for (int w: {1}) {
@@ -48,6 +48,9 @@ void AScript(){
 
     // w20: PPSS
     for (int w: {20}) {
+        AConnect(ATime(w, -50 - ADT - CBT),[](){
+            aIceFiller.Coffee();
+        });
         AConnect(ATime(w, W20PCP), [](){
             aCobManager.Fire({{2, 9}, {5, 9}});
         });

@@ -47,6 +47,7 @@ ALogger<AConsole> waDebugLogger;
 #define DEBUG_LOG(x)
 #endif
 ALogger<AMsgBox> waLogger;
+ALogger<APvzGui> waIngameLogger;
 ATickRunner waRecoverEndRunner;
 ATickRunner waCheckRunner;
 std::vector<APlantType> waCheckPlants = { ACOB_CANNON, AGLOOM_SHROOM, AWINTER_MELON };
@@ -59,20 +60,25 @@ std::string WAGetCurrentScene() {
     else return scenes[scene_id];
 }
 
-bool WAHasZombie(std::vector<AZombieType> types) {
+bool WAExistZombie(std::vector<AZombieType> types, std::vector<int> rows = {1, 2, 3, 4, 5, 6}) {
     for (auto &&zombie: aAliveZombieFilter) {
-        if (std::find(types.begin(), types.end(), zombie.Type()) != types.end()) return true;
+        if (std::find(types.begin(), types.end(), zombie.Type()) != types.end()) {
+            if (std::find(rows.begin(), rows.end(), zombie.Row() + 1) != rows.end()) {
+                return true;
+            }
+        }
     }
     return false;
 }
 
-bool WAHasZombie(AZombieType type) {   
-    return WAHasZombie(std::vector<AZombieType>({type}));
+// 判断场上某行是否有指定类型的僵尸。此处行从 1 开始编号。
+bool WAExistZombie(AZombieType type, std::vector<int> rows = {1, 2, 3, 4, 5, 6}) {   
+    return WAExistZombie(std::vector<AZombieType>({type}), rows);
 }
 
 // 初始化选卡并指定僵尸。传入空数组不指定僵尸，使用自然生成的僵尸。
 // 选卡剩下的格子会用一些常用的植物填充防止漏选。
-void WAInit(const std::vector<APlantType> &plants, const std::vector<AZombieType> &zombies, bool cycle = false) {
+void WAInit(const std::vector<APlantType> &plants, const std::vector<AZombieType> &zombies, bool cycle = false, bool check = false) {
     if (!zombies.empty()) ASetZombies(std::vector<int>(zombies.begin(), zombies.end()));
     if(cycle) ASetReloadMode(AReloadMode::MAIN_UI_OR_FIGHT_UI);
     // 使用常用植物填充植物格防止漏带
@@ -96,7 +102,8 @@ void WAInit(const std::vector<APlantType> &plants, const std::vector<AZombieType
             plant_ids.push_back(plant);
         }
     }
-    ASelectCards(plant_ids);
+    if (check) ASelectCards(plant_ids, 0);
+    else ASelectCards(plant_ids);
 }
 
 // 初始化选卡，并根据场地选择合理的僵尸。
@@ -109,7 +116,7 @@ void WAInit(const std::vector<APlantType> &plants, const std::vector<AZombieType
 // `"NE"`: 路障 撑杆 橄榄 舞王 小丑 气球 矿工 跳跳 蹦极 白眼 红眼
 // `"PE"` 或 `"FE"`: 撑杆 橄榄 舞王 冰车 海豚 小丑 气球 矿工 蹦极 白眼 红眼
 // `"RE"` 或 `"ME"`: 路障 撑杆 橄榄 冰车 小丑 气球 跳跳 蹦极 扶梯 白眼 红眼
-void WAInit(const std::vector<APlantType> &plants, std::string scene="Auto") {
+void WAInit(const std::vector<APlantType> &plants, std::string scene="Auto", bool check = false) {
     // 为各场地选择常见的出怪组合
     for (int i = 0; i < scene.length(); i++) {
         scene[i] = toupper(scene[i]);
@@ -134,7 +141,7 @@ void WAInit(const std::vector<APlantType> &plants, std::string scene="Auto") {
         // 不设置，并循环执行脚本
         cycle = true;
     }
-    WAInit(plants, zombies, cycle);
+    WAInit(plants, zombies, cycle, check);
 }
 
 void WAAutoManageCob() {
@@ -190,6 +197,14 @@ private:
     std::vector<int> l;
 };
 
+void WARecordWaves() {
+    for (int w: WaveList(1, 20)) {
+        AConnect(ATime(w, 0), [w](){
+            waIngameLogger.Info("Wave " + std::to_string(w));
+        });
+    }
+}
+
 // WAEndCobber 会在收尾波使用已恢复的炮清理剩余的僵尸。
 // 默认提供 waEndCobber 直接使用，但每个对象只能用于一种收尾方式，若需要更多收尾方式需定义新的全局变量。
 // 默认炸9列，为血量最高的巨人僵尸留下600血。
@@ -205,7 +220,7 @@ public:
     WAEndCobber() {
         column = 9;
         ioDamage = 600;
-        Default();
+                Default();
     }
     void setColumn(float col) {
         column = col;
@@ -213,7 +228,7 @@ public:
     void setIODamage(int io) {
         ioDamage = io;
     }
-    void setIgnoreList(const std::vector<AZombieType> &ignore) {
+        void setIgnoreList(const std::vector<AZombieType> &ignore) {
         list_is_ignore = true;
         list = ignore;
     }
@@ -222,11 +237,11 @@ public:
         list = danger;
     }
     void setWaterIgnoreList(const std::vector<AZombieType> &ignore) {
-        list_is_ignore = true;
+        water_list_is_ignore = true;
         list = ignore;
     }
     void setWaterDangerList(const std::vector<AZombieType> &danger) {
-        list_is_ignore = false;
+        water_list_is_ignore = false;
         list = danger;
     }
     // 无视除白眼、红眼外的所有僵尸
