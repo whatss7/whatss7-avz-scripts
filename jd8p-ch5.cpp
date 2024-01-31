@@ -11,11 +11,12 @@ void AScript(){
 
     // 底线只有单曾无法冰杀，需要叶子保护伞防偷
     umbrellaFixer.Start(AUMBRELLA_LEAF, {{2, 1}, {5, 1}});
+
     // ch5: I-PP|IPP-PP|PP (15, 15, 6)
     // ch5可以冰杀矿工从而在底线存冰，但是冰波转加速波时矿工无法处理，用多出的两炮热过渡
 
-    // w1-w9: N|PP|PP|I-PP|I-PP|PP|I-PP|I-PP|PP
-    // w10-w19: PPA|I-PP|I-PP|PP|I-PP|I-PP|PP|I-PP|I-PP|PP
+    // w1-w9: N|PP|PP|I-PP|IPP-PP|PP|I-PP|IPP-PP|PP
+    // w10-w19: PPA|I-PP|IPP-PP|PP|I-PP|IPP-PP|PP|I-PP|IPP-PP|PP
     // w20: PP
 
     // w1: N

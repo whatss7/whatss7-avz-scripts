@@ -50,7 +50,26 @@ ALogger<AMsgBox> waLogger;
 ALogger<APvzGui> waIngameLogger;
 ATickRunner waRecoverEndRunner;
 ATickRunner waCheckRunner;
+ATickRunner waBloverTickRunner;
 std::vector<APlantType> waCheckPlants = { ACOB_CANNON, AGLOOM_SHROOM, AWINTER_MELON };
+
+void waStartBlover(int row = 1, int column = 1) {
+    // 有概率收尾漏气球，加上三叶草保险
+    waBloverTickRunner.Start([row, column](){
+        bool needBlow = false;
+        for (auto &&zombie: aAliveZombieFilter) {
+            if (zombie.Type() == AQQ_16 && zombie.Abscissa() < 50) {
+                needBlow = true;
+            }
+        }
+        if (needBlow) {
+            auto bloverSeed = AGetSeedPtr(ABLOVER);
+            if (bloverSeed->IsUsable()) {
+                ACard(ABLOVER, row, column);
+            }
+        }
+    });
+}
 
 // 获得当前所处的场地。
 std::string WAGetCurrentScene() {
