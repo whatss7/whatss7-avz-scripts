@@ -6,7 +6,7 @@ void AScript() {
     WACheck();
     WAAutoManageCob();
     waEndCobber.Bucket();
-    waStartBlover();
+    WAStartBlover();
     
     // P5u-N: ccccPP|ccccPP|ccccPP|ccccPP|N (751, 751, 751, 751, 600)
 
@@ -61,7 +61,7 @@ void AScript() {
     // w19: N'
     for (int w: {19}) {
         AConnect(ATime(w - 1, PCP + CFT - CBT - ADT - MDT + 751), [](){
-            auto plant = ACard({ALILY_PAD, AM_DOOM_SHROOM}, {{3, 8}, {4, 8}, {3, 9}, {4, 9}});
+            ACard({ALILY_PAD, AM_DOOM_SHROOM}, {{3, 8}, {4, 8}, {3, 9}, {4, 9}});
             AConnect(ANowDelayTime(MDT),[](){
                 ACard(ACOFFEE_BEAN, {{3, 8}, {4, 8}, {3, 9}, {4, 9}});
             });

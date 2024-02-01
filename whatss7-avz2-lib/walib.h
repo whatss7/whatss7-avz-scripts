@@ -53,8 +53,8 @@ ATickRunner waCheckRunner;
 ATickRunner waBloverTickRunner;
 std::vector<APlantType> waCheckPlants = { ACOB_CANNON, AGLOOM_SHROOM, AWINTER_MELON };
 
-void waStartBlover(int row = 1, int column = 1) {
-    // 有概率收尾漏气球，加上三叶草保险
+// 有概率漏气球时，加上三叶草保险
+void WAStartBlover(int row = 1, int column = 1) {
     waBloverTickRunner.Start([row, column](){
         bool needBlow = false;
         for (auto &&zombie: aAliveZombieFilter) {
