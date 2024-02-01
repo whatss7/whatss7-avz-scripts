@@ -1,5 +1,4 @@
-#include <avz.h>
-#include "whatss7-avz2-lib/walib.h"
+#include "../whatss7-avz2-lib/walib.h"
 
 void AScript(){
     WAInit({AICE_SHROOM, AM_ICE_SHROOM, ACOFFEE_BEAN, ACHERRY_BOMB, ALILY_PAD, APUMPKIN, AUMBRELLA_LEAF, APUFF_SHROOM, ASUN_SHROOM});

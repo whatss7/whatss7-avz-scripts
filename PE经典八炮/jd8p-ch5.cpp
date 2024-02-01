@@ -1,5 +1,4 @@
-#include <avz.h>
-#include "whatss7-avz2-lib/walib.h"
+#include "../whatss7-avz2-lib/walib.h"
 
 APlantFixer umbrellaFixer;
 
