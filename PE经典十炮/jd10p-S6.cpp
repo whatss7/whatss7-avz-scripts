@@ -9,23 +9,9 @@ void AScript(){
     WAAutoManageCob();
     waEndCobber.setColumn(8.5);
     waEndCobber.Bucket();
-    sneakSunFixer.Start(ASUNFLOWER, {{5, 1}, {6, 1}}, 0);
 
-    // 有概率收尾漏气球，加上三叶草保险
-    bloverTickRunner.Start([](){
-        bool needBlow = false;
-        for (auto &&zombie: aAliveZombieFilter) {
-            if (zombie.Type() == AQQ_16 && zombie.Abscissa() < 50) {
-                needBlow = true;
-            }
-        }
-        if (needBlow) {
-            auto bloverSeed = AGetSeedPtr(ABLOVER);
-            if (bloverSeed->IsUsable()) {
-                ACard(ABLOVER, 1, 1);
-            }
-        }
-    });
+    WAStartBlover();
+    sneakSunFixer.Start(ASUNFLOWER, {{5, 1}, {6, 1}}, 0);
 
     // 2-1 存蓝冰，w5/w11/w19种，w6/w15/w20用，避开矿工并合理安排冷却
     AConnect(ATime(5, 0), [](){ ACard(AICE_SHROOM, 2, 1); });

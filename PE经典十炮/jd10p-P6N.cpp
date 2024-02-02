@@ -11,22 +11,7 @@ void AScript(){
 
     // 为了求稳并且保高坚果，阳光消耗较大，偷几朵花
     sneakSunFixer.Start(ASUNFLOWER, {{2, 1}, {5, 1}, {6, 1}}, 0);
-
-    // 有概率收尾漏气球，加上三叶草保险
-    bloverTickRunner.Start([](){
-        bool needBlow = false;
-        for (auto &&zombie: aAliveZombieFilter) {
-            if (zombie.Type() == AQQ_16 && zombie.Abscissa() < 50) {
-                needBlow = true;
-            }
-        }
-        if (needBlow) {
-            auto bloverSeed = AGetSeedPtr(ABLOVER);
-            if (bloverSeed->IsUsable()) {
-                ACard(ABLOVER, 1, 1);
-            }
-        }
-    });
+    WAStartBlover();
     
     // P6: PP|PP|PP|PP|PP|N (12,6,6,6,6)
     // w1-w9: PP|PP|PP|PP|PP|N|PP|PP|PP

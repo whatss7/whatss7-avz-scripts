@@ -7,8 +7,6 @@ void AScript() {
     aPlantFixer.Start(APUMPKIN);
     aPlantFixer.SetHp(4000 / 3 * 2);
 
-    WASkipTo(9, 100);
-
     // ch4 I-PP|I-PP (18, 18)
 
     aIceFiller.Start({{3, 5}, {1, 4}, {6, 4}});

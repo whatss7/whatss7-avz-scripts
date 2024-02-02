@@ -51,6 +51,7 @@ ALogger<APvzGui> waIngameLogger;
 ATickRunner waRecoverEndRunner;
 ATickRunner waCheckRunner;
 ATickRunner waBloverTickRunner;
+APlantFixer waWallNutFixer, waTallNutFixer, waPumpkinFixer;
 std::vector<APlantType> waCheckPlants = { ACOB_CANNON, AGLOOM_SHROOM, AWINTER_MELON };
 
 // 有概率漏气球时，加上三叶草保险
@@ -166,6 +167,20 @@ void WAInit(const std::vector<APlantType> &plants, std::string scene="Auto", boo
 void WAAutoManageCob() {
     AConnect(ATime(1, -599), [] {
         aCobManager.AutoSetList();
+    });
+}
+
+void WAFixNuts() {
+    AConnect(ATime(1, -599), [] {
+        if(AGetSeedIndex(AWALL_NUT) != -1){
+            waWallNutFixer.Start(AWALL_NUT, {}, 4000 / 3 * 2);
+        }
+        if(AGetSeedIndex(ATALL_NUT) != -1){
+            waTallNutFixer.Start(ATALL_NUT, {}, 8000 / 3 * 2);
+        }
+        if(AGetSeedIndex(APUMPKIN) != -1){
+            waPumpkinFixer.Start(APUMPKIN, {}, 4000 / 3 * 2);
+        }
     });
 }
 
