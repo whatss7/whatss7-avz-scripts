@@ -1,8 +1,7 @@
 #include "../whatss7-avz2-lib/walib.h"
 
 void AScript(){
-    WAInit({APUFF_SHROOM, ASUN_SHROOM, ASCAREDY_SHROOM, AFLOWER_POT, APUMPKIN}, "Cycle");
-    WACheck();
+    WAInit({APUFF_SHROOM, ASUN_SHROOM, ASCAREDY_SHROOM, AFLOWER_POT, APUMPKIN});
     WAAutoManageCob();
     aPlantFixer.Start(APUMPKIN);
     aPlantFixer.SetHp(4000 / 3 * 2);
