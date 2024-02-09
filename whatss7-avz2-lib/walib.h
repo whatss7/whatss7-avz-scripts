@@ -136,7 +136,8 @@ void WAInit(const std::vector<APlantType> &plants, const std::vector<AZombieType
 // `"NE"`: 路障 撑杆 橄榄 舞王 小丑 气球 矿工 跳跳 蹦极 白眼 红眼
 // `"PE"` 或 `"FE"`: 撑杆 橄榄 舞王 冰车 海豚 小丑 气球 矿工 蹦极 白眼 红眼
 // `"RE"` 或 `"ME"`: 路障 撑杆 橄榄 冰车 小丑 气球 跳跳 蹦极 扶梯 白眼 红眼
-void WAInit(const std::vector<APlantType> &plants, std::string scene="Auto", bool check = false) {
+// `"PEF"` PE快速关: 路障 撑杆 舞王 潜水 冰车 海豚 小丑 矿工 跳跳 蹦极 扶梯
+void WAInit(const std::vector<APlantType> &plants, std::string scene = "Auto", bool check = false) {
     // 为各场地选择常见的出怪组合
     for (int i = 0; i < scene.length(); i++) {
         scene[i] = toupper(scene[i]);
@@ -146,7 +147,9 @@ void WAInit(const std::vector<APlantType> &plants, std::string scene="Auto", boo
     }
     std::vector<AZombieType> zombies;
     bool cycle = false;
-    if (scene == "PE" || scene == "FE") {
+    if (scene == "PE2") {
+        zombies = { ACG_3, AGL_7, AWW_8, ABC_12, AHT_14, AXC_15, AQQ_16, AKG_17, ABJ_20, ABY_23, AHY_32 };
+    } if (scene == "PE" || scene == "FE") {
         zombies = { ACG_3, AGL_7, AWW_8, ABC_12, AHT_14, AXC_15, AQQ_16, AKG_17, ABJ_20, ABY_23, AHY_32 };
     } else if (scene == "DE") {
         // DE没有水路僵尸

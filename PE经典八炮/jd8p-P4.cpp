@@ -1,7 +1,8 @@
+#define WALIB_DEBUG
 #include "../whatss7-avz2-lib/walib.h"
 
 ATickRunner delayCobRunner;
-int nukeWave = 0, pureNukeWave = 0, icedWave = 0;
+int nukeWave = 0, pureNukeWave = 0, icedWave = 0, cherryWave = 0;
 
 void NormalFire() {
     bool hasDancer = false;
@@ -19,18 +20,24 @@ void NormalFire() {
 }
 
 void AScript(){
-    WAInit({ALILY_PAD, ABLOVER, ADOOM_SHROOM, AICE_SHROOM, ACOFFEE_BEAN, APUMPKIN});
+    WAInit({ALILY_PAD, ABLOVER, ADOOM_SHROOM, AICE_SHROOM, ACOFFEE_BEAN, APUMPKIN}); //, "Cycle", true);
+    // WACheck();
     WAAutoManageCob();
     WAStartBlover();
     aPlantFixer.Start(APUMPKIN);
     aPlantFixer.SetHp(4000 / 3 * 2);
     
     // P4: PP|PP|PP|PP (9, 9, 9, 9)
-    // 大体分为几种情况：略大于9s(不管)，大于12s（下一波同时点核或打12s冰波），发炮后意外刷新（下一波核代奏或18s冰波），18s（再打一炮）。
-
+    // 大体分为几种情况：略大于9s(不管)，大于12.5s（下一波同时点核或打12s冰波），发炮后意外刷新（下一波核代奏或18s冰波），18s（再打一炮）。
+    
     for (int w: WaveList(1, 20)) {
         // PP
         AConnect(ATime(w, (w == 1 || w == 10 || w == 20) ? -599 : -200), [w](){
+            #ifdef WALIB_DEBUG
+            if (!(w == 1 || w == 10 || w == 20)) {
+                waDebugLogger.Info("Wave time: " + std::to_string(ANowTime().time + 200));
+            }
+            #endif
             delayCobRunner.Stop();
             if (w == 1 || w == 10 || w == 20) nukeWave = pureNukeWave = icedWave = 0;
         });
@@ -44,7 +51,7 @@ void AScript(){
                 if (w != pureNukeWave) {
                     AConnect(ATime(w, 900 - 200 - CFT), NormalFire);
                 }
-            } else {
+            } else if (AGetSeedPtr(AICE_SHROOM) && AGetSeedPtr(AICE_SHROOM)->IsUsable()) {
                 if (w == nukeWave) {
                     icedWave = w;
                     ACard({ALILY_PAD, AICE_SHROOM, ACOFFEE_BEAN}, {{3, 8}, {4, 8}, {3, 9}, {4, 9}});
@@ -66,6 +73,8 @@ void AScript(){
                 } else {
                     AConnect(ATime(w, 900 - 200 - CFT), NormalFire);
                 }
+            } else {
+                AConnect(ATime(w, 900 - 200 - CFT), NormalFire);
             }
         });
         AConnect(ATime(w, 1), [w](){
@@ -80,20 +89,14 @@ void AScript(){
                     delayCobRunner.Stop();
                     return;
                 }
-                if (ANowTime().time == 0) {
-                    nukeWave = pureNukeWave = w;
-                }
-                if (ANowTime().time == 699) {
-                    nukeWave = pureNukeWave = 0;
-                }
-                if (w != icedWave && ANowTime().time == 1000) {
+                if (w != icedWave && ANowTime().time == 1250 - 200 - 1) {
                     nukeWave = w + 1;
                 }
-                if (w != icedWave && ANowTime().time == 1600 - CFT) {
+                if (w != icedWave && ANowTime().time == 1800 - 200 - CFT) {
                     NormalFire();
                     pureNukeWave = w + 1;
                 }
-                if (ANowTime().time == 1599) {
+                if (ANowTime().time == 1800 - 200 - 1) {
                     nukeWave = 0;
                     pureNukeWave = 0;
                 }
@@ -101,7 +104,7 @@ void AScript(){
                 if (ANowTime().time == 2500 - CFT) {
                     NormalFire();
                 }
-                // 收尾没炸完？再来一炮
+                // 收尾没炸完，再来一炮
                 if (ANowTime().time == 3400 - CFT) {
                     NormalFire();
                 }
