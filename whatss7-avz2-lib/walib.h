@@ -398,7 +398,14 @@ private:
     int ioDamage;
 } waEndCobber;
 
-// 从 `aCobManager` 发射一对炮。参数是生效时机而不是发炮时机。注意此函数未考虑风炮等情况，请谨慎使用。
+// 判断是否为有效的时间。
+// w1 / w10 / w20 的时间总是有效，而其他波次小于 -200 的时间无效。
+bool WAIsValidTime(int wave, int time) {
+    if (wave == 1 || wave == 10 || wave == 20) return true;
+    else return time >= -200;
+}
+
+// 从 `aCobManager` 发射一对炮。注意此函数未考虑风炮等情况，请谨慎使用。
 // 若不设置时间，则 w10 或 w20 318cs (`DPCAP`) 时生效，其他时间 278cs (`PCAP`) 时生效
 void PP(int wave, int time = -1, float col = 9, std::vector<int> rows = {}) {
     if (rows.empty()) {
@@ -420,7 +427,7 @@ void PP(int wave, int time = -1, float col = 9, std::vector<int> rows = {}) {
     });
 }
 
-// 从 `aCobManager` 发射一对炮。参数是生效时机而不是发炮时机。注意此函数未考虑风炮等情况，请谨慎使用。
+// 从 `aCobManager` 发射一对炮。注意此函数未考虑风炮等情况，请谨慎使用。
 void PP(int wave, int time, float col, int row) {
     std::vector<int> rows;
     rows.push_back(row);
@@ -455,13 +462,17 @@ void C(int wave, int time, APlantType plant, int col, float row) {
     });
 }
 
-// 开启自动存冰时，进行点冰。若需要非旗帜波的完美预判冰，则需要假设波长或提供上一波波长。
-// 默认未锁定寒冰菇生效时间，可能会延迟1cs生效。
-void I(int wave, int time, int last_wave_length = -1) {
+// 开启自动存冰时，从 `aIceFiller` 进行点冰。若需要非旗帜波的完美预判冰，则需要假设波长或提供上一波波长。
+// 由于咖啡豆的不确定性，有概率延迟1cs生效。
+void I(int wave, int time = 11, int last_wave_length = -1) {
     time -= CBT + ADT;
-    if (time < -200 && wave != 10 && wave != 20 && last_wave_length > 0) {
-        
+    if (!WAIsValidTime(wave, time) && last_wave_length > 0) {
+        wave -= 1;
+        time += last_wave_length;
     }
+    AConnect(ATime(wave, time), [](){
+        aIceFiller.Coffee();
+    });
 }
 
 // 未开启自动存冰时，种植并立刻点冰。目前仅用于非w1/w10/w20的预判冰，且需要提供上波波长。需要手动种植花盆或睡莲。
@@ -481,4 +492,99 @@ void ManualI(int wave, int time, int last_wave_length, int row = 1, float col = 
     });
 }
 
-#endif // WHATSS7_WALIB_H
+// 种植毁灭菇。由于咖啡豆和模仿者的不确定性，有概率延迟1cs生效。
+// 若存在模仿核等需要早种的情况，则需要假设波长或提供上波波长。所以用不到模仿核时，使用此函数请不要携带模仿核。
+// 不考虑模仿花盆、模仿睡莲、模仿咖啡豆等奇葩情况。
+void N(int wave, int time, std::vector<APosition> pos, int last_wave_length = -1) {
+    bool isDay = true;
+    std::string scene = WAGetCurrentScene();
+    if (scene == "NE" || scene == "FE" || scene == "RE") {
+        isDay = false;
+    }
+    int VCBT = isDay ? CBT : 0;
+    if (AGetCardPtr(AM_DOOM_SHROOM)) {
+        // 携带了模仿核的情况
+        if (!WAIsValidTime(wave, time - (MDT + 1) - VCBT - ADT) && last_wave_length > 0) {
+            wave -= 1;
+            time += last_wave_length;
+        }
+        // 若为白昼，早种植1cs，模仿者即使319cs完成变身也等到320cs再种咖啡豆，保证延迟最大为1cs。
+        // 若为黑夜，则不能早种植，否则有概率提前1cs。
+        AConnect(ATime(wave, time - (MDT + (isDay ? 1 : 0)) - VCBT - ADT), [wave, time, pos, scene, isDay, VCBT](){
+            if (AGetCardPtr(AM_DOOM_SHROOM)->IsUsable() && !(AGetCardPtr(ADOOM_SHROOM) && AGetCardPtr(ADOOM_SHROOM)->IsUsable())) {
+                // 若模仿核能种而普通核不能种（此判断提前完成，存在普通核到时间能转好但还是使用模仿核的现象）
+                // 则立即种植模仿核
+                for (APosition p: pos) {
+                    auto ptr = ACard(AM_DOOM_SHROOM, p.row, p.col);
+                    if (!ptr) {
+                        if (scene == "RE" || scene == "ME") {
+                            ptr = ACard({AFLOWER_POT, AM_DOOM_SHROOM}, p.row, p.col)[1];
+                        } else if ((scene == "PE" || scene == "FE") && p.row >= 3 && p.row <= 4) {
+                            ptr = ACard({ALILY_PAD, AM_DOOM_SHROOM}, p.row, p.col)[1];
+                        }
+                    }
+                    if (ptr) {
+                        if (isDay) {
+                            AConnect(ATime(wave, time - CBT - ADT), [p](){
+                                ACard(ACOFFEE_BEAN, p.row, p.col);
+                            });
+                        }
+                        break;
+                    }
+                }
+            } else {
+                // 否则稍后种植普通核
+                AConnect(ATime(wave, time - VCBT - ADT), [pos, scene, isDay](){
+                    for (APosition p: pos) {
+                        auto ptr = ACard(ADOOM_SHROOM, p.row, p.col);
+                        if (!ptr) {
+                            if (scene == "RE" || scene == "ME") {
+                                ptr = ACard({AFLOWER_POT, ADOOM_SHROOM}, p.row, p.col)[1];
+                            } else if ((scene == "PE" || scene == "FE") && p.row >= 3 && p.row <= 4) {
+                                ptr = ACard({ALILY_PAD, ADOOM_SHROOM}, p.row, p.col)[1];
+                            }
+                        }
+                        if (ptr) {
+                            if (isDay) ACard(ACOFFEE_BEAN, p.row, p.col);
+                            break;
+                        }
+                    }
+                });
+            }
+        });
+    } else {
+        // 未携带模仿核同之前的“否则”情况。
+        if (!WAIsValidTime(wave, time - VCBT - ADT) && AGetCardPtr(AM_DOOM_SHROOM)) {
+            wave -= 1;
+            time += last_wave_length;
+        }
+        AConnect(ATime(wave, time - VCBT - ADT), [pos, scene, isDay](){
+            for (APosition p: pos) {
+                auto ptr = ACard(ADOOM_SHROOM, p.row, p.col);
+                if (!ptr) {
+                    if (scene == "RE" || scene == "ME") {
+                        ptr = ACard({AFLOWER_POT, ADOOM_SHROOM}, p.row, p.col)[1];
+                    } else if ((scene == "PE" || scene == "FE") && p.row >= 3 && p.row <= 4) {
+                        ptr = ACard({ALILY_PAD, ADOOM_SHROOM}, p.row, p.col)[1];
+                    }
+                }
+                if (ptr) {
+                    if (isDay) ACard(ACOFFEE_BEAN, p.row, p.col);
+                    break;
+                }
+            }
+        });
+    }
+}
+
+// 使用一个樱桃炸弹。此函数不会使用模仿樱桃炸弹。
+void A(int wave, int time, int row, float col) {
+    C(wave, time - ADT, ACHERRY_BOMB, row, col);
+}
+
+// 使用一个火爆辣椒。此函数不会使用模仿火爆辣椒。
+void J(int wave, int time, int row, float col) {
+    C(wave, time - ADT, AJALAPENO, row, col);
+}
+
+#endif // WHATSS7_WALIB_H 
