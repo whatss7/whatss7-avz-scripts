@@ -15,14 +15,14 @@ void AScript(){
     // w10-w19: PPA|PP|I-PP|PP|I-PP|PP|I-PP|PP|I-PP|PP
     // w20: I-PP
 
-    // w1, w2, w4, w5, w8, w11, w13, w15, w17, w19: PP
+    // w1, w2, w4, w5, w8, w12, w14, w16, w18: PP
     for (int w: {1, 2, 4, 6, 8, 12, 14, 16, 18}) {
         AConnect(ATime(w, PCP), [](){
             aCobManager.Fire({{2, 9}, {5, 9}});
         });
     }
 
-    // w3, w5, w7, w9, w12, w14, w16, w18: I-PP
+    // w3, w5, w7, w9, w11, w13, w15, w17, w19: I-PP
     for (int w: {3, 5, 7, 9, 11, 13, 15, 17, 19}) {
         AConnect(ATime(w, -200), [](){
             aIceFiller.Coffee();
