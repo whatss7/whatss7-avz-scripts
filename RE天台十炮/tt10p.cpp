@@ -1,8 +1,7 @@
 #include "../whatss7-avz2-lib/walib.h"
 
 void AScript() {
-    WAInit({AICE_SHROOM, AFLOWER_POT, ACOB_CANNON}, "Cycle", true);
-    WACheck();
+    WAInit({AICE_SHROOM, AFLOWER_POT, ACOB_CANNON});
     WAAutoManageCob();
     for (int w: WaveList(1, 20)) {
         PP(w, 700 - 200);

@@ -2,7 +2,7 @@
 #include "../whatss7-avz2-lib/walib.h"
 
 void AScript() {
-    WAInit({AICE_SHROOM, ACOFFEE_BEAN, ACHERRY_BOMB}, "Cycle");
+    WAInit({AICE_SHROOM, ACOFFEE_BEAN, ACHERRY_BOMB});
     WAAutoManageCob();
     // 非旗帜波: PP
     for (int w: WaveList(1, 9) + WaveList(11, 19)) {

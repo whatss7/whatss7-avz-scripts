@@ -120,60 +120,23 @@ bool WAExistPlant(APlantType type, int col, int row) {
     return false;
 }
 
-// 初始化选卡并指定僵尸。传入空数组不指定僵尸，使用自然生成的僵尸。
-// 选卡剩下的格子会用一些常用的植物填充防止漏选。
-void WAInit(const std::vector<APlantType> &plants, const std::vector<AZombieType> &zombies, bool cycle = false, bool check = false) {
-    if (!zombies.empty()) ASetZombies(std::vector<int>(zombies.begin(), zombies.end()));
-    if(cycle) ASetReloadMode(AReloadMode::MAIN_UI_OR_FIGHT_UI);
-    // 使用常用植物填充植物格防止漏带
-    const std::vector<APlantType> extra_plants = {
-        AICE_SHROOM,        // 寒冰菇
-        ACOFFEE_BEAN,       // 咖啡豆
-        ACHERRY_BOMB,       // 樱桃炸弹
-        ADOOM_SHROOM,       // 毁灭菇
-        ABLOVER,            // 三叶草
-        APUFF_SHROOM,       // 垫材四人组：小喷菇
-        ASUN_SHROOM,        // 垫材四人组：阳光菇
-        ASCAREDY_SHROOM,    // 垫材四人组：胆小菇
-        AFLOWER_POT,        // 垫材四人组：花盆
-        AM_ICE_SHROOM       // 模仿者寒冰菇
-    };
-    std::vector<int> plant_ids(plants.begin(), plants.end());
-    for (APlantType plant: extra_plants) {
-        if (plant_ids.size() >= 10) break;
-        // 检查植物是否已在列表中，若不在则用此植物填充
-        if (std::find(plants.begin(), plants.end(), plant) == plants.end())  {
-            plant_ids.push_back(plant);
-        }
-    }
-    if (check) ASelectCards(plant_ids, 0);
-    else ASelectCards(plant_ids);
-}
-
-// 初始化选卡，并根据场地选择合理的僵尸。
-// 选卡剩下的格子会用一些常用的植物填充防止漏选。
+// 根据场地选择合理的僵尸。
 // 场地支持传入的参数：
-// `"Manual"`: 或其他任意下方未提到的参数: 不进行僵尸选择，使用自然出怪
-// `"Cycle"`: 不进行僵尸选择，使用自然出怪，并开启脚本挂机循环
+// `"None"` 或其他任意下方未提到的参数: 不进行僵尸选择，使用自然出怪
 // `"Auto"` 或不传入参数: 自动根据场地选择下面的组合
 // `"DE"`: 路障 撑杆 橄榄 舞王 冰车 小丑 气球 矿工 蹦极 白眼 红眼
 // `"NE"`: 路障 撑杆 橄榄 舞王 小丑 气球 矿工 跳跳 蹦极 白眼 红眼
 // `"PE"` 或 `"FE"`: 撑杆 橄榄 舞王 冰车 海豚 小丑 气球 矿工 蹦极 白眼 红眼
 // `"RE"` 或 `"ME"`: 路障 撑杆 橄榄 冰车 小丑 气球 跳跳 蹦极 扶梯 白眼 红眼
 // `"PEF"` PE快速关: 路障 撑杆 舞王 潜水 冰车 海豚 小丑 矿工 跳跳 蹦极 扶梯
-void WAInit(const std::vector<APlantType> &plants, std::string scene = "Auto", bool check = false) {
-    // 为各场地选择常见的出怪组合
+void WASelectZombies(std::string scene = "Auto") {
     for (int i = 0; i < scene.length(); i++) {
         scene[i] = toupper(scene[i]);
     }
-    if (scene == "AUTO") {
-        scene = WAGetCurrentScene();
-    }
+    if (scene == "AUTO")  scene = WAGetCurrentScene();
+
     std::vector<AZombieType> zombies;
-    bool cycle = false;
-    if (scene == "PE2") {
-        zombies = { ACG_3, AGL_7, AWW_8, ABC_12, AHT_14, AXC_15, AQQ_16, AKG_17, ABJ_20, ABY_23, AHY_32 };
-    } if (scene == "PE" || scene == "FE") {
+    if (scene == "PE" || scene == "FE") {
         zombies = { ACG_3, AGL_7, AWW_8, ABC_12, AHT_14, AXC_15, AQQ_16, AKG_17, ABJ_20, ABY_23, AHY_32 };
     } else if (scene == "DE") {
         // DE没有水路僵尸
@@ -184,11 +147,51 @@ void WAInit(const std::vector<APlantType> &plants, std::string scene = "Auto", b
     } else if (scene == "RE" || scene == "ME") {
         // RE和FE没有水路僵尸、舞王和矿工
         zombies = { ALZ_2, ACG_3, AGL_7, ABC_12, AXC_15, AQQ_16, ATT_18, ABJ_20, AFT_21, ABY_23, AHY_32 };
-    } else if (scene == "CYCLE") {
-        // 不设置，并循环执行脚本
-        cycle = true;
+    } else if (scene == "PEF") {
+        zombies = { ALZ_2, ACG_3, AWW_8, AQS_11, ABC_12, AHT_14, AXQ_13, AKG_17, ATT_18, ABJ_20, AFT_21 };
     }
-    WAInit(plants, zombies, cycle, check);
+    if (!zombies.empty()) ASetZombies(std::vector<int>(zombies.begin(), zombies.end()));
+}
+
+void WASelectCards(std::vector<APlantType> plants = {}, bool fast = false) {
+    // 使用常用植物填充植物格防止漏带
+    const std::vector<APlantType> extra_plants = {
+        AICE_SHROOM,        // 寒冰菇
+        ACOFFEE_BEAN,       // 咖啡豆
+        ACHERRY_BOMB,       // 樱桃炸弹
+        ADOOM_SHROOM,       // 毁灭菇
+        ABLOVER,            // 三叶草
+        ALILY_PAD,          // 睡莲
+        APUFF_SHROOM,       // 垫材四人组：小喷菇
+        ASUN_SHROOM,        // 垫材四人组：阳光菇
+        ASCAREDY_SHROOM,    // 垫材四人组：胆小菇
+        AFLOWER_POT,        // 垫材四人组：花盆
+    };
+    std::vector<int> plant_ids(plants.begin(), plants.end());
+    for (APlantType plant: extra_plants) {
+        if (plant_ids.size() >= 10) break;
+        // 检查植物是否已在列表中，若不在则用此植物填充
+        if (std::find(plants.begin(), plants.end(), plant) == plants.end())  {
+            plant_ids.push_back(plant);
+        }
+    }
+    if (fast) ASelectCards(plant_ids, 0);
+    else ASelectCards(plant_ids);
+}
+
+// 初始化选卡并指定僵尸。传入空数组不指定僵尸，使用自然生成的僵尸。
+// 选卡剩下的格子会用一些常用的植物填充防止漏选。
+void WAInit(const std::vector<APlantType> &plants, const std::vector<AZombieType> &zombies, bool cycle = false, bool fast = false) {
+    if (!zombies.empty()) ASetZombies(std::vector<int>(zombies.begin(), zombies.end()));
+    WASelectCards(plants, fast);
+}
+
+// 初始化选卡，并根据场地选择合理的僵尸。
+// 选卡剩下的格子会用一些常用的植物填充防止漏选。
+// 场景可传入的参数参见 `WASelectZombies()`.
+void WAInit(const std::vector<APlantType> &plants, std::string scene = "Auto", bool fast = false) {
+    WASelectZombies(scene);
+    WASelectCards(plants, fast);
 }
 
 // 自动管理全场炮。若需要使用后续轨道语言函数，则此处必须进行自动管理。
@@ -234,9 +237,10 @@ void WASkipTo(int wave, int time = -199) {
     });
 }
 
-// 启动测试模式：10倍速，当忧郁菇、冰瓜投手或玉米加农炮受损时弹窗提示。
-// 检测受损的植物类型可通过修改向量 waCheckPlants 进行设置。
+// 启动测试模式：开启脚本循环，10倍速，当忧郁菇、冰瓜投手或玉米加农炮受损时弹窗提示。
+// 检测受损的植物类型可通过修改 waCheckPlants 进行设置。
 void WACheck() {
+    ASetReloadMode(AReloadMode::MAIN_UI_OR_FIGHT_UI);
     ASetGameSpeed(10);
     waCheckRunner.Start([](){
         for (auto &&plant: aAlivePlantFilter) {
@@ -282,154 +286,6 @@ void WARecordWaves() {
         });
     }
 }
-
-// WAEndCobber 会在收尾波使用已恢复的炮清理剩余的僵尸。
-// 默认提供 waEndCobber 直接使用，但每个对象只能用于一种收尾方式，若需要更多收尾方式需定义新的全局变量。
-// 默认炸9列，为血量最高的巨人僵尸留下600血。
-// 用于收尾的最后一炮会在所有僵尸都走进范围后再开炮，默认考虑除伴舞外所有僵尸。
-// 毫无 IO 又有前置植物需要保护时，请使用 `IncludeBackupDancer()` 同时考虑伴舞。
-// IO 较强的阵可以无视一般僵尸时，请使用  `Bucket()`, `Football()` 和 `Giga()` 选择能处理的僵尸等级。
-// 其他情况，可以使用 `setIgnoreList()` 和 `setDangerList()` 进行的手动处理。
-// 注意调用其中一个会覆盖之前这两个函数进行的所有设置，且水路和陆路需要分开设置。
-// 请在最后一个运算量生效后再调用，例如：
-// `AConnect(ATime(20, DPCP + CFT + 1), WAEndCobber());`
-class WAEndCobber {
-public:
-    WAEndCobber() {
-        column = 9;
-        ioDamage = 600;
-                Default();
-    }
-    void setColumn(float col) {
-        column = col;
-    }
-    void setIODamage(int io) {
-        ioDamage = io;
-    }
-        void setIgnoreList(const std::vector<AZombieType> &ignore) {
-        list_is_ignore = true;
-        list = ignore;
-    }
-    void setDangerList(const std::vector<AZombieType> &danger) {
-        list_is_ignore = false;
-        list = danger;
-    }
-    void setWaterIgnoreList(const std::vector<AZombieType> &ignore) {
-        water_list_is_ignore = true;
-        list = ignore;
-    }
-    void setWaterDangerList(const std::vector<AZombieType> &danger) {
-        water_list_is_ignore = false;
-        list = danger;
-    }
-    // 无视除白眼、红眼外的所有僵尸
-    void Giga() {
-        setDangerList({ABY_23, AHY_32});
-    }
-    // 无视除橄榄、白眼、红眼外的所有僵尸
-    void Football() {
-        setDangerList({AGL_7, ABY_23, AHY_32});
-    }
-    // 无视除铁桶、橄榄、白眼、红眼外的所有僵尸
-    void Bucket() {
-        setDangerList({ATT_4, AGL_7, ABY_23, AHY_32});
-    }
-    // 还原为默认行为
-    void Default() {
-        setWaterIgnoreList({});
-        setIgnoreList({ABW_9});
-    }
-    // 考虑所有僵尸
-    void IncludeBackupDancer() {
-        setIgnoreList({});
-    }
-    void operator()() {
-        ATime time = ANowTime();
-        if (time.wave != 9 && time.wave != 19 && time.wave != 20) {
-            waLogger.Error("当前波次不是收尾波，不能使用 WAEndCobber");
-        }
-        DoRecoverFire();
-    }
-private:
-    static bool isIncluded(AZombie &zombie, 
-                           const std::vector<AZombieType> &list, bool list_is_ignore, 
-                           const std::vector<AZombieType> &water_list, bool water_list_is_ignore) {
-        std::string scene = WAGetCurrentScene();
-        if ((scene == "PE" || scene == "FE") && (zombie.Row() == 2 || zombie.Row() == 3)) {
-            if (water_list_is_ignore && std::find(water_list.begin(), water_list.end(), zombie.Type()) != water_list.end()) return false;
-            if (!water_list_is_ignore && std::find(water_list.begin(), water_list.end(), zombie.Type()) == water_list.end()) return false;
-            return true;
-        } else {
-            if (list_is_ignore && std::find(list.begin(), list.end(), zombie.Type()) != list.end()) return false;
-            if (!list_is_ignore && std::find(list.begin(), list.end(), zombie.Type()) == list.end()) return false;
-            return true;
-        }
-    }
-    static void Fire(float column) {
-        std::string scene = WAGetCurrentScene();
-        if (scene == "PE" || scene == "FE") {
-            aCobManager.RecoverFire({{2, column}, {5, column}});
-        } else {
-            aCobManager.RecoverFire({{2, column}, {4, column}});
-        }
-    }
-    static void ScheduleFire(float column, 
-                             std::vector<AZombieType> list, bool list_is_ignore, 
-                             std::vector<AZombieType> water_list, bool water_list_is_ignore) {
-        waRecoverEndRunner.Start([column, list, list_is_ignore, water_list, water_list_is_ignore](){
-            ATime now = ANowTime();
-            // 如果此波已过，立即停止
-            if (now.wave != 9 && now.wave != 19 && now.wave != 20) {
-                waRecoverEndRunner.Stop();
-            }
-            if (now.time < 0) {
-                waRecoverEndRunner.Stop();
-            }
-            // 检查僵尸位置
-            float max_x = 0;
-            for (auto &zombie: aAliveZombieFilter) {
-                if (!isIncluded(zombie, list, list_is_ignore, water_list, water_list_is_ignore)) continue;
-                max_x = std::max(max_x, zombie.Abscissa() + zombie.BulletAbscissa());
-            }
-            // 如果僵尸全灭（或者已经进家）则立即停止
-            if (max_x == 0) {
-                waRecoverEndRunner.Stop();
-            }
-            // 所有僵尸进入范围开炮
-            if (max_x <= 800 - (9 - column) * 80) {
-                waRecoverEndRunner.Stop();
-                Fire(column);
-            }
-        });
-    }
-    void DoRecoverFire() {
-        int maxHp = 0;
-        for (auto &&zombie: aAliveZombieFilter) {
-            if (!isIncluded(zombie, list, list_is_ignore, water_list, water_list_is_ignore)) continue;
-            if (zombie.Type() == ABY_23 || zombie.Type() == AHY_32) {
-                // 记录巨人最高血量
-                maxHp = std::max(maxHp, zombie.Hp());
-            } else {
-                // 所有未被忽略的非巨人僵尸都需要一炮
-                maxHp = std::max(maxHp, 1800);
-            } 
-        }
-        if (maxHp > ioDamage) {
-            // 其中一炮等所有僵尸走进画面再打（对于炸9列来说）
-            ScheduleFire(column, list, list_is_ignore, water_list, water_list_is_ignore);
-        }
-        for (int i = ioDamage + 1800; i < maxHp; i += 1800) {
-            // 其他的立即打
-            Fire(column);
-        }
-    }
-    std::vector<AZombieType> list;
-    bool list_is_ignore;
-    std::vector<AZombieType> water_list;
-    bool water_list_is_ignore;
-    float column;
-    int ioDamage;
-} waEndCobber;
 
 // 判断是否为有效的时间。
 // w1 / w10 / w20 的时间总是有效，而其他波次小于 -200 的时间无效。
@@ -496,22 +352,34 @@ void P(int wave, int time, float col, int row) {
     PP(wave, time, col, rows);
 }
 
-// 用于收尾的炮。是对应波次（处于刷新倒计时也算）且场上有僵尸才发射。注意此函数w9/w19不计伴舞。
-void PPForEnd(int wave, int time, float col = 9, std::vector<int> rows = {}) {
-    std::string scene = WAGetCurrentScene();
-    int VCFT = (scene == "RE" || scene == "ME" ? 387 : 373);
-    AConnect(ATime(wave, time - VCFT), [wave, time, col, rows](){
+
+// 控制 `ForEnd()` 和 `PPForEnd()` 函数所无视的僵尸类型。其中设置的类型在 w20 也生效。
+std::vector<AZombieType> waForEndIgnore;
+
+// 用于收尾的函数。在指定时间是对应波次（处于刷新倒计时也算）且场上有僵尸才执行对应的操作。注意此函数w9/w19不计伴舞。
+void ForEnd(int wave, int time, std::function<void()> action) {
+    AConnect(ATime(wave, time), [wave, action](){
         ATime now = ANowTime();
         if (now.wave != wave) return;
         bool hasZombie = false;
         for (auto &&zombie: aAliveZombieFilter) {
+            if (std::find(waForEndIgnore.begin(), waForEndIgnore.end(), zombie.Type()) != waForEndIgnore.end()) {
+                continue;
+            }
             if (zombie.Type() != ABW_9 || (wave != 9 && wave != 19)) {
                 hasZombie = true;
             }
         }
         if (!hasZombie) return;
-        PP(wave, time, col, rows);
+        action();
     });
+}
+
+// 用于收尾的炮。是对应波次（处于刷新倒计时也算）且场上有僵尸才发射。注意此函数w9/w19不计伴舞。
+void PPForEnd(int wave, int time, float col = 9, std::vector<int> rows = {}) {
+    std::string scene = WAGetCurrentScene();
+    int VCFT = (scene == "RE" || scene == "ME" ? 387 : 373);
+    ForEnd(wave, time - VCFT, [=](){ PP(wave, time, col, rows); });
 }
 
 // 种植卡片到对应位置。
@@ -669,11 +537,18 @@ void ManualShroom(int wave, int time, std::vector<APosition> pos, APlantType car
     }
 }
 
-// 种植毁灭菇。由于咖啡豆和模仿者的不确定性，有概率延迟1cs生效。
+// 种植寒冰菇。由于咖啡豆和模仿者的不确定性，有概率延迟1cs生效。
 // 若存在预判冰或模仿冰等需要早种的情况，则需要假设波长或提供上波波长。所以用不到模仿冰时，使用此函数请不要携带模仿冰。
 // 不考虑模仿花盆、模仿睡莲、模仿咖啡豆和模仿南瓜头。
 void ManualI(int wave, int time, std::vector<APosition> pos, bool protect = false, int last_wave_length = -1){
     ManualShroom(wave, time, pos, AICE_SHROOM, protect, last_wave_length);
+}
+
+// 种植寒冰菇。由于咖啡豆和模仿者的不确定性，有概率延迟1cs生效。
+// 若存在预判冰或模仿冰等需要早种的情况，则需要假设波长或提供上波波长。所以用不到模仿冰时，使用此函数请不要携带模仿冰。
+// 不考虑模仿花盆、模仿睡莲、模仿咖啡豆和模仿南瓜头。
+void ManualI(int wave, int time, int row, float col, bool protect = false, int last_wave_length = -1){
+    ManualShroom(wave, time, {{row, col}}, AICE_SHROOM, protect, last_wave_length);
 }
 
 // 种植毁灭菇。由于咖啡豆和模仿者的不确定性，有概率延迟1cs生效。
@@ -681,6 +556,10 @@ void ManualI(int wave, int time, std::vector<APosition> pos, bool protect = fals
 // 不考虑模仿花盆、模仿睡莲、模仿咖啡豆和模仿南瓜头。
 void N(int wave, int time, std::vector<APosition> pos, bool protect = false, int last_wave_length = -1) {
     ManualShroom(wave, time, pos, ADOOM_SHROOM, protect, last_wave_length);
+}
+
+void N(int wave, int time, int row, float col, bool protect = false, int last_wave_length = -1) {
+    ManualShroom(wave, time, {{row, col}}, ADOOM_SHROOM, protect, last_wave_length);
 }
 
 // 使用一个樱桃炸弹。此函数不会使用模仿樱桃炸弹。
@@ -691,6 +570,27 @@ void A(int wave, int time, int row, float col) {
 // 使用一个火爆辣椒。此函数不会使用模仿火爆辣椒。
 void J(int wave, int time, int row, float col) {
     C(wave, time - ADT, AJALAPENO, row, col);
+}
+
+// 使用一个樱桃炸弹用于P6节奏旗帜波中的消延迟。此函数不会使用模仿樱桃炸弹。
+void DelayRemovingA(int wave, int time) {
+    AConnect(ATime(wave, time - ADT), [wave, time](){
+        int uby = 0, uhy = 0, dby = 0, dhy = 0;
+        for (auto &&zombie: aAliveZombieFilter) {
+            if (zombie.Type() == ABY_23) {
+                if (zombie.Row() < 3) uby++;
+                else dby++;
+            } else if (zombie.Type() == AHY_32) {
+                if (zombie.Row() < 3) uhy++;
+                else dhy++;
+            }
+        }
+        if (uby * 2 + uhy * 3 > dby * 2 + dhy * 3) {
+            A(wave, time, 2, 9);
+        } else {
+            A(wave, time, 5, 9);
+        }
+    });
 }
 
 #endif // WHATSS7_WALIB_H 
