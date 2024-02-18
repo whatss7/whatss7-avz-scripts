@@ -5,7 +5,7 @@ void AScript() {
     WAAutoManageCob();
     aIceFiller.Start({{1, 1}, {6, 1}, {2, 7}});
     WAFixNuts();
-    WAStartBlover();
+    WAStartBlover(1, 9);
     
     // ch4: IPP-PP|IPP-PP (18,18)
     // w1-w9: N|PP|IPP-PP|IPP-PP|IPP-PP|IPP-PP|IPP-PP|IPP-PP|IPP-PP

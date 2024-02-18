@@ -1,8 +1,7 @@
 #include "../whatss7-avz2-lib/walib.h"
 
 void AScript() {
-    WAInit({APUFF_SHROOM, ASUN_SHROOM, ASCAREDY_SHROOM, AFLOWER_POT, APUMPKIN, ADOOM_SHROOM, AM_DOOM_SHROOM, ALILY_PAD, ACOFFEE_BEAN, ABLOVER}, "Cycle", true);
-    WACheck();
+    WAInit({APUFF_SHROOM, ASUN_SHROOM, ASCAREDY_SHROOM, AFLOWER_POT, APUMPKIN, ADOOM_SHROOM, AM_DOOM_SHROOM, ALILY_PAD, ACOFFEE_BEAN, ABLOVER});
     WAAutoManageCob();
     waEndCobber.Bucket();
     WAStartBlover();

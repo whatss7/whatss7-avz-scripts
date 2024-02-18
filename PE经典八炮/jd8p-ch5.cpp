@@ -6,7 +6,7 @@ void AScript(){
     WAInit({AICE_SHROOM, AM_ICE_SHROOM, ACOFFEE_BEAN, ACHERRY_BOMB, ADOOM_SHROOM, ALILY_PAD, APUMPKIN, AUMBRELLA_LEAF, APUFF_SHROOM, ASUN_SHROOM});
     WAAutoManageCob();
     aIceFiller.Start({{1, 1}, {6, 1}});
-    aPlantFixer.Start(APUMPKIN, {}, 4000 / 3 * 2);
+    WAFixNuts();
 
     // 底线只有单曾无法冰杀，需要叶子保护伞防偷
     umbrellaFixer.Start(AUMBRELLA_LEAF, {{2, 1}, {5, 1}});

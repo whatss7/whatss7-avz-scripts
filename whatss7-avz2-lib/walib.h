@@ -24,6 +24,10 @@ const int DELAYED_PRE_COB_POINT = -55;
 const int COFFEE_BEAN_TIME = 198;
 // 模仿者种下至生效时间319cd或320cs（此处取320cs）
 const int IMITATOT_DELAY_TIME = 320;
+// 6秒加速波预判炸生效时间点
+const int PRE_COB_ACTIVATE_POINT = PRE_COB_POINT + COB_FLYING_TIME;
+// 旗帜波6秒加速波预判炸生效时间点
+const int DELAYED_PRE_COB_ACTIVATE_POINT = DELAYED_PRE_COB_POINT + COB_FLYING_TIME;
 
 // 玉米加农炮发射到生效用时
 const int CFT = COB_FLYING_TIME;
@@ -39,6 +43,10 @@ const int W10PCP = DPCP, W20PCP = DPCP;
 const int CBT = COFFEE_BEAN_TIME;
 // 模仿者种下至生效时间319cd或320cs（此处取319cs）
 const int MDT = IMITATOT_DELAY_TIME;
+// 6秒加速波预判炸生效时间点
+const int PCAP = PRE_COB_ACTIVATE_POINT;
+// 旗帜波6秒加速波预判炸生效时间点
+const int DPCAP = DELAYED_PRE_COB_ACTIVATE_POINT;
 
 #ifdef WALIB_DEBUG
 ALogger<AConsole> waDebugLogger;
@@ -102,7 +110,7 @@ void WAInit(const std::vector<APlantType> &plants, const std::vector<AZombieType
     if (!zombies.empty()) ASetZombies(std::vector<int>(zombies.begin(), zombies.end()));
     if(cycle) ASetReloadMode(AReloadMode::MAIN_UI_OR_FIGHT_UI);
     // 使用常用植物填充植物格防止漏带
-    std::vector<APlantType> extra_plants = {
+    const std::vector<APlantType> extra_plants = {
         AICE_SHROOM,        // 寒冰菇
         ACOFFEE_BEAN,       // 咖啡豆
         ACHERRY_BOMB,       // 樱桃炸弹
@@ -389,5 +397,88 @@ private:
     float column;
     int ioDamage;
 } waEndCobber;
+
+// 从 `aCobManager` 发射一对炮。参数是生效时机而不是发炮时机。注意此函数未考虑风炮等情况，请谨慎使用。
+// 若不设置时间，则 w10 或 w20 318cs (`DPCAP`) 时生效，其他时间 278cs (`PCAP`) 时生效
+void PP(int wave, int time = -1, float col = 9, std::vector<int> rows = {}) {
+    if (rows.empty()) {
+        std::string scene = WAGetCurrentScene();
+        if (scene == "PE" || scene == "FE") {
+            rows = {2, 5};
+        } else {
+            rows = {2, 4};
+        }
+    }
+    std::vector<APosition> pos;
+    for (int i: rows) pos.push_back({i, col});
+    if (time < 0) {
+        if (wave == 10 || wave == 20) time = DPCAP;
+        else time = PCAP;
+    }
+    AConnect(ATime(wave, time - CFT), [pos](){
+        aCobManager.Fire(pos);
+    });
+}
+
+// 从 `aCobManager` 发射一对炮。参数是生效时机而不是发炮时机。注意此函数未考虑风炮等情况，请谨慎使用。
+void PP(int wave, int time, float col, int row) {
+    std::vector<int> rows;
+    rows.push_back(row);
+    PP(wave, time, col, rows);
+}
+
+// 种植卡片到对应位置。
+void C(int wave, int time, std::vector<APlantType> plants, std::vector<APosition> pos) {
+    AConnect(ATime(wave, time), [plants, pos](){
+        ACard(plants, pos);
+    });
+}
+
+// 种植卡片到对应位置。
+void C(int wave, int time, APlantType plant, std::vector<APosition> pos) {
+    AConnect(ATime(wave, time), [plant, pos](){
+        ACard(plant, pos);
+    });
+}
+
+// 种植卡片到对应位置。
+void C(int wave, int time, std::vector<APlantType> plants, int col, float row) {
+    AConnect(ATime(wave, time), [plants, col, row](){
+        ACard(plants, col, row);
+    });
+}
+
+// 种植卡片到对应位置。
+void C(int wave, int time, APlantType plant, int col, float row) {
+    AConnect(ATime(wave, time), [plant, col, row](){
+        ACard(plant, col, row);
+    });
+}
+
+// 开启自动存冰时，进行点冰。若需要非旗帜波的完美预判冰，则需要假设波长或提供上一波波长。
+// 默认未锁定寒冰菇生效时间，可能会延迟1cs生效。
+void I(int wave, int time, int last_wave_length = -1) {
+    time -= CBT + ADT;
+    if (time < -200 && wave != 10 && wave != 20 && last_wave_length > 0) {
+        
+    }
+}
+
+// 未开启自动存冰时，种植并立刻点冰。目前仅用于非w1/w10/w20的预判冰，且需要提供上波波长。需要手动种植花盆或睡莲。
+void ManualI(int wave, int time, int last_wave_length, int row = 1, float col = 1){
+    AConnect(ATime(wave - 1, last_wave_length - ADT - CBT - MDT), [wave, last_wave_length, row, col](){
+        if ((AGetSeedPtr(AICE_SHROOM) && AGetSeedPtr(AICE_SHROOM)->IsUsable()) || 
+            !AGetSeedPtr(AM_ICE_SHROOM) || !AGetSeedPtr(AM_ICE_SHROOM)->IsUsable()) {
+            AConnect(ATime(wave - 1, last_wave_length - ADT - CBT + 1), [row, col](){
+                ACard({AICE_SHROOM, ACOFFEE_BEAN}, row, col);
+            });
+        } else {
+            ACard(AM_ICE_SHROOM, row, col);
+            AConnect(ATime(wave - 1, last_wave_length - ADT - CBT + 1), [row, col](){
+                ACard(ACOFFEE_BEAN, row, col);
+            });
+        }
+    });
+}
 
 #endif // WHATSS7_WALIB_H
