@@ -4,8 +4,6 @@ void AScript(){
     WAInit({AICE_SHROOM, AM_ICE_SHROOM, ACOFFEE_BEAN, APUFF_SHROOM, ASUN_SHROOM, ASCAREDY_SHROOM, AFLOWER_POT, APUMPKIN});
     WAAutoManageCob();
     WAFixNuts();
-    waEndCobber.Bucket();
-    waEndCobber.setColumn(8.5);
     
     // S4: IPP-PP|ccccPP|ccccPP (1800, 875, 875)
     // w1-w9: PP|PP|IPP-PP|PP|PP|IPP-PP|PP|PP|IPP-PP
@@ -43,7 +41,7 @@ void AScript(){
 
     // IPP-PP
     for (int w: {3, 6, 9, 12, 15, 18}) {
-        ManualI(w, 100, 875);
+        ManualI(w, 100, 1, 1, 0, 875);
         PP(w, 600 - 200, 9);
         PP(w, 1800 - 200, 8.5);
     }

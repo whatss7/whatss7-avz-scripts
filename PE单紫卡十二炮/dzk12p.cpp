@@ -26,8 +26,6 @@ void AScript() {
     WAInit({AICE_SHROOM, AM_ICE_SHROOM, ADOOM_SHROOM, ALILY_PAD, ACOFFEE_BEAN, AJALAPENO}, "None", true);
     WACheck();
     WAAutoManageCob();
-    waForEndIgnore.push_back(AKG_17);
-    waForEndIgnore.push_back(AXG_24);
     // 存在红眼时，使用S6节奏；否则，使用P6节奏。
     if (AGetZombieTypeList()[AHY_32]) {
         AAssumeWavelength({
@@ -64,7 +62,7 @@ void AScript() {
         }
         // 冰波：IC-PP，w20顺便冰消珊瑚，放置地刺保证w10放樱桃消延迟
         for (int w: {5, 9, 14, 19, 20}) {
-            ManualI(w, 100, {{1, 4}});
+            ManualI(w, 100, 1, 4);
             PP(w, 1200 - 200, 9);
             // C(w, 400, ASPIKEWEED, 2, 9);
             // 收尾波
@@ -101,7 +99,7 @@ void AScript() {
             } 
         }
         for (int w: {11, 20}) {
-            ManualI(w, 100, {{1, 4}});
+            ManualI(w, 100, 1, 4);
             // C(w, 400, ASPIKEWEED, 2, 9);
             PP(w, 1200 - 200); 
             // w20 炸蹦极

@@ -4,33 +4,13 @@
 void AScript() {
     WAInit({AICE_SHROOM, ACOFFEE_BEAN, ACHERRY_BOMB});
     WAAutoManageCob();
-    // 非旗帜波: PP
-    for (int w: WaveList(1, 9) + WaveList(11, 19)) {
-        AConnect(ATime(w, PCP), [](){
-            aCobManager.Fire({{2, 9}, {5, 9}});
-        });
-        if (w == 9 || w == 19) {
-            AConnect(ATime(w, PCP + CFT + 1), waEndCobber);
+    for (int w: WaveList(1, 20)) {
+        PP(w);
+        if (w == 9 || w == 19 || w == 20) {
+            PPForEnd(w, 1200 - 200);
+            PPForEnd(w, 1800 - 200);
         }
-    }
-    // w10: PPA 消延迟
-    for (int w: {10}) {
-        AConnect(ATime(w, DPCP), [](){
-            aCobManager.Fire({{2, 9}, {5, 9}});
-        });
-        AConnect(ATime(w, DPCP + CFT - ADT), [](){
-            ACard(ACHERRY_BOMB, 2, 9);
-        });
-    }
-    // w20: PP+冰消珊瑚
-    for (int w: {20}) {
-        AConnect(ATime(w, -50 - ADT - CBT), [](){
-            ACard(AICE_SHROOM, 1, 1);
-            ACard(ACOFFEE_BEAN, 1, 1);
-        });
-        AConnect(ATime(w, PCP), [](){
-            aCobManager.Fire({{2, 9}, {5, 9}});
-        });
-        AConnect(ATime(w, PCP + CFT + 1), waEndCobber);
+        if (w == 10) DelayRemovingA(w, 400);
+        if (w == 20) ManualI(w, -50, 1, 1);
     }
 }

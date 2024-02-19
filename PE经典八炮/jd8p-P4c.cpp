@@ -3,12 +3,10 @@
 void AScript(){
     WAInit({APUFF_SHROOM, ASUN_SHROOM, ASCAREDY_SHROOM, AFLOWER_POT, APUMPKIN});
     WAAutoManageCob();
-    aPlantFixer.Start(APUMPKIN);
-    aPlantFixer.SetHp(4000 / 3 * 2);
-    waEndCobber.Bucket();
-    waEndCobber.setColumn(8.5);
+    WAFixNuts();
+    waForEndIgnore = { AXG_24, AKG_17, APJ_0, ALZ_2 };
     
-    // P4: ccccPP|ccccPP|ccccPP|ccccPP (875,875,875,875)
+    // P4: ccccPP|ccccPP|ccccPP|ccccPP (875, 875, 875, 875)
     for (int w: WaveList(1, 20)) {
         // cccc
         AConnect(ATime(w, 140), [](){
@@ -34,11 +32,10 @@ void AScript(){
             ARemovePlant(6, 9);
         });
         // PP
-        AConnect(ATime(w, 875 - 200 - CFT), [](){
-            aCobManager.Fire({{2, 8.5}, {5, 8.5}});
-        });
+        PP(w, 875 - 200, 8.5);
         if (w == 9 || w == 19 || w == 20) {
-            AConnect(ATime(w, 875 - 200 + 1), waEndCobber);
+            PPForEnd(w, 1750 - 200);
+            PPForEnd(w, 2625 - 200);
         }
     }
 }
