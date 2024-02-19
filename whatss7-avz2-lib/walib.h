@@ -303,6 +303,19 @@ bool WAIsValidTime(int wave, int time) {
     else return time >= -200;
 }
 
+// 使用墓碑吞噬者尝试种植所有可能生长墓碑的位置。
+void WARemoveGraves(int wave, int time) {
+    AConnect(ATime(wave, time), [](){
+        ACard(AGRAVE_BUSTER, {
+            {1, 9}, {2, 9}, {3, 9}, {4, 9}, {5, 9},
+            {1, 8}, {2, 8}, {3, 8}, {4, 8}, {5, 8},
+            {1, 7}, {2, 7}, {3, 7}, {4, 7}, {5, 7},
+            {1, 6}, {2, 6}, {3, 6}, {4, 6}, {5, 6},
+            {1, 5}, {2, 5}, {3, 5}, {4, 5}, {5, 5}
+        });
+    });
+}
+
 // 从 `aCobManager` 发射一对炮。
 // 若不设置位置，则泳池场景默认炸2-9和5-9，其他场景默认炸2-9和4-9。
 // 若不设置时间，则 w10 或 w20 318cs (`DPCAP`) 时生效，其他时间 278cs (`PCAP`) 时生效
@@ -391,7 +404,7 @@ void ForEnd(int wave, int time, std::function<void()> action) {
     });
 }
 
-// 用于收尾的炮。是对应波次（处于刷新倒计时也算）且场上有僵尸才发射。注意此函数w9/w19不计伴舞。
+// 用于收尾的炮。是对应波次（处于下一波的刷新倒计时也算本波）且场上有僵尸才发射。注意此函数w9/w19不计伴舞。
 void PPForEnd(int wave, int time, float col = 9, std::vector<int> rows = {}) {
     std::string scene = WAGetCurrentScene();
     int VCFT = (scene == "RE" || scene == "ME" ? 387 : 373);
@@ -586,35 +599,104 @@ void N(int wave, int time, int row, float col, int protect = 0, int last_wave_le
     ManualShroom(wave, time, {{row, col}}, ADOOM_SHROOM, protect, last_wave_length);
 }
 
+// 种植一个临时植物并在一段时间后移除。此函数还会帮忙临时种植花盆或睡莲。
+// 若给定的时长为负数，则不会移除该植物。
+void TempC(int wave, int time, APlantType card, std::vector<APosition> pos, int duration) {
+    std::string scene = WAGetCurrentScene();
+    AConnect(ATime(wave, time), [wave, time, card, pos, scene, duration](){
+        for (APosition p: pos) {
+            bool should_remove = false;
+            APlant *ptr = nullptr;
+            if ((scene == "RE" || scene == "ME") && !WAExistPlant(AFLOWER_POT, p.col, p.row)) {
+                ptr = ACard({AFLOWER_POT, card}, p.row, p.col)[1];
+                should_remove = true;
+            } else if ((scene == "PE" || scene == "FE") && p.row >= 3 && p.row <= 4 && !WAExistPlant(ALILY_PAD, p.col, p.row)) {
+                ptr = ACard({ALILY_PAD, card}, p.row, p.col)[1];
+                should_remove = true;
+            } else {
+                ptr = ACard(card, p.row, p.col);
+            }
+            if (ptr) {
+                if (duration >= 0) {
+                    if (should_remove){
+                        AConnect(ATime(wave, time + duration), [p, card](){
+                            ARemovePlant(p.row, p.col, {card, AFLOWER_POT, ALILY_PAD});
+                        });
+                    } else {
+                        AConnect(ATime(wave, time + duration), [p, card](){
+                            ARemovePlant(p.row, p.col, card);
+                        });
+                    }
+                }
+                break;
+            }
+        }
+    });
+}
+
+// 种植一个临时植物并在一段时间后移除。此函数还会帮忙临时种植花盆或睡莲。
+// 若给定的时长为负数，则不会移除该植物。
+void TempC(int wave, int time, APlantType card, int row, float col, int duration) {
+    TempC(wave, time, card, {{row, col}}, duration);
+}
+
 // 使用一个樱桃炸弹。此函数不会使用模仿樱桃炸弹。
 void A(int wave, int time, int row, float col) {
-    C(wave, time - ADT, ACHERRY_BOMB, row, col);
+    TempC(wave, time - ADT, ACHERRY_BOMB, row, col, 101);
 }
 
 // 使用一个火爆辣椒。此函数不会使用模仿火爆辣椒。
 void J(int wave, int time, int row, float col) {
-    C(wave, time - ADT, AJALAPENO, row, col);
+    TempC(wave, time - ADT, AJALAPENO, row, col, 101);
 }
 
 // 使用一个樱桃炸弹用于P6节奏旗帜波中的消延迟。此函数不会使用模仿樱桃炸弹。
 void DelayRemovingA(int wave, int time) {
-    AConnect(ATime(wave, time - ADT), [wave, time](){
-        int uby = 0, uhy = 0, dby = 0, dhy = 0;
-        for (auto &&zombie: aAliveZombieFilter) {
-            if (zombie.Type() == ABY_23) {
-                if (zombie.Row() < 3) uby++;
-                else dby++;
-            } else if (zombie.Type() == AHY_32) {
-                if (zombie.Row() < 3) uhy++;
-                else dhy++;
+    std::string scene = WAGetCurrentScene();
+    if (scene == "PE" || scene == "FE") {
+        AConnect(ATime(wave, time - ADT), [wave, time](){
+            int uby = 0, uhy = 0, dby = 0, dhy = 0;
+            for (auto &&zombie: aAliveZombieFilter) {
+                if (zombie.Type() == ABY_23) {
+                    if (zombie.Row() < 3) uby++;
+                    else dby++;
+                } else if (zombie.Type() == AHY_32) {
+                    if (zombie.Row() < 3) uhy++;
+                    else dhy++;
+                }
             }
-        }
-        if (uby * 2 + uhy * 3 > dby * 2 + dhy * 3) {
-            A(wave, time, 2, 9);
-        } else {
-            A(wave, time, 5, 9);
-        }
-    });
+            if (uby * 2 + uhy * 3 < dby * 2 + dhy * 3) {
+                TempC(wave, time - ADT, ACHERRY_BOMB, {{5, 9}, {2, 9}}, 101);
+            } else {
+                TempC(wave, time - ADT, ACHERRY_BOMB, {{2, 9}, {5, 9}}, 101);
+            }
+        });
+    } else {
+        AConnect(ATime(wave, time - ADT), [wave, time](){
+            std::vector<APosition> choices = {{2, 9}, {3, 9}, {4, 9}};
+            int status[3];
+            for (auto &&zombie: aAliveZombieFilter) {
+                int score = 0;
+                if (zombie.Type() == ABY_23) score = 2;
+                else if (zombie.Type() == AHY_32) score = 3;
+                if (zombie.Row() == 1 || zombie.Row() == 2 || zombie.Row() == 3) {
+                    status[0] += score;
+                }
+                if (zombie.Row() == 2 || zombie.Row() == 3 || zombie.Row() == 4) {
+                    status[1] += score;
+                }
+                if (zombie.Row() == 3 || zombie.Row() == 4 || zombie.Row() == 5) {
+                    status[2] += score;
+                }
+            }
+            std::sort(choices.begin(), choices.end(), [status](APosition a, APosition b){
+                return status[a.row - 2] < status[b.row - 2];
+            });
+            TempC(wave, time - ADT, ACHERRY_BOMB, choices, 101);
+        });
+    }
 }
+
+void DRA(int wave, int time) { DelayRemovingA(wave, time); }
 
 #endif // WHATSS7_WALIB_H 
