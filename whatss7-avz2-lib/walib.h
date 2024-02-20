@@ -326,6 +326,7 @@ void WARemoveGraves(int wave, int time) {
 
 // 从 `aCobManager` 发射一对炮。
 // 若不设置位置，则泳池场景默认炸2-9和5-9，其他场景默认炸2-9和4-9。
+// 请注意，本函数先填列数，再填行数。
 // 若不设置时间，则 w10 或 w20 318cs (`DPCAP`) 时生效，其他时间 278cs (`PCAP`) 时生效
 // 屋顶场景，1-2路的炮优先选择一二列炮，其次三列炮，最后平炮；3-5路相反。
 void PP(int wave, int time = -1, float col = 9, std::vector<int> rows = {}) {
@@ -376,7 +377,7 @@ void PP(int wave, int time = -1, float col = 9, std::vector<int> rows = {}) {
 }
 
 // 从 `aCobManager` 发射一炮。
-void P(int wave, int time, float col, int row) {
+void P(int wave, int time, int row, float col) {
     std::vector<int> rows;
     rows.push_back(row);
     PP(wave, time, col, rows);
@@ -471,7 +472,7 @@ void ManualShroom(int wave, int time, std::vector<APosition> pos, APlantType car
     int VCBT = isDay ? CBT : 0;
     if (AGetCardPtr(imitated)) {
         // 携带了模仿植物的情况
-        if (!WAIsValidTime(wave, time - (MDT + 1) - VCBT - ADT) && last_wave_length > 0) {
+        if (!WAIsValidTime(wave, time - (MDT + (isDay ? 1 : 0)) - VCBT - ADT) && last_wave_length > 0) {
             wave -= 1;
             time += last_wave_length;
         }

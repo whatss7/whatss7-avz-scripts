@@ -65,10 +65,10 @@ void GigaEnd(int wave, int time, int to_time = 4300) {
             PP(ANowTime().wave, time, 8.5, {2, 4});
             gigaEnd_row = 6;
         } else if (dist[0] == 0 && dist[1] == 1) {
-            P(ANowTime().wave, time, 8.5, 5);
+            P(ANowTime().wave, time, 5, 8.5);
             gigaEnd_row = 2;
         } else if (dist[5] == 0 && dist[4] == 1) {
-            P(ANowTime().wave, time, 8.5, 2);
+            P(ANowTime().wave, time, 2, 8.5);
             gigaEnd_row = 5;
         } else if (dist[0]) {
             PP(ANowTime().wave, time, 8.5, {3, 5});
@@ -77,7 +77,7 @@ void GigaEnd(int wave, int time, int to_time = 4300) {
             PP(ANowTime().wave, time, 8.5, {2, 4});
             gigaEnd_row = 6;
         } else if (dist[1]) {
-            P(ANowTime().wave, time, 8.5, 5);
+            P(ANowTime().wave, time, 5, 8.5);
             gigaEnd_row = 2;
         }
     });
@@ -94,7 +94,7 @@ void GigaEnd(int wave, int time, int to_time = 4300) {
                 min_x_row = zombie.Row();
             }
         }
-        P(wave, to_time, floorf((min_x + 40) / 80.0f), min_x_row + 1);
+        P(wave, to_time, min_x_row + 1, floorf((min_x + 40) / 80.0f));
     });
     AConnect(ATime(wave, to_time - 1), [](){
         stopGigaRunner.Stop();
