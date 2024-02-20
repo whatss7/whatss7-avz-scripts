@@ -6,9 +6,9 @@
 
 ## 1 级
 
-- [PE 经典八炮](./PE经典八炮/jd8p-P4c.cpp)
-- [RE 天台十炮](./RE天台十炮/tt10p.cpp)
-- [PE 经典十二炮](./PE经典十二炮/jd12p.cpp)
+- [PE 经典八炮](./PE经典八炮/jd8p-P4c.cpp) 可挂机
+- [RE 天台十炮](./RE天台十炮/tt10p.cpp) 可挂机
+- [PE 经典十二炮](./PE经典十二炮/jd12p.cpp) 可挂机
 - [NE 核代十炮·改](./NE核代十炮·改/nen10p.cpp)
 - [PE 经典四炮](./PE经典四炮/jd4p.cpp)
 - [DE 双冰六炮](./DE双冰六炮/2i6p.cpp)

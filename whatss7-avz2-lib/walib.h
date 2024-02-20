@@ -120,11 +120,19 @@ bool WAExistZombie(AZombieType type, std::vector<int> rows = {1, 2, 3, 4, 5, 6})
 }
 
 // 判断指定位置是否有指定的植物。
-bool WAExistPlant(APlantType type, int col, int row) {
+bool WAExistPlant(APlantType type, int row, int col) {
     for (auto &&plant: aAlivePlantFilter) {
         if (plant.Type() == type && plant.Col() + 1 == col && plant.Row() + 1 == row) {
             return true;
         }
+    }
+    return false;
+}
+
+// 判断指定位置是否有指定的植物。
+bool WAExistPlant(std::vector<APlantType> types, int row, int col) {
+    for (auto type: types) {
+        if (WAExistPlant(type, row, col)) return true;
     }
     return false;
 }
@@ -290,7 +298,7 @@ private:
 
 void WARecordWaves() {
     for (int w: WaveList(1, 20)) {
-        AConnect(ATime(w, 0), [w](){
+        AConnect(ATime(w, -1), [w](){
             waIngameLogger.Info("Wave " + std::to_string(w));
         });
     }
@@ -479,17 +487,21 @@ void ManualShroom(int wave, int time, std::vector<APosition> pos, APlantType car
                 for (APosition p: pos) {
                     APlant *ptr = nullptr;
                     bool should_remove = false;
-                    if ((scene == "RE" || scene == "ME") && !WAExistPlant(AFLOWER_POT, p.col, p.row)) {
+                    bool should_remove_pumpkin = false;
+                    if ((scene == "RE" || scene == "ME") && !WAExistPlant(AFLOWER_POT, p.row, p.col)) {
                         ptr = ACard({AFLOWER_POT, imitated}, p.row, p.col)[1];
                         should_remove = true;
-                    } else if ((scene == "PE" || scene == "FE") && p.row >= 3 && p.row <= 4 && !WAExistPlant(ALILY_PAD, p.col, p.row)) {
+                    } else if ((scene == "PE" || scene == "FE") && p.row >= 3 && p.row <= 4 && !WAExistPlant(ALILY_PAD, p.row, p.col)) {
                         ptr = ACard({ALILY_PAD, imitated}, p.row, p.col)[1];
                         should_remove = true;
                     } else {
                         ptr = ACard(imitated, p.row, p.col);
                     }
                     if (ptr) {
-                        if (protect > 0) ACard(APUMPKIN, p.row, p.col);
+                        if (protect > 0 && !WAExistPlant(APUMPKIN, p.row, p.col)) {
+                            should_remove_pumpkin = true;
+                            ACard(APUMPKIN, p.row, p.col);
+                        }
                         if (isDay) {
                             AConnect(ATime(wave, time - CBT - ADT), [p](){
                                 ACard(ACOFFEE_BEAN, p.row, p.col);
@@ -498,6 +510,11 @@ void ManualShroom(int wave, int time, std::vector<APosition> pos, APlantType car
                         if (card == AICE_SHROOM && should_remove) {
                             AConnect(ATime(wave, time + 1), [p](){
                                 ARemovePlant(p.row, p.col, {AFLOWER_POT, ALILY_PAD});
+                            });
+                        }
+                        if (card == AICE_SHROOM && should_remove_pumpkin) {
+                            AConnect(ATime(wave, time + 1), [p](){
+                                ARemovePlant(p.row, p.col, APUMPKIN);
                             });
                         }
                         break;
@@ -509,21 +526,30 @@ void ManualShroom(int wave, int time, std::vector<APosition> pos, APlantType car
                     for (APosition p: pos) {
                         APlant *ptr = nullptr;
                         bool should_remove = false;
-                        if ((scene == "RE" || scene == "ME") && !WAExistPlant(AFLOWER_POT, p.col, p.row)) {
+                        bool should_remove_pumpkin = false;
+                        if ((scene == "RE" || scene == "ME") && !WAExistPlant(AFLOWER_POT, p.row, p.col)) {
                             ptr = ACard({AFLOWER_POT, card}, p.row, p.col)[1];
                             should_remove = true;
-                        } else if ((scene == "PE" || scene == "FE") && p.row >= 3 && p.row <= 4 && !WAExistPlant(ALILY_PAD, p.col, p.row)) {
+                        } else if ((scene == "PE" || scene == "FE") && p.row >= 3 && p.row <= 4 && !WAExistPlant(ALILY_PAD, p.row, p.col)) {
                             ptr = ACard({ALILY_PAD, card}, p.row, p.col)[1];
                             should_remove = true;
                         } else {
                             ptr = ACard(card, p.row, p.col);
                         }
                         if (ptr) {
-                            if (protect > 1) ACard(APUMPKIN, p.row, p.col);
+                            if (protect > 1 && !WAExistPlant(APUMPKIN, p.row, p.col)) {
+                                should_remove_pumpkin = true;
+                                ACard(APUMPKIN, p.row, p.col);
+                            }
                             if (isDay) ACard(ACOFFEE_BEAN, p.row, p.col);
                             if (card == AICE_SHROOM && should_remove) {
                                 AConnect(ATime(wave, time + 1), [p](){
                                     ARemovePlant(p.row, p.col, {AFLOWER_POT, ALILY_PAD});
+                                });
+                            }
+                            if (card == AICE_SHROOM && should_remove_pumpkin) {
+                                AConnect(ATime(wave, time + 1), [p](){
+                                    ARemovePlant(p.row, p.col, APUMPKIN);
                                 });
                             }
                             break;
@@ -542,21 +568,30 @@ void ManualShroom(int wave, int time, std::vector<APosition> pos, APlantType car
             for (APosition p: pos) {
                 APlant *ptr = nullptr;
                 bool should_remove = false;
-                if ((scene == "RE" || scene == "ME") && !WAExistPlant(AFLOWER_POT, p.col, p.row)) {
+                bool should_remove_pumpkin = false;
+                if ((scene == "RE" || scene == "ME") && !WAExistPlant(AFLOWER_POT, p.row, p.col)) {
                     ptr = ACard({AFLOWER_POT, card}, p.row, p.col)[1];
                     should_remove = true;
-                } else if ((scene == "PE" || scene == "FE") && p.row >= 3 && p.row <= 4 && !WAExistPlant(ALILY_PAD, p.col, p.row)) {
+                } else if ((scene == "PE" || scene == "FE") && p.row >= 3 && p.row <= 4 && !WAExistPlant(ALILY_PAD, p.row, p.col)) {
                     ptr = ACard({ALILY_PAD, card}, p.row, p.col)[1];
                     should_remove = true;
                 } else {
                     ptr = ACard(card, p.row, p.col);
                 }
                 if (ptr) {
-                    if (protect > 1) ACard(APUMPKIN, p.row, p.col);
+                    if (protect > 1 && !WAExistPlant(APUMPKIN, p.row, p.col)) {
+                        should_remove_pumpkin = true;
+                        ACard(APUMPKIN, p.row, p.col);
+                    }
                     if (isDay) ACard(ACOFFEE_BEAN, p.row, p.col);
                     if (card == AICE_SHROOM && should_remove) {
                         AConnect(ATime(wave, time + 1), [p](){
                             ARemovePlant(p.row, p.col, {AFLOWER_POT, ALILY_PAD});
+                        });
+                    }
+                    if (card == AICE_SHROOM && should_remove_pumpkin) {
+                        AConnect(ATime(wave, time + 1), [p](){
+                            ARemovePlant(p.row, p.col, APUMPKIN);
                         });
                     }
                     break;
@@ -607,10 +642,10 @@ void TempC(int wave, int time, APlantType card, std::vector<APosition> pos, int 
         for (APosition p: pos) {
             bool should_remove = false;
             APlant *ptr = nullptr;
-            if ((scene == "RE" || scene == "ME") && !WAExistPlant(AFLOWER_POT, p.col, p.row)) {
+            if ((scene == "RE" || scene == "ME") && !WAExistPlant(AFLOWER_POT, p.row, p.col)) {
                 ptr = ACard({AFLOWER_POT, card}, p.row, p.col)[1];
                 should_remove = true;
-            } else if ((scene == "PE" || scene == "FE") && p.row >= 3 && p.row <= 4 && !WAExistPlant(ALILY_PAD, p.col, p.row)) {
+            } else if ((scene == "PE" || scene == "FE") && p.row >= 3 && p.row <= 4 && !WAExistPlant(ALILY_PAD, p.row, p.col)) {
                 ptr = ACard({ALILY_PAD, card}, p.row, p.col)[1];
                 should_remove = true;
             } else {
