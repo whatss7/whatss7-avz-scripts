@@ -10,7 +10,7 @@ void AScript() {
             PPForEnd(w, 1200 - 200);
             PPForEnd(w, 1800 - 200);
         }
-        if (w == 10) DelayRemovingA(w, 400);
+        if (w == 10) SmartA(w, 400);
         if (w == 20) ManualI(w, -50, 1, 1);
     }
 }

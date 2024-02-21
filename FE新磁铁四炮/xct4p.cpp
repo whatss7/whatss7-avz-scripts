@@ -19,7 +19,7 @@ void AScript() {
         N(w, PCAP, {{3, 9}, {4, 9}, {3, 8}, {4, 8}});
     }
     for (int w: {2, 6, 11, 15, 19}) {
-        ManualI(w, 1, 1, 6, 0, 601);
+        ManualI(w, 1, 1, 6, 601);
         AConnect(ATime(w, 400), [](){
             if (WAExistZombie(ABC_12, {2})) {
                 ACard(ASPIKEWEED, 2, 9);
@@ -35,7 +35,7 @@ void AScript() {
         P(w, 1900 - 200, 5, 8.5);
     }
     for (int w: {4, 8, 13, 17}) {
-        ManualI(w, 1, 1, 6, 0, 601);
+        ManualI(w, 1, 1, 6, 601);
         C(w, 400, ASQUASH, {{2, 9}, {2, 8}, {2, 7}});
         AConnect(ATime(w, 700), [](){
             if (WAExistZombie(AXC_15, {2})) {

@@ -462,7 +462,7 @@ void I(int wave, int time = 11, int last_wave_length = -1) {
 }
 
 // 手动种植毁灭菇或寒冰菇。
-void ManualShroom(int wave, int time, std::vector<APosition> pos, APlantType card, int protect, int last_wave_length) {
+void ManualShroom(int wave, int time, std::vector<APosition> pos, APlantType card, int last_wave_length, int protect) {
     bool isDay = true;
     APlantType imitated = (card == AICE_SHROOM ? AM_ICE_SHROOM : AM_DOOM_SHROOM);
     std::string scene = WAGetCurrentScene();
@@ -603,7 +603,7 @@ void ManualShroom(int wave, int time, std::vector<APosition> pos, APlantType car
 // 若存在预判冰或模仿冰等需要早种的情况，则需要假设波长或提供上波波长。所以用不到模仿冰时，使用此函数请不要携带模仿冰。
 // `protect` 为 0 时，不进行保护；为 1 时，仅保护模仿冰；为 2 时，都进行保护。
 // 不考虑模仿花盆、模仿睡莲、模仿咖啡豆和模仿南瓜头。
-void ManualI(int wave, int time, std::vector<APosition> pos, int protect = 0, int last_wave_length = -1){
+void ManualI(int wave, int time, std::vector<APosition> pos, int last_wave_length = -1, int protect = 0){
     ManualShroom(wave, time, pos, AICE_SHROOM, protect, last_wave_length);
 }
 
@@ -611,16 +611,16 @@ void ManualI(int wave, int time, std::vector<APosition> pos, int protect = 0, in
 // 若存在预判冰或模仿冰等需要早种的情况，则需要假设波长或提供上波波长。所以用不到模仿冰时，使用此函数请不要携带模仿冰。
 // `protect` 为 0 时，不进行保护；为 1 时，仅保护模仿冰；为 2 时，都进行保护。
 // 不考虑模仿花盆、模仿睡莲、模仿咖啡豆和模仿南瓜头。
-void ManualI(int wave, int time, int row, float col, int protect = 0, int last_wave_length = -1){
-    ManualShroom(wave, time, {{row, col}}, AICE_SHROOM, protect, last_wave_length);
+void ManualI(int wave, int time, int row, float col, int last_wave_length = -1, int protect = 0){
+    ManualShroom(wave, time, {{row, col}}, AICE_SHROOM, last_wave_length, protect);
 }
 
 // 种植毁灭菇。由于咖啡豆和模仿者的不确定性，有概率延迟1cs生效。
 // 若存在模仿核等需要早种的情况，则需要假设波长或提供上波波长。所以用不到模仿核时，使用此函数请不要携带模仿核。
 // `protect` 为 0 时，不进行保护；为 1 时，仅保护模仿核；为 2 时，都进行保护。
 // 不考虑模仿花盆、模仿睡莲、模仿咖啡豆和模仿南瓜头。
-void N(int wave, int time, std::vector<APosition> pos, int protect = 0, int last_wave_length = -1) {
-    ManualShroom(wave, time, pos, ADOOM_SHROOM, protect, last_wave_length);
+void N(int wave, int time, std::vector<APosition> pos, int last_wave_length = -1, int protect = 0) {
+    ManualShroom(wave, time, pos, ADOOM_SHROOM, last_wave_length, protect);
 }
 
 
@@ -628,8 +628,8 @@ void N(int wave, int time, std::vector<APosition> pos, int protect = 0, int last
 // 若存在模仿核等需要早种的情况，则需要假设波长或提供上波波长。所以用不到模仿核时，使用此函数请不要携带模仿核。
 // `protect` 为 0 时，不进行保护；为 1 时，仅保护模仿核；为 2 时，都进行保护。
 // 不考虑模仿花盆、模仿睡莲、模仿咖啡豆和模仿南瓜头。
-void N(int wave, int time, int row, float col, int protect = 0, int last_wave_length = -1) {
-    ManualShroom(wave, time, {{row, col}}, ADOOM_SHROOM, protect, last_wave_length);
+void N(int wave, int time, int row, float col, int last_wave_length = -1, int protect = 0) {
+    ManualShroom(wave, time, {{row, col}}, ADOOM_SHROOM, last_wave_length, protect);
 }
 
 // 种植一个临时植物并在一段时间后移除。此函数还会帮忙临时种植花盆或睡莲。
@@ -683,8 +683,8 @@ void J(int wave, int time, int row, float col) {
     TempC(wave, time - ADT, AJALAPENO, row, col, 101);
 }
 
-// 使用一个樱桃炸弹用于P6节奏旗帜波中的消延迟。此函数不会使用模仿樱桃炸弹。
-void DelayRemovingA(int wave, int time) {
+// 使用智能樱桃消延迟。此函数不会使用模仿樱桃炸弹。
+void SmartA(int wave, int time) {
     std::string scene = WAGetCurrentScene();
     if (scene == "PE" || scene == "FE") {
         AConnect(ATime(wave, time - ADT), [wave, time](){
@@ -729,7 +729,5 @@ void DelayRemovingA(int wave, int time) {
         });
     }
 }
-
-void DRA(int wave, int time) { DelayRemovingA(wave, time); }
 
 #endif // WHATSS7_WALIB_H 

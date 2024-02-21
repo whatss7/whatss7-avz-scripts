@@ -26,7 +26,7 @@ void AScript(){
             PPForEnd(w, 1000);
             PPForEnd(w, 2200);
         }
-        if (w == 10) DelayRemovingA(w, 400);
+        if (w == 10) SmartA(w, 400);
         if (w == 20) ManualI(w, -50, 1, 1);
         if (w == 10 || w == 20) {
             if (AGetZombieTypeList()[ABJ_20]) {

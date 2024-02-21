@@ -53,7 +53,7 @@ void AScript() {
     for (int w: WaveList(1, 20)) {
         if (w == 6 || w == 15) continue;
         PP(w);
-        if (w == 10) DRA(w, 400);
+        if (w == 10) SmartA(w, 400);
         if (w == 9 || w == 19 || w == 20) {
             PPForEnd(w, 1200 - 200, 8.75);
             PPForEnd(w, 2400 - 200, 8.5);

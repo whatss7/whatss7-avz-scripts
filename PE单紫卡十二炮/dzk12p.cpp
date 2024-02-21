@@ -187,7 +187,7 @@ void AScript() {
         }
         // 冰波
         for (int w: {3, 8, 13, 18}) {
-            ManualI(w, 135, 1, 4, 1, 601);
+            ManualI(w, 135, 1, 4, 601, 1);
             PP(w, 1149 - 200);
         }
         // w9: PP-PPDD-PP-P
@@ -221,7 +221,7 @@ void AScript() {
         }
         // w20 应该必有红眼
         for (int w: {20}) {
-            ManualI(w, 135, 1, 4, 1);
+            ManualI(w, 135, 1, 4, -1, 1);
             if (AGetZombieTypeList()[ABJ_20]) PP(w, 400, 2);
             PP(w, 949);
             PP(w, 1600);
@@ -252,7 +252,7 @@ void AScript() {
             }
         }
         for (int w: {20}) {
-            ManualI(w, 135, 1, 4, 1);
+            ManualI(w, 135, 1, 4, -1, 1);
             if (AGetZombieTypeList()[ABJ_20]) PP(w, 400, 2);
             PP(w, 1149 - 200); 
             if (w == 20) {
