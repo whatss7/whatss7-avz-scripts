@@ -24,7 +24,7 @@ const int PRE_COB_POINT = -95;
 const int DELAYED_PRE_COB_POINT = -55;
 // 咖啡豆生效时间198cs或199cs（此处取198cs）
 const int COFFEE_BEAN_TIME = 198;
-// 模仿者种下至生效时间319cd或320cs（此处取320cs）
+// 模仿者种下至生效时间319cs或320cs（此处取320cs）
 const int IMITATOT_DELAY_TIME = 320;
 // 6秒加速波预判炸生效时间点
 const int PRE_COB_ACTIVATE_POINT = PRE_COB_POINT + COB_FLYING_TIME;
@@ -206,7 +206,7 @@ void WAInit(const std::vector<APlantType> &plants, const std::vector<AZombieType
 // 初始化选卡，并根据场地选择合理的僵尸。
 // 选卡剩下的格子会用一些常用的植物填充防止漏选。
 // 场景可传入的参数参见 `WASelectZombies()`.
-void WAInit(const std::vector<APlantType> &plants, std::string scene = "Auto", bool fast = false) {
+void WAInit(const std::vector<APlantType> &plants, const char *scene = "Auto", bool fast = false) {
     WASelectZombies(scene);
     WASelectCards(plants, fast);
 }
@@ -479,9 +479,6 @@ void ManualShroom(int wave, int time, std::vector<APosition> pos, APlantType car
         // 若为白昼，早种植1cs，模仿者即使319cs完成变身也等到320cs再种咖啡豆，保证延迟最大为1cs。
         // 若为黑夜，则不能早种植，否则有概率提前1cs。
         AConnect(ATime(wave, time - (MDT + (isDay ? 1 : 0)) - VCBT - ADT), [wave, time, card, imitated, pos, scene, isDay, VCBT, protect](){
-            #ifdef WALIB_DEBUG
-            waDebugLogger.Info("Imitate routine");
-            #endif
             if (AGetCardPtr(imitated)->IsUsable() && !(AGetCardPtr(card) && AGetCardPtr(card)->IsUsable())) {
                 // 若模仿能种而普通不能种（此判断提前完成，存在普通到时间能转好但还是使用模仿的现象）
                 // 则立即种植模仿
