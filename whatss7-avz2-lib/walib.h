@@ -24,8 +24,8 @@ const int PRE_COB_POINT = -95;
 const int DELAYED_PRE_COB_POINT = -55;
 // 咖啡豆生效时间198cs或199cs（此处取198cs）
 const int COFFEE_BEAN_TIME = 198;
-// 模仿者种下至生效时间319cs或320cs（此处取320cs）
-const int IMITATOT_DELAY_TIME = 320;
+// 模仿者种下至生效时间319cs或320cs（此处取319cs）
+const int IMITATOT_DELAY_TIME = 319;
 // 6秒加速波预判炸生效时间点
 const int PRE_COB_ACTIVATE_POINT = PRE_COB_POINT + COB_FLYING_TIME;
 // 旗帜波6秒加速波预判炸生效时间点
@@ -64,7 +64,7 @@ ATickRunner waRecoverEndRunner;
 ATickRunner waCheckRunner;
 ATickRunner waBloverTickRunner;
 APlantFixer waWallNutFixer, waTallNutFixer, waPumpkinFixer;
-ACobManager waRoofR1R2CobManager, waRoofR3CobManager;
+ACobManager waRoofC1C2CobManager, waRoofC3CobManager;
 
 // 控制 `WACheck()` 函数所检查的植物类型。
 std::vector<APlantType> waCheckPlants = { ACOB_CANNON, AGLOOM_SHROOM, AWINTER_MELON };
@@ -217,16 +217,16 @@ void WAAutoManageCob() {
     AConnect(ATime(1, -599), [] {
         std::string scene = WAGetCurrentScene();
         if (scene == "RE" || scene == "ME") {
-            std::vector<AGrid> R1R2, R3, others;
+            std::vector<AGrid> C1C2, C3, others;
             for (auto &&plant: aAlivePlantFilter) {
                 if (plant.Type() == ACOB_CANNON) {
-                    if (plant.Col() <= 2) R1R2.push_back({plant.Row() + 1, plant.Col() + 1});
-                    else if (plant.Col() == 3) R3.push_back({plant.Row() + 1, plant.Col() + 1});
+                    if (plant.Col() <= 2) C1C2.push_back({plant.Row() + 1, plant.Col() + 1});
+                    else if (plant.Col() == 3) C3.push_back({plant.Row() + 1, plant.Col() + 1});
                     else others.push_back({plant.Row() + 1, plant.Col() + 1});
                 }
             }
-            waRoofR1R2CobManager.SetList(R1R2);
-            waRoofR3CobManager.SetList(R3);
+            waRoofC1C2CobManager.SetList(C1C2);
+            waRoofC3CobManager.SetList(C3);
             aCobManager.SetList(others);
         } else {
             aCobManager.AutoSetList();
@@ -347,10 +347,10 @@ void PP(int wave, int time = -1, float col = 9, std::vector<int> rows = {}) {
         for (int row: rows) {
             if (row <= 2) {
                 AConnect(ATime(wave, time - RCFT), [row, col](){
-                    if (waRoofR1R2CobManager.GetRoofUsablePtr(col)) {
-                        waRoofR1R2CobManager.RoofFire(row, col);
-                    } else if (waRoofR3CobManager.GetRoofUsablePtr(col)) {
-                        waRoofR3CobManager.RoofFire(row, col);
+                    if (waRoofC1C2CobManager.GetRoofUsablePtr(col)) {
+                        waRoofC1C2CobManager.RoofFire(row, col);
+                    } else if (waRoofC3CobManager.GetRoofUsablePtr(col)) {
+                        waRoofC3CobManager.RoofFire(row, col);
                     } else {
                         aCobManager.RoofFire(row, col);
                     }
@@ -359,10 +359,10 @@ void PP(int wave, int time = -1, float col = 9, std::vector<int> rows = {}) {
                 AConnect(ATime(wave, time - RCFT), [row, col](){
                     if (aCobManager.GetRoofUsablePtr(col)) {
                         aCobManager.RoofFire(row, col);
-                    } else if (waRoofR3CobManager.GetRoofUsablePtr(col)) {
-                        waRoofR3CobManager.RoofFire(row, col);
+                    } else if (waRoofC3CobManager.GetRoofUsablePtr(col)) {
+                        waRoofC3CobManager.RoofFire(row, col);
                     } else {
-                        waRoofR1R2CobManager.RoofFire(row, col);
+                        waRoofC1C2CobManager.RoofFire(row, col);
                     }
                 });
             }
