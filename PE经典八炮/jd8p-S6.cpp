@@ -13,59 +13,17 @@ void AScript() {
     // w20: PPDD
 
     // 加速波 PP
-    for (int w: WaveList(1, 9) + WaveList(11, 19)) {
+    for (int w: WaveList(1, 20)) {
         if (w == 5 || w == 14 || w == 19) continue;
         // PP
-        AConnect(ATime(w, PCP), [](){
-            aCobManager.Fire({{2, 9}, {5, 9}});
-        });
+        PP(w);
+        if (w == 9) N(w, 400, {{3, 8}, {4, 8}, {3, 9}, {4, 9}}, 601, 1);
+        if (w == 10) SmartA();
+        if (w == 20) PP(w, 400);
     } 
-    // w9 N' 炸撑杆
-    for (int w: {9}) {
-        AConnect(ATime(w - 1, 400 - CBT - ADT - MDT + 600), [](){
-            ACard({ALILY_PAD, AM_DOOM_SHROOM}, {{3, 8}, {4, 8}, {3, 9}, {4, 9}});
-        });
-        AConnect(ATime(w, 400 - CBT - ADT), [](){
-            ACard(ACOFFEE_BEAN, {{3, 8}, {4, 8}, {3, 9}, {4, 9}});
-        });
-    }
-    // 冰波 w5/w14 I-N
-    for (int w: {5, 14}) {
-        // I
-        AConnect(ATime(w, -199), [](){ aIceFiller.Coffee(); });
-        // N
-        AConnect(ATime(w, 1200 - 200 - CBT - ADT), [](){
-            ACard({ALILY_PAD, APUMPKIN, ADOOM_SHROOM, ACOFFEE_BEAN}, {{3, 8}, {4, 8}, {3, 9}, {4, 9}});
-        });
-    }
-    // 冰波 w19 I-N'
-    for (int w: {19}) {
-        // I
-        AConnect(ATime(w, -199), [](){ aIceFiller.Coffee(); });
-        // N'
-        AConnect(ATime(w, 1200 - 200 - CBT - ADT - MDT), [](){
-            ACard({ALILY_PAD, APUMPKIN, AM_DOOM_SHROOM}, {{3, 8}, {4, 8}, {3, 9}, {4, 9}});
-        });
-        AConnect(ATime(w, 1200 - 200 - CBT - ADT), [](){
-            ACard(ACOFFEE_BEAN, {{3, 8}, {4, 8}, {3, 9}, {4, 9}});
-        });
-    }
-    // 旗帜波 w10 消延迟 w20 炸撑杆
-    for (int w: {10, 20}) {
-        AConnect(ATime(w, DPCP), [](){
-            aCobManager.Fire({{2, 9}, {5, 9}});
-        });
-        // 消延迟
-        if (w == 10) {
-            AConnect(ATime(w, 400 - ADT), [](){
-                ACard(ACHERRY_BOMB, 2, 9);
-            });
-        }
-        // 炸撑杆
-        if (w == 20) {
-            AConnect(ATime(w, 400 - CFT), [](){
-                aCobManager.Fire({{2, 9}, {5, 9}});
-            });
-        }
+    // 冰波 I-N
+    for (int w: {5, 14, 19}) {
+        I(w, 100);
+        N(w, 1200 - 200, {{3, 8}, {4, 8}, {3, 9}, {4, 9}}, 601, 1);
     }
 }

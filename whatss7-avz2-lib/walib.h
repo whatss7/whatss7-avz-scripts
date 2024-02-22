@@ -12,45 +12,31 @@
 #warning "walib is designed for AvZ 2 version 240113. You're using an newer version, which might cause issues."
 #endif
 
+// 常见预判炸时间点（有8列炮情况下最晚舞王不召唤时间点）
+const int PRE_COB_POINT = 318;
 // 玉米加农炮发射到生效用时
 const int COB_FLYING_TIME = 373;
 // 屋顶修正玉米加农炮发射到生效用时
 const int ROOF_COB_FLYING_TIME = 387;
 // 灰烬植物和寒冰菇种下到生效用时
 const int ASH_DELAY_TIME = 100;
-// 6秒加速波预判炸时间点
-const int PRE_COB_POINT = -95;
-// 旗帜波6秒加速波预判炸时间点
-const int DELAYED_PRE_COB_POINT = -55;
 // 咖啡豆生效时间198cs或199cs（此处取198cs）
 const int COFFEE_BEAN_TIME = 198;
 // 模仿者种下至生效时间319cs或320cs（此处取319cs）
 const int IMITATOT_DELAY_TIME = 319;
-// 6秒加速波预判炸生效时间点
-const int PRE_COB_ACTIVATE_POINT = PRE_COB_POINT + COB_FLYING_TIME;
-// 旗帜波6秒加速波预判炸生效时间点
-const int DELAYED_PRE_COB_ACTIVATE_POINT = DELAYED_PRE_COB_POINT + COB_FLYING_TIME;
 
+// 常见预判炸时间点（有8列炮情况下最晚舞王不召唤时间点）
+const int PCP = PRE_COB_POINT;
 // 玉米加农炮发射到生效用时
 const int CFT = COB_FLYING_TIME;
-// 玉米加农炮发射到生效用时
-const int RCFT = COB_FLYING_TIME;
+// 屋顶修正玉米加农炮发射到生效用时
+const int RCFT = ROOF_COB_FLYING_TIME;
 // 灰烬植物和寒冰菇种下到生效用时
 const int ADT = ASH_DELAY_TIME;
-// 6秒加速波预判炸时间点
-const int PCP = PRE_COB_POINT;
-// 旗帜波6秒加速波预判炸时间点
-const int DPCP = DELAYED_PRE_COB_POINT;
-// 旗帜波6秒加速波预判炸时间点
-const int W10PCP = DPCP, W20PCP = DPCP;
 // 咖啡豆生效时间198cs或199cs（此处取198cs）
 const int CBT = COFFEE_BEAN_TIME;
 // 模仿者种下至生效时间319cd或320cs（此处取319cs）
 const int MDT = IMITATOT_DELAY_TIME;
-// 6秒加速波预判炸生效时间点
-const int PCAP = PRE_COB_ACTIVATE_POINT;
-// 旗帜波6秒加速波预判炸生效时间点
-const int DPCAP = DELAYED_PRE_COB_ACTIVATE_POINT;
 
 #ifdef WALIB_DEBUG
 ALogger<AConsole> waDebugLogger;
@@ -65,6 +51,8 @@ ATickRunner waCheckRunner;
 ATickRunner waBloverTickRunner;
 APlantFixer waWallNutFixer, waTallNutFixer, waPumpkinFixer;
 ACobManager waRoofC1C2CobManager, waRoofC3CobManager;
+
+
 
 // 控制 `WACheck()` 函数所检查的植物类型。
 std::vector<APlantType> waCheckPlants = { ACOB_CANNON, AGLOOM_SHROOM, AWINTER_MELON };
@@ -196,11 +184,26 @@ void WASelectCards(std::vector<APlantType> plants = {}, bool fast = false) {
     else ASelectCards(plant_ids);
 }
 
+// 绑定一些快捷键。
+// `Q`: 1倍速
+// `W`: 2倍速
+// `E`: 5倍速
+// `R`: 10倍速
+// `T`: 0.5倍速
+void WABindKeys() {
+    AConnect('Q', [](){ ASetGameSpeed(1); });
+    AConnect('W', [](){ ASetGameSpeed(2); });
+    AConnect('E', [](){ ASetGameSpeed(5); });
+    AConnect('R', [](){ ASetGameSpeed(10); });
+    AConnect('T', [](){ ASetGameSpeed(0.5); });
+}
+
 // 初始化选卡并指定僵尸。传入空数组不指定僵尸，使用自然生成的僵尸。
 // 选卡剩下的格子会用一些常用的植物填充防止漏选。
 void WAInit(const std::vector<APlantType> &plants, const std::vector<AZombieType> &zombies, bool cycle = false, bool fast = false) {
     if (!zombies.empty()) ASetZombies(std::vector<int>(zombies.begin(), zombies.end()));
     WASelectCards(plants, fast);
+    WABindKeys();
 }
 
 // 初始化选卡，并根据场地选择合理的僵尸。
@@ -209,6 +212,7 @@ void WAInit(const std::vector<APlantType> &plants, const std::vector<AZombieType
 void WAInit(const std::vector<APlantType> &plants, const char *scene = "Auto", bool fast = false) {
     WASelectZombies(scene);
     WASelectCards(plants, fast);
+    WABindKeys();
 }
 
 // 自动管理全场炮。若需要使用后续轨道语言函数，则此处必须进行自动管理。
@@ -327,7 +331,7 @@ void WARemoveGraves(int wave, int time) {
 // 从 `aCobManager` 发射一对炮。
 // 若不设置位置，则泳池场景默认炸2-9和5-9，其他场景默认炸2-9和4-9。
 // 请注意，本函数先填列数，再填行数。
-// 若不设置时间，则 w10 或 w20 318cs (`DPCAP`) 时生效，其他时间 278cs (`PCAP`) 时生效
+// 若不设置时间，则 318cs (`PCP`) 时生效
 // 屋顶场景，1-2路的炮优先选择一二列炮，其次三列炮，最后平炮；3-5路相反。
 void PP(int wave, int time = -1, float col = 9, std::vector<int> rows = {}) {
     if (rows.empty()) {
@@ -338,10 +342,7 @@ void PP(int wave, int time = -1, float col = 9, std::vector<int> rows = {}) {
             rows = {2, 4};
         }
     }
-    if (time < 0) {
-        if (wave == 10 || wave == 20) time = DPCAP;
-        else time = PCAP;
-    }
+    if (time < 0) time = PCP;
     std::string scene = WAGetCurrentScene();
     if (scene == "RE" || scene == "ME") {
         for (int row: rows) {
@@ -450,7 +451,7 @@ void C(int wave, int time, APlantType plant, int col, float row) {
 
 // 开启自动存冰时，从 `aIceFiller` 进行点冰。若需要非旗帜波的完美预判冰，则需要假设波长或提供上一波波长。
 // 由于咖啡豆的不确定性，有概率延迟1cs生效。
-void I(int wave, int time = 11, int last_wave_length = -1) {
+void I(int wave, int time = 1, int last_wave_length = -1) {
     time -= CBT + ADT;
     if (!WAIsValidTime(wave, time) && last_wave_length > 0) {
         wave -= 1;
@@ -461,8 +462,22 @@ void I(int wave, int time = 11, int last_wave_length = -1) {
     });
 }
 
+// 开启自动存冰时，从 `aIceFiller` 进行点冰。若需要非旗帜波的完美预判冰，则需要假设波长或提供上一波波长。
+// 此函数使得寒冰菇精准生效。
+void I3(int wave, int time = 11, int last_wave_length = -1) {
+    time -= CBT + ADT;
+    if (!WAIsValidTime(wave, time) && last_wave_length > 0) {
+        wave -= 1;
+        time += last_wave_length;
+    }
+    AConnect(ATime(wave, time), [](){
+        aIceFiller.Coffee();
+        AIce3(CBT + ADT);
+    });
+}
+
 // 手动种植毁灭菇或寒冰菇。
-void ManualShroom(int wave, int time, std::vector<APosition> pos, APlantType card, int last_wave_length, int protect) {
+void ManualShroom(int wave, int time, std::vector<APosition> pos, APlantType card, int last_wave_length, int protect, bool accurate = false) {
     bool isDay = true;
     APlantType imitated = (card == AICE_SHROOM ? AM_ICE_SHROOM : AM_DOOM_SHROOM);
     std::string scene = WAGetCurrentScene();
@@ -478,7 +493,7 @@ void ManualShroom(int wave, int time, std::vector<APosition> pos, APlantType car
         }
         // 若为白昼，早种植1cs，模仿者即使319cs完成变身也等到320cs再种咖啡豆，保证延迟最大为1cs。
         // 若为黑夜，则不能早种植，否则有概率提前1cs。
-        AConnect(ATime(wave, time - (MDT + (isDay ? 1 : 0)) - VCBT - ADT), [wave, time, card, imitated, pos, scene, isDay, VCBT, protect](){
+        AConnect(ATime(wave, time - (MDT + (isDay ? 1 : 0)) - VCBT - ADT), [wave, time, card, imitated, pos, scene, isDay, VCBT, protect, accurate](){
             if (AGetCardPtr(imitated)->IsUsable() && !(AGetCardPtr(card) && AGetCardPtr(card)->IsUsable())) {
                 // 若模仿能种而普通不能种（此判断提前完成，存在普通到时间能转好但还是使用模仿的现象）
                 // 则立即种植模仿
@@ -496,6 +511,7 @@ void ManualShroom(int wave, int time, std::vector<APosition> pos, APlantType car
                         ptr = ACard(imitated, p.row, p.col);
                     }
                     if (ptr) {
+                        if (accurate) ASetPlantActiveTime(card, (MDT + (isDay ? 1 : 0)) + VCBT + ADT);
                         if (protect > 0 && !WAExistPlant(APUMPKIN, p.row, p.col)) {
                             should_remove_pumpkin = true;
                             ACard(APUMPKIN, p.row, p.col);
@@ -520,7 +536,7 @@ void ManualShroom(int wave, int time, std::vector<APosition> pos, APlantType car
                 }
             } else {
                 // 否则稍后种植普通
-                AConnect(ATime(wave, time - VCBT - ADT), [wave, time, card, pos, scene, isDay, protect](){
+                AConnect(ATime(wave, time - VCBT - ADT), [wave, time, card, pos, scene, isDay, protect, VCBT, accurate](){
                     for (APosition p: pos) {
                         APlant *ptr = nullptr;
                         bool should_remove = false;
@@ -535,6 +551,7 @@ void ManualShroom(int wave, int time, std::vector<APosition> pos, APlantType car
                             ptr = ACard(card, p.row, p.col);
                         }
                         if (ptr) {
+                            if (accurate && isDay) ASetPlantActiveTime(card, (VCBT + ADT));
                             if (protect > 1 && !WAExistPlant(APUMPKIN, p.row, p.col)) {
                                 should_remove_pumpkin = true;
                                 ACard(APUMPKIN, p.row, p.col);
@@ -562,7 +579,7 @@ void ManualShroom(int wave, int time, std::vector<APosition> pos, APlantType car
             wave -= 1;
             time += last_wave_length;
         }
-        AConnect(ATime(wave, time - VCBT - ADT), [wave, time, card, pos, scene, isDay, protect](){
+        AConnect(ATime(wave, time - VCBT - ADT), [wave, time, card, pos, scene, isDay, protect, VCBT, accurate](){
             for (APosition p: pos) {
                 APlant *ptr = nullptr;
                 bool should_remove = false;
@@ -577,6 +594,7 @@ void ManualShroom(int wave, int time, std::vector<APosition> pos, APlantType car
                     ptr = ACard(card, p.row, p.col);
                 }
                 if (ptr) {
+                    if (accurate && isDay) ASetPlantActiveTime(card, (VCBT + ADT));
                     if (protect > 1 && !WAExistPlant(APUMPKIN, p.row, p.col)) {
                         should_remove_pumpkin = true;
                         ACard(APUMPKIN, p.row, p.col);
@@ -604,7 +622,7 @@ void ManualShroom(int wave, int time, std::vector<APosition> pos, APlantType car
 // `protect` 为 0 时，不进行保护；为 1 时，仅保护模仿冰；为 2 时，都进行保护。
 // 不考虑模仿花盆、模仿睡莲、模仿咖啡豆和模仿南瓜头。
 void ManualI(int wave, int time, std::vector<APosition> pos, int last_wave_length = -1, int protect = 0){
-    ManualShroom(wave, time, pos, AICE_SHROOM, protect, last_wave_length);
+    ManualShroom(wave, time, pos, AICE_SHROOM, last_wave_length, protect);
 }
 
 // 种植寒冰菇。由于咖啡豆和模仿者的不确定性，有概率延迟1cs生效。
@@ -615,6 +633,22 @@ void ManualI(int wave, int time, int row, float col, int last_wave_length = -1, 
     ManualShroom(wave, time, {{row, col}}, AICE_SHROOM, last_wave_length, protect);
 }
 
+// 种植寒冰菇。此函数使得寒冰菇精准生效。
+// 若存在预判冰或模仿冰等需要早种的情况，则需要假设波长或提供上波波长。所以用不到模仿冰时，使用此函数请不要携带模仿冰。
+// `protect` 为 0 时，不进行保护；为 1 时，仅保护模仿冰；为 2 时，都进行保护。
+// 不考虑模仿花盆、模仿睡莲、模仿咖啡豆和模仿南瓜头。
+void ManualI3(int wave, int time, std::vector<APosition> pos, int last_wave_length = -1, int protect = 0){
+    ManualShroom(wave, time, pos, AICE_SHROOM, last_wave_length, protect, true);
+}
+
+// 种植寒冰菇。此函数使得寒冰菇精准生效。
+// 若存在预判冰或模仿冰等需要早种的情况，则需要假设波长或提供上波波长。所以用不到模仿冰时，使用此函数请不要携带模仿冰。
+// `protect` 为 0 时，不进行保护；为 1 时，仅保护模仿冰；为 2 时，都进行保护。
+// 不考虑模仿花盆、模仿睡莲、模仿咖啡豆和模仿南瓜头。
+void ManualI3(int wave, int time, int row, float col, int last_wave_length = -1, int protect = 0){
+    ManualShroom(wave, time, {{row, col}}, AICE_SHROOM, last_wave_length, protect, true);
+}
+
 // 种植毁灭菇。由于咖啡豆和模仿者的不确定性，有概率延迟1cs生效。
 // 若存在模仿核等需要早种的情况，则需要假设波长或提供上波波长。所以用不到模仿核时，使用此函数请不要携带模仿核。
 // `protect` 为 0 时，不进行保护；为 1 时，仅保护模仿核；为 2 时，都进行保护。
@@ -622,7 +656,6 @@ void ManualI(int wave, int time, int row, float col, int last_wave_length = -1, 
 void N(int wave, int time, std::vector<APosition> pos, int last_wave_length = -1, int protect = 0) {
     ManualShroom(wave, time, pos, ADOOM_SHROOM, last_wave_length, protect);
 }
-
 
 // 种植毁灭菇。由于咖啡豆和模仿者的不确定性，有概率延迟1cs生效。
 // 若存在模仿核等需要早种的情况，则需要假设波长或提供上波波长。所以用不到模仿核时，使用此函数请不要携带模仿核。
@@ -640,10 +673,10 @@ void TempC(int wave, int time, APlantType card, std::vector<APosition> pos, int 
         for (APosition p: pos) {
             bool should_remove = false;
             APlant *ptr = nullptr;
-            if ((scene == "RE" || scene == "ME") && !WAExistPlant(AFLOWER_POT, p.row, p.col)) {
+            if ((scene == "RE" || scene == "ME") && card != AFLOWER_POT && !WAExistPlant(AFLOWER_POT, p.row, p.col)) {
                 ptr = ACard({AFLOWER_POT, card}, p.row, p.col)[1];
                 should_remove = true;
-            } else if ((scene == "PE" || scene == "FE") && p.row >= 3 && p.row <= 4 && !WAExistPlant(ALILY_PAD, p.row, p.col)) {
+            } else if ((scene == "PE" || scene == "FE") && card != ALILY_PAD && p.row >= 3 && p.row <= 4 && !WAExistPlant(ALILY_PAD, p.row, p.col)) {
                 ptr = ACard({ALILY_PAD, card}, p.row, p.col)[1];
                 should_remove = true;
             } else {
@@ -653,7 +686,9 @@ void TempC(int wave, int time, APlantType card, std::vector<APosition> pos, int 
                 if (duration >= 0) {
                     if (should_remove){
                         AConnect(ATime(wave, time + duration), [p, card](){
-                            ARemovePlant(p.row, p.col, {card, AFLOWER_POT, ALILY_PAD});
+                            ARemovePlant(p.row, p.col, card);
+                            ARemovePlant(p.row, p.col, AFLOWER_POT);
+                            ARemovePlant(p.row, p.col, ALILY_PAD);
                         });
                     } else {
                         AConnect(ATime(wave, time + duration), [p, card](){
@@ -673,6 +708,21 @@ void TempC(int wave, int time, APlantType card, int row, float col, int duration
     TempC(wave, time, card, {{row, col}}, duration);
 }
 
+// 种植毁灭菇，但进行车底炸。仅用于夜间场景。
+// 本路无冰车时，与N函数相同；而有冰车时，在生效时间点再放。
+// 不考虑模仿花盆。
+void ZomboniN(int wave, int time, int row, float col) {
+    const std::string scene = WAGetCurrentScene();
+    if (scene != "NE" && scene != "ME") {
+        waLogger.Error("ZomboniN 仅用于 NE 与 ME. 将改用 N()");
+        N(wave, time, row, col);
+    }
+    AConnect(ATime(wave, 1), [wave, time, row, col](){
+        if (WAExistZombie(ABC_12, {row})) TempC(wave, time, ADOOM_SHROOM, 3, 9, -1);
+        else N(wave, time, row, col);
+    });
+}
+
 // 使用一个樱桃炸弹。此函数不会使用模仿樱桃炸弹。
 void A(int wave, int time, int row, float col) {
     TempC(wave, time - ADT, ACHERRY_BOMB, row, col, 101);
@@ -684,7 +734,7 @@ void J(int wave, int time, int row, float col) {
 }
 
 // 使用智能樱桃消延迟。此函数不会使用模仿樱桃炸弹。
-void SmartA(int wave, int time) {
+void SmartA(int wave = 10, int time = 400) {
     std::string scene = WAGetCurrentScene();
     if (scene == "PE" || scene == "FE") {
         AConnect(ATime(wave, time - ADT), [wave, time](){

@@ -14,7 +14,7 @@ void AScript(){
 
     // w1: N
     for (int w: {1}) {
-        N(w, PCAP, 3, 9);
+        N(w, PCP, 3, 9);
     }
 
     // w2, w3, w6, w9, w10, w13, w16, w19, w20: PP

@@ -5,8 +5,7 @@ APlantFixer sneakSunFixer;
 
 void AScript(){
     // WACheck();
-    WAInit({AICE_SHROOM, ACOFFEE_BEAN, ACHERRY_BOMB, ALILY_PAD, AUMBRELLA_LEAF, ABLOVER, ASUNFLOWER, ATALL_NUT}, "None", true);
-    WACheck();
+    WAInit({AICE_SHROOM, ACOFFEE_BEAN, ACHERRY_BOMB, ALILY_PAD, AUMBRELLA_LEAF, ABLOVER, ASUNFLOWER, ATALL_NUT});
     WAAutoManageCob();
     waForEndIgnore = { AKG_17, AXG_24, AQQ_16, APJ_0, ALZ_2, ADB_5, ATM_6 };
     waForEndIgnoreInWater = { AHY_32 };
@@ -34,22 +33,14 @@ void AScript(){
             PPForEnd(w, w == 19 ? 1600 : 1000, 8.75);
             PPForEnd(w, 2200, 8.5);
         }
-        if (w == 10) DelayRemovingA(w, 400);
+        if (w == 10) SmartA(w, 400);
+        if (w == 20) C(w, -50 - CBT - ADT, ACOFFEE_BEAN, 2, 1);
         if (w == 10 || w == 20) {
             // 临时保护伞防小偷
             AConnect(ATime(w, 300), [w](){
-                if (WAExistZombie(ABJ_20)) {
-                    ACard({ALILY_PAD, AUMBRELLA_LEAF}, {{3, 8}, {4, 8}});
-                    AConnect(ATime(w, 500), [](){
-                        ARemovePlant(3, 8);
-                        ARemovePlant(3, 8, ALILY_PAD);
-                        ARemovePlant(4, 8);
-                        ARemovePlant(4, 8, ALILY_PAD);
-                    });
-                }
+                TempC(w, 300, AUMBRELLA_LEAF, {{3, 8}, {4, 8}}, 100);
             });
         }
-        if (w == 20) C(w, -50 - CBT - ADT, ACOFFEE_BEAN, 2, 1);
     }
 
     // w6/w15: I-PP

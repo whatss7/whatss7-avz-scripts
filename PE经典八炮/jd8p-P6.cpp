@@ -11,58 +11,28 @@ void AScript() {
     // w20: PP
     // 核坑位比较极限，需要拖满收尾，但是io较高，快速关不一定能拖
 
-    for (int w: WaveList(1, 9) + WaveList(11, 18)) {
-        if (w == 4 || w == 6 || w == 13 || w == 15) continue;
+    for (int w: WaveList(1, 20)) {
+        if (w == 4 || w == 6 || w == 13 || w == 15 || w == 19) continue;
         // PP
-        AConnect(ATime(w, PCP), [](){
-            aCobManager.Fire({{2, 9}, {5, 9}});
-        });
+        PP(w);
+        // 消延迟
+        if (w == 10) SmartA();
         // 铲种炮
         if (w == 16) {
-            AConnect(ATime(w, PCP + 210), [](){
+            AConnect(ATime(w, PCP - CFT + 210), [](){
                 aCobManager.FixLatest();
             });
         }
-    } 
-    for (int w: {10, 20}) {
-        AConnect(ATime(w, DPCP), [](){
-            aCobManager.Fire({{2, 9}, {5, 9}});
-        });
-        // 消延迟
-        if (w == 10) {
-            AConnect(ATime(w, 400 - ADT), [](){
-                ACard(ACHERRY_BOMB, 2, 9);
-            });
-        }
         // 炮炸珊瑚
-        if (w == 20) {
-            AConnect(ATime(w, 225 - CFT), [](){
-                aCobManager.Fire(4, 7);
-            });
-        }
-    }
-    for (int w: {4, 13}) {
+        if (w == 20) P(w, 225, 4, 7);
+    } 
+    for (int w: {4, 6, 13, 15}) {
         // N
-        AConnect(ATime(w, PCP + CFT - CBT - ADT), [](){
-            ACard({ALILY_PAD, ADOOM_SHROOM, ACOFFEE_BEAN}, {{3, 8}, {4, 8}, {3, 9}, {4, 9}});
-        });
-    }
-    for (int w: {6, 15}) {
-        // N'
-        AConnect(ATime(w - 1, PCP + CFT - CBT - ADT - MDT + 600), [](){
-            ACard({ALILY_PAD, AM_DOOM_SHROOM}, {{3, 8}, {4, 8}, {3, 9}, {4, 9}});
-            AConnect(ANowDelayTime(MDT), [](){
-                ACard(ACOFFEE_BEAN, {{3, 8}, {4, 8}, {3, 9}, {4, 9}});
-            });
-        });
+        N(w, PCP, {{3, 8}, {4, 8}, {3, 9}, {4, 9}}, 601);
     }
     for (int w: {19}) {
         // P'A
-        AConnect(ATime(w, PCP), [](){
-            aCobManager.Fire({{5, 9}});
-        });
-        AConnect(ATime(w, PCP + CFT - ADT), [](){
-            ACard(ACHERRY_BOMB, 2, 9);
-        });
+        P(w, PCP, 2, 9);
+        A(w, PCP, 5, 9);
     }
 }

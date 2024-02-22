@@ -174,7 +174,7 @@ void AScript() {
             if (w == 3 || w == 8 || w == 13 || w == 18) continue;
             PP(w);
             // w5/w15 空炸
-            if (w == 5 || w == 15) PP(w, PCAP + 110, 8.7, {1, 5});
+            if (w == 5 || w == 15) PP(w, PCP + 110, 8.7, {1, 5});
             // w10 点核+炸蹦极，或者没有蹦极就PPSS
             if (w == 10) {
                 if (AGetZombieTypeList()[ABJ_20]) {
@@ -206,14 +206,14 @@ void AScript() {
         }
         // w19: NDD-PP-PP
         for (int w: {19}) {
-            N(w, PCAP, {{3, 9}, {4, 9}});
+            N(w, PCP, {{3, 9}, {4, 9}});
             AConnect(ATime(w, 1), [w](){
                 if (ExistNewGiga()) {
-                    PP(w, PCAP + 110, 8.7, {1, 5});
+                    PP(w, PCP + 110, 8.7, {1, 5});
                     PP(w, 1000);
                     PP(w, 1600);
                 } else {
-                    PP(w, PCAP + 250, 3);
+                    PP(w, PCP + 250, 3);
                     PP(w, 1000);
                     PPForEnd(w, 1600);
                 }
@@ -239,14 +239,14 @@ void AScript() {
         for (int w: WaveList(1, 9) + WaveList(11, 19)) {
             PP(w);
             if (w == 9 || w == 19) {
-                PPForEnd(w, PCAP + 600);
+                PPForEnd(w, PCP + 600);
                 PPForEnd(w, 1800 - 200);
             }
         }
         for (int w: {10}) {
             if (AGetZombieTypeList()[ABJ_20]) {
-                N(w, DPCAP, {{3, 9}, {4, 9}});
-                PP(w, DPCAP + 124, 2.5);
+                N(w, PCP, {{3, 9}, {4, 9}});
+                PP(w, PCP + 124, 2.5);
             } else {
                 PP(w);
             }

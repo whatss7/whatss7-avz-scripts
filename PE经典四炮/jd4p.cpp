@@ -18,7 +18,7 @@ void AScript() {
 
     // w1 N
     for (int w: {1}) {
-        N(w, PCAP, {{3, 8}, {4, 8}, {3, 9}, {4, 9}});
+        N(w, PCP, {{3, 8}, {4, 8}, {3, 9}, {4, 9}});
     }
 
     // w2 PP
@@ -28,7 +28,7 @@ void AScript() {
 
     // 常规 I-PP
     for (int w: WaveList(3, 9) + WaveList(11, 19)) {
-        I(w);
+        I3(w);
         PP(w, 1800 - 200, 8.5);
         // w9 和 w19 再点一核帮忙收尾
         if (w == 9 || w == 19) {

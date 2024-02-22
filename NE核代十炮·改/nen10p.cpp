@@ -53,7 +53,7 @@ void AScript() {
     for (int w: WaveList(1, 20)) {
         if (w == 6 || w == 15) continue;
         PP(w);
-        if (w == 10) SmartA(w, 400);
+        if (w == 10) SmartA();
         if (w == 9 || w == 19 || w == 20) {
             PPForEnd(w, 1200 - 200, 8.75);
             PPForEnd(w, 2400 - 200, 8.5);
@@ -71,7 +71,7 @@ void AScript() {
         if (w == 10 || w == 20) ManualI(w, 575, {{1, 7}, {2, 7}, {3, 7}, {4, 7}, {5, 7}});
     }
     for (int w: {6, 15}) {
-        N(w, PCAP, {{3, 9}, {3, 8}, {4, 9}, {4, 8}});
+        N(w, PCP, {{3, 9}, {3, 8}, {4, 9}, {4, 8}});
     }
     // 解决墓碑
     AConnect(ATime(20, 200), [](){
