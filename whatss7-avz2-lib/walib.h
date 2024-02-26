@@ -56,7 +56,7 @@ ACobManager waRoofCobManager[9];
 // 控制 `WACheck()` 函数所检查的植物类型。
 std::vector<APlantType> waCheckPlants = { ACOB_CANNON, AGLOOM_SHROOM, AWINTER_MELON };
 
-// 控制 `ForEnd()` 和 `PPForEnd()` 函数所无视的僵尸类型。其中设置的类型在 w20 也生效。
+// 控制 `ForEnd()` 和 `PPForEnd()` 函数所无视的僵尸类型。
 std::vector<AZombieType> waForEndIgnore = { AKG_17, AXG_24 };
 
 // 控制 `ForEnd()` 和 `PPForEnd()` 函数所无视的水路僵尸类型。若为空，则沿用 `waForEndIgnore` 的设置。
