@@ -56,6 +56,9 @@ ACobManager waRoofCobManager[9];
 // 控制 `WACheck()` 函数所检查的植物类型。
 std::vector<APlantType> waCheckPlants = { ACOB_CANNON, AGLOOM_SHROOM, AWINTER_MELON };
 
+// 控制 `WACheck()` 函数所排除的植物位置。
+std::vector<APosition> waCheckIgnore = {  };
+
 // 控制 `ForEnd()` 和 `PPForEnd()` 函数所无视的僵尸类型。
 std::vector<AZombieType> waForEndIgnore = { AKG_17, AXG_24 };
 
@@ -268,6 +271,14 @@ void WACheck() {
     ASetGameSpeed(10);
     waCheckRunner.Start([](){
         for (auto &&plant: aAlivePlantFilter) {
+            bool ignored = false;
+            for (const auto &pos: waCheckIgnore) {
+                if (pos.row == plant.Row() + 1 && fabs(pos.col - (plant.Col() + 1)) < 0.5f) {
+                    ignored = true;
+                    break;
+                }
+            }
+            if (ignored) continue;
             if (std::find(waCheckPlants.begin(), waCheckPlants.end(), plant.Type()) != waCheckPlants.end()) {
                 if (plant.Hp() != plant.HpMax()) {
                     waLogger.Error("第" + std::to_string(plant.Row() + 1) + "行第" + std::to_string(plant.Col() + 1) + "列植物受损");
@@ -360,6 +371,78 @@ void WARemoveGraves(int wave, int time) {
             {1, 6}, {2, 6}, {3, 6}, {4, 6}, {5, 6},
             {1, 5}, {2, 5}, {3, 5}, {4, 5}, {5, 5}
         });
+    });
+}
+
+ATickRunner waStopGigaRunner;
+int waStopGiga_last_row, waStopGiga_last_col;
+
+// 持续在最前面的巨人面前种植垫材，并使用女仆秘籍停止舞王和伴舞前进。
+// 不设置to_time时，一直垫到下波僵尸刷新。
+void WAStopGiga(int wave, int time, const std::vector<APlantType> &plants_to_stop, int to_time = -999) {
+    AConnect(ATime(wave, time), [plants_to_stop](){
+        waStopGiga_last_row = waStopGiga_last_col = -1;
+        AMaidCheats::Dancing();
+        waStopGigaRunner.Start([plants_to_stop](){
+            int min_x = 1000;
+            int min_x_row = 0;
+            AZombie *min_zombie = nullptr;
+            for (auto &&zombie: aAliveZombieFilter) {
+                if (zombie.Type() != AHY_32 && zombie.Type() != ABY_23) continue;
+                if (zombie.Abscissa() < min_x) {
+                    min_x = zombie.Abscissa();
+                    min_x_row = zombie.Row() + 1;
+                    min_zombie = &zombie;
+                }
+            }
+            // 没有巨人时不垫，并且停止种植
+            if (!min_zombie) {
+                if (waStopGigaRunner.IsStopped()) return;
+                waStopGigaRunner.Stop();
+                ARemovePlant(waStopGiga_last_row, waStopGiga_last_col, std::vector<int>(plants_to_stop.begin(), plants_to_stop.end()));
+                AMaidCheats::Stop();
+                return;
+            }
+            // 位于64时，恰可在1列垫（小喷菇位于35时可垫到）；位于65时，恰不可在1列垫。
+            // 位于-15时，恰可在1列垫（小喷菇位于44时可垫到）；位于-16时，恰不可在1列垫。
+            // 通过两种方法得到的可垫位置相同。
+            int now_row = min_x_row;
+            int now_col = (min_x + 95) / 80;
+            // 若已初始化，且更换了垫的位置，则铲掉旧垫
+            if (waStopGiga_last_col != -1) {
+                if (waStopGiga_last_row != now_row || waStopGiga_last_col != now_col) {
+                    ARemovePlant(waStopGiga_last_row, waStopGiga_last_col, std::vector<int>(plants_to_stop.begin(), plants_to_stop.end()));
+                }
+            }
+            // 超出范围的不垫
+            if (now_col > 9 || now_col < 1) return;
+            // 在投掷小鬼或在举锤的不垫
+            if (min_zombie->State() == 69 || min_zombie->State() == 70) return;
+            if (!WAExistPlant(plants_to_stop, now_row, now_col) && !WAExistPlant(plants_to_stop, now_row, now_col)) {
+                for (APlantType plant: plants_to_stop) {
+                    if (AGetSeedPtr(plant) && AGetSeedPtr(plant)->IsUsable()) {
+                        ACard(plant, now_row, now_col);
+                        waStopGiga_last_row = now_row;
+                        waStopGiga_last_col = now_col;
+                        break;
+                    }
+                }
+            }
+        });
+    });
+    if (to_time <= -999) {
+        if (wave == 20) {
+            to_time = 5999;
+        } else {
+            wave = wave + 1;
+            to_time = 0;
+        }
+    }
+    AConnect(ATime(wave, to_time), [plants_to_stop](){
+        if (waStopGigaRunner.IsStopped()) return;
+        waStopGigaRunner.Stop();
+        ARemovePlant(waStopGiga_last_row, waStopGiga_last_col, std::vector<int>(plants_to_stop.begin(), plants_to_stop.end()));
+        AMaidCheats::Stop();
     });
 }
 
@@ -497,6 +580,85 @@ void PPForEnd(int wave, int time, float col = 9, std::vector<int> rows = {}) {
     std::string scene = WAGetCurrentScene();
     int VCFT = (scene == "RE" || scene == "ME" ? 387 : 373);
     ForEnd(wave, time - VCFT, [=](){ PP(wave, time, col, rows); });
+}
+
+// 在泳池场景，对除了某列以外的所有红眼开炮。常用于拖收尾。
+// 为了收尾的正常运行，请确保场上的红眼都是本波红眼。
+// 本函数已进行 `ForEnd()` 判定。
+void PPExceptOne(int wave, int time, float col = 9) {
+    std::string scene = WAGetCurrentScene();
+    int VCFT = (scene == "RE" || scene == "ME" ? 387 : 373);
+    ForEnd(wave, time - VCFT, [=](){
+        AConnect(ATime(wave, time - VCFT), [time, col](){
+            int dist[6] = { 0, 0, 0, 0, 0, 0 };
+            for (auto &&zombie: aAliveZombieFilter) {
+                if (zombie.Type() != AHY_32) continue;
+                if (zombie.Hp() < 0) continue;
+                dist[zombie.Row()]++;
+            }
+            if (dist[0] == 1) {
+                if (dist[1] != 0) {
+                    P(ANowTime().wave, time, 3, col);
+                }
+                if (dist[4] != 0 || dist[5] != 0) {
+                    P(ANowTime().wave, time, 5, col);
+                }
+            } else if (dist[5] == 1) {
+                if (dist[4] != 0) {
+                    P(ANowTime().wave, time, 4, col);
+                }
+                if (dist[0] != 0 || dist[1] != 0) {
+                    P(ANowTime().wave, time, 2, col);
+                }
+            } else if (dist[0] == 0 && dist[1] == 1) {
+                if (dist[4] != 0 || dist[5] != 0) {
+                    P(ANowTime().wave, time, 5, col);
+                }
+            } else if (dist[5] == 0 && dist[4] == 1) {
+                if (dist[0] != 0 || dist[1] != 0) {
+                    P(ANowTime().wave, time, 2, col);
+                }
+            } else if (dist[0]) {
+                if (dist[1] != 0) {
+                    P(ANowTime().wave, time, 3, col);
+                }
+                if (dist[4] != 0 || dist[5] != 0) {
+                    P(ANowTime().wave, time, 5, col);
+                }
+            } else if (dist[5]) {
+                if (dist[4] != 0) {
+                    P(ANowTime().wave, time, 4, col);
+                }
+                if (dist[0] != 0 || dist[1] != 0) {
+                    P(ANowTime().wave, time, 2, col);
+                }
+            } else if (dist[1]) {
+                if (dist[4] != 0 || dist[5] != 0) {
+                    P(ANowTime().wave, time, 5, col);
+                }
+            }
+        });
+    });
+}
+
+// 对场上的最后一列有红眼的位置开炮。
+// 本函数已进行 `ForEnd()` 判定。
+void PPLast(int wave, int time) {
+    std::string scene = WAGetCurrentScene();
+    int VCFT = (scene == "RE" || scene == "ME" ? 387 : 373);
+    ForEnd(wave, time - VCFT, [=](){
+        AConnect(ATime(wave, time - VCFT), [wave, time](){
+            for (auto &&zombie: aAliveZombieFilter) {
+                if (zombie.Type() != AHY_32) continue;
+                if (zombie.Hp() < 0) continue;
+                float col = (zombie.Abscissa() + 40) / 80.0f;
+                if (col < 1) col = 1;
+                if (col > 9) col = 9;
+                P(wave, time, zombie.Row() + 1, col);
+                break;
+            }
+        });
+    });
 }
 
 #pragma endregion
