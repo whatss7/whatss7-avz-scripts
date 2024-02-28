@@ -31,11 +31,8 @@ void SlowGiga(int wave, int time) {
 
 void AScript() {
     WAInit({AICE_SHROOM, AM_ICE_SHROOM, AFLOWER_POT, ACHERRY_BOMB});
-    // 对C8u: I-PP|PP|PP|I-PP|PP|PP (1253, 746, 746, 1253, 746, 746)
 
-    // w1-w9: I-PP|PP|PP|I-PP|PP|PP|I-PP|PP|PP
-    // w10-w19: PP(601)|I-PP|PP|PP|I-PP|PP|PP|I-PP|PP|PP
-    // w20: PP
+    // 对C8u: I-PP|PP|PP|I-PP|PP|PP (1253, 746, 746, 1253, 746, 746)
     const int ice_len = 1253;
     const int a_len = 746;
 
@@ -72,10 +69,12 @@ void AScript() {
     }
     for (int w: {20}) {
         ZomboniN(w, 409, 3, 9);
-        ManualI(w, 420, 3, 3);
+        ManualI(w, 409, 3, 3);
         PP(w, 750, 7);
-        PPForEnd(w, 409 + 1253);
-        PPForEnd(w, 409 + 1253 + 746);
-        PPForEnd(w, 409 + 1253 + 746 + 746);
+        PPForEnd(w, 409 + ice_len);
+        SlowGiga(w, 409 + ice_len);
+        PPForEnd(w, 409 + ice_len + a_len);
+        SlowGiga(w, 409 + ice_len + a_len);
+        PPForEnd(w, 409 + ice_len + a_len * 2);
     }
 }
