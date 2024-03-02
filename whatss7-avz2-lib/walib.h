@@ -13,9 +13,9 @@
 #endif
 
 // 常见预判炸时间点（有8列炮情况下最晚舞王不召唤时间点）
-const int PRE_COB_POINT = 318;
-// 玉米加农炮发射到生效用时
-const int COB_FLYING_TIME = 373;
+const int PRE_COB_POINT = 316;
+// 考虑泳池延迟后，玉米加农炮发射到生效修正用时
+const int COB_FLYING_TIME = 378;
 // 屋顶修正玉米加农炮发射到生效用时
 const int ROOF_COB_FLYING_TIME = 387;
 // 灰烬植物和寒冰菇种下到生效用时
@@ -377,12 +377,11 @@ void WARemoveGraves(int wave, int time) {
 ATickRunner waStopGigaRunner;
 int waStopGiga_last_row, waStopGiga_last_col;
 
-// 持续在最前面的巨人面前种植垫材，并使用女仆秘籍停止舞王和伴舞前进。
+// 持续在最前面的巨人面前种植垫材。
 // 不设置to_time时，一直垫到下波僵尸刷新。
 void WAStopGiga(int wave, int time, const std::vector<APlantType> &plants_to_stop, int to_time = -999) {
     AConnect(ATime(wave, time), [plants_to_stop](){
         waStopGiga_last_row = waStopGiga_last_col = -1;
-        AMaidCheats::Dancing();
         waStopGigaRunner.Start([plants_to_stop](){
             int min_x = 1000;
             int min_x_row = 0;
@@ -400,7 +399,6 @@ void WAStopGiga(int wave, int time, const std::vector<APlantType> &plants_to_sto
                 if (waStopGigaRunner.IsStopped()) return;
                 waStopGigaRunner.Stop();
                 ARemovePlant(waStopGiga_last_row, waStopGiga_last_col, std::vector<int>(plants_to_stop.begin(), plants_to_stop.end()));
-                AMaidCheats::Stop();
                 return;
             }
             // 位于64时，恰可在1列垫（小喷菇位于35时可垫到）；位于65时，恰不可在1列垫。
@@ -442,7 +440,6 @@ void WAStopGiga(int wave, int time, const std::vector<APlantType> &plants_to_sto
         if (waStopGigaRunner.IsStopped()) return;
         waStopGigaRunner.Stop();
         ARemovePlant(waStopGiga_last_row, waStopGiga_last_col, std::vector<int>(plants_to_stop.begin(), plants_to_stop.end()));
-        AMaidCheats::Stop();
     });
 }
 
@@ -503,10 +500,17 @@ void PP(int wave, int time = -1, float col = 9, std::vector<int> rows = {}) {
         }
     } else {
         std::vector<APosition> pos;
-        for (int i: rows) pos.push_back({i, col});
-        AConnect(ATime(wave, time - CFT), [pos](){
-            aCobManager.Fire(pos);
-        });
+        for (int i: rows) {
+            if ((scene == "PE" || scene == "FE") && (i == 3 || i == 4)) {
+                AConnect(ATime(wave, time - 378), [i, col](){
+                    aCobManager.Fire(i, col);
+                });
+            } else {
+                AConnect(ATime(wave, time - 373), [i, col](){
+                    aCobManager.Fire(i, col);
+                });
+            }
+        }
     }
 }
 
@@ -590,51 +594,135 @@ void PPExceptOne(int wave, int time, float col = 9) {
     int VCFT = (scene == "RE" || scene == "ME" ? 387 : 373);
     ForEnd(wave, time - VCFT, [=](){
         AConnect(ATime(wave, time - VCFT), [time, col](){
-            int dist[6] = { 0, 0, 0, 0, 0, 0 };
+            int dist[7] = { 0, 0, 0, 0, 0, 0, 0 };
             for (auto &&zombie: aAliveZombieFilter) {
                 if (zombie.Type() != AHY_32) continue;
-                if (zombie.Hp() < 0) continue;
-                dist[zombie.Row()]++;
+                dist[zombie.Row() + 1]++;
             }
-            if (dist[0] == 1) {
-                if (dist[1] != 0) {
-                    P(ANowTime().wave, time, 3, col);
+            std::string scene = WAGetCurrentScene();
+            if (scene == "PE" || scene == "FE") {
+                // 六行场地收尾
+                if (dist[1] == 1) {
+                    if (dist[2] != 0) {
+                        P(ANowTime().wave, time, 3, col);
+                    }
+                    if (dist[5] != 0 || dist[6] != 0) {
+                        P(ANowTime().wave, time, 5, col);
+                    }
+                } else if (dist[6] == 1) {
+                    if (dist[5] != 0) {
+                        P(ANowTime().wave, time, 4, col);
+                    }
+                    if (dist[1] != 0 || dist[2] != 0) {
+                        P(ANowTime().wave, time, 2, col);
+                    }
+                } else if (dist[1] == 0 && dist[2] == 1) {
+                    if (dist[5] != 0 || dist[6] != 0) {
+                        P(ANowTime().wave, time, 5, col);
+                    }
+                } else if (dist[5] == 0 && dist[6] == 1) {
+                    if (dist[1] != 0 || dist[2] != 0) {
+                        P(ANowTime().wave, time, 2, col);
+                    }
+                } else if (dist[1]) {
+                    if (dist[2] != 0) {
+                        P(ANowTime().wave, time, 3, col);
+                    }
+                    if (dist[5] != 0 || dist[6] != 0) {
+                        P(ANowTime().wave, time, 5, col);
+                    }
+                } else if (dist[6]) {
+                    if (dist[5] != 0) {
+                        P(ANowTime().wave, time, 4, col);
+                    }
+                    if (dist[1] != 0 || dist[2] != 0) {
+                        P(ANowTime().wave, time, 2, col);
+                    }
+                } else if (dist[2]) {
+                    if (dist[5] != 0 || dist[6] != 0) {
+                        P(ANowTime().wave, time, 5, col);
+                    }
                 }
-                if (dist[4] != 0 || dist[5] != 0) {
-                    P(ANowTime().wave, time, 5, col);
-                }
-            } else if (dist[5] == 1) {
-                if (dist[4] != 0) {
-                    P(ANowTime().wave, time, 4, col);
-                }
-                if (dist[0] != 0 || dist[1] != 0) {
-                    P(ANowTime().wave, time, 2, col);
-                }
-            } else if (dist[0] == 0 && dist[1] == 1) {
-                if (dist[4] != 0 || dist[5] != 0) {
-                    P(ANowTime().wave, time, 5, col);
-                }
-            } else if (dist[5] == 0 && dist[4] == 1) {
-                if (dist[0] != 0 || dist[1] != 0) {
-                    P(ANowTime().wave, time, 2, col);
-                }
-            } else if (dist[0]) {
-                if (dist[1] != 0) {
-                    P(ANowTime().wave, time, 3, col);
-                }
-                if (dist[4] != 0 || dist[5] != 0) {
-                    P(ANowTime().wave, time, 5, col);
-                }
-            } else if (dist[5]) {
-                if (dist[4] != 0) {
-                    P(ANowTime().wave, time, 4, col);
-                }
-                if (dist[0] != 0 || dist[1] != 0) {
-                    P(ANowTime().wave, time, 2, col);
-                }
-            } else if (dist[1]) {
-                if (dist[4] != 0 || dist[5] != 0) {
-                    P(ANowTime().wave, time, 5, col);
+            } else {
+                // 五行场地收尾
+                if (dist[1] == 1) {
+                    bool middled = false;
+                    if (dist[2]) {
+                        P(ANowTime().wave, time, 3, col);
+                        middled = true;
+                    }
+                    if (dist[5]) {
+                        P(ANowTime().wave, time, 4, col);
+                        middled = true;
+                    }
+                    if (!middled && (dist[3] || dist[4])) {
+                        P(ANowTime().wave, time, 3, col);
+                    }
+                } else if (dist[3] == 1) {
+                    if (dist[1] || dist[2]) {
+                        P(ANowTime().wave, time, 1, col);
+                    }
+                    if (dist[4] || dist[5]) {
+                        P(ANowTime().wave, time, 5, col);
+                    }
+                } else if (dist[5] == 1) {
+                    bool middled = false;
+                    if (dist[1]) {
+                        P(ANowTime().wave, time, 2, col);
+                        middled = true;
+                    }
+                    if (dist[4]) {
+                        P(ANowTime().wave, time, 3, col);
+                        middled = true;
+                    }
+                    if (!middled && (dist[2] || dist[3])) {
+                        P(ANowTime().wave, time, 2, col);
+                    }
+                } else if (dist[1] == 0 && dist[2] == 1) {
+                    if (dist[3] || dist[4] || dist[5]) {
+                        P(ANowTime().wave, time, 4, col);
+                    }
+                } else if (dist[5] == 0 && dist[4] == 1) {
+                    if (dist[1] || dist[2] || dist[3]) {
+                        P(ANowTime().wave, time, 2, col);
+                    }
+                } else if (dist[1]) {
+                    bool middled = false;
+                    if (dist[2]) {
+                        P(ANowTime().wave, time, 3, col);
+                        middled = true;
+                    }
+                    if (dist[5]) {
+                        P(ANowTime().wave, time, 4, col);
+                        middled = true;
+                    }
+                    if (!middled && (dist[3] || dist[4])) {
+                        P(ANowTime().wave, time, 3, col);
+                    }
+                } else if (dist[3]) {
+                    if (dist[1] || dist[2]) {
+                        P(ANowTime().wave, time, 1, col);
+                    }
+                    if (dist[4] || dist[5]) {
+                        P(ANowTime().wave, time, 5, col);
+                    }
+                } else if (dist[5]) {
+                    bool middled = false;
+                    if (dist[1]) {
+                        P(ANowTime().wave, time, 2, col);
+                        middled = true;
+                    }
+                    if (dist[4]) {
+                        P(ANowTime().wave, time, 3, col);
+                        middled = true;
+                    }
+                    if (!middled && (dist[2] || dist[3])) {
+                        P(ANowTime().wave, time, 2, col);
+                    }
+                } else if (dist[2]) {
+                    if (dist[3] || dist[4] || dist[5]) {
+                        P(ANowTime().wave, time, 4, col);
+                    }
                 }
             }
         });
