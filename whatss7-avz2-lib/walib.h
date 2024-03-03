@@ -587,18 +587,39 @@ void PPForEnd(int wave, int time, float col = 9, std::vector<int> rows = {}) {
 }
 
 // 在泳池场景，对除了某列以外的所有红眼开炮。常用于拖收尾。
+// 若场上没有红眼，且当前是w20，则改为对除了某列以外的所有僵尸开炮。
 // 为了收尾的正常运行，请确保场上的红眼都是本波红眼。
 // 本函数已进行 `ForEnd()` 判定。
 void PPExceptOne(int wave, int time, float col = 9) {
     std::string scene = WAGetCurrentScene();
     int VCFT = (scene == "RE" || scene == "ME" ? 387 : 373);
     ForEnd(wave, time - VCFT, [=](){
-        AConnect(ATime(wave, time - VCFT), [time, col](){
+        AConnect(ATime(wave, time - VCFT), [wave, time, col](){
             int dist[7] = { 0, 0, 0, 0, 0, 0, 0 };
+            int sum = 0;
             for (auto &&zombie: aAliveZombieFilter) {
                 if (zombie.Type() != AHY_32) continue;
                 dist[zombie.Row() + 1]++;
+                sum++;
             }
+            if (wave == 20 && sum == 0) {
+                #ifdef WALIB_DEBUG
+                waDebugLogger.Info("no red found");
+                #endif
+                for (auto &&zombie: aAliveZombieFilter) {
+                    if (zombie.Type() == ABJ_20) continue;
+                    #ifdef WALIB_DEBUG
+                    waDebugLogger.Info("found zombie # at #", zombie.Type(), zombie.Row() + 1);
+                    #endif
+                    dist[zombie.Row() + 1]++;
+                    sum++;
+                }
+            }
+            #ifdef WALIB_DEBUG
+            for (int i = 1; i <= 6; i++) {
+                waDebugLogger.Info("distr of #: #", i, dist[i]);
+            }
+            #endif
             std::string scene = WAGetCurrentScene();
             if (scene == "PE" || scene == "FE") {
                 // 六行场地收尾
@@ -730,6 +751,7 @@ void PPExceptOne(int wave, int time, float col = 9) {
 }
 
 // 对场上的最后一列有红眼的位置开炮。
+// 如果场上没有红眼，则对最后一列有僵尸的位置开炮。
 // 本函数已进行 `ForEnd()` 判定。
 void PPLast(int wave, int time) {
     std::string scene = WAGetCurrentScene();
@@ -743,7 +765,16 @@ void PPLast(int wave, int time) {
                 if (col < 1) col = 1;
                 if (col > 9) col = 9;
                 P(wave, time, zombie.Row() + 1, col);
-                break;
+                return;
+            }
+            for (auto &&zombie: aAliveZombieFilter) {
+                if (zombie.Type() == ABJ_20) continue;
+                if (zombie.Hp() < 0) continue;
+                float col = (zombie.Abscissa() + 40) / 80.0f;
+                if (col < 1) col = 1;
+                if (col > 9) col = 9;
+                P(wave, time, zombie.Row() + 1, col);
+                return;
             }
         });
     });
@@ -822,6 +853,29 @@ void TempC(int wave, int time, APlantType card, std::vector<APosition> pos, int 
 // 若给定的时长为负数，则不会移除该植物。
 void TempC(int wave, int time, APlantType card, int row, float col, int duration) {
     TempC(wave, time, card, {{row, col}}, duration);
+}
+
+// 在场上的最后一列有僵尸的位置种植一个坚果类。
+// 本函数已进行 `ForEnd()` 判定。
+void BlockLast(int wave, int time, int to_time = -1000) {
+    ForEnd(wave, time, [=](){
+        AConnect(ATime(wave, time), [=](){
+            for (auto &&zombie: aAliveZombieFilter) {
+                if (zombie.Hp() < 0) continue;
+                float col = (zombie.Abscissa() + 40) / 80.0f;
+                if (col < 1) col = 1;
+                if (col > 9) col = 9;
+                if (AGetSeedPtr(AWALL_NUT) && AGetSeedPtr(AWALL_NUT)->IsUsable()) {
+                    TempC(wave, time, AWALL_NUT, zombie.Row() + 1, col, to_time - time);
+                } else if (AGetSeedPtr(ATALL_NUT) && AGetSeedPtr(ATALL_NUT)->IsUsable()) {
+                    TempC(wave, time, ATALL_NUT, zombie.Row() + 1, col, to_time - time);
+                } else {
+                    TempC(wave, time, APUMPKIN, zombie.Row() + 1, col, to_time - time);
+                }
+                break;
+            }
+        });
+    });
 }
 
 #pragma endregion
