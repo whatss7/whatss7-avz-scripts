@@ -1,14 +1,16 @@
+// #define WALIB_DEBUG
 #include "../whatss7-avz2-lib/walib.h"
 
 void AScript() {
     // I-PP | PP | I-PP | PP (11.5, 6, 11.5, 6)
-    const int ice_len = 1149;
+    const int ice_len = 1200;
     WAInit({ AICE_SHROOM, AM_ICE_SHROOM, ADOOM_SHROOM, ACOFFEE_BEAN, ALILY_PAD,
              ACHERRY_BOMB, AUMBRELLA_LEAF, APUFF_SHROOM, ASUN_SHROOM, ASCAREDY_SHROOM });
     aIceFiller.Start({{3, 6}, {4, 6}});
 
     for (int w: {1, 3, 5, 7, 9, 11, 13, 15, 17, 19}) {
-        I(w, 1, 601);
+        // 对w11炸不到的红眼，应当都是慢速红眼，不构成威胁（大概
+        I(w, 50, 601);
         PP(w, ice_len - 200);
         if (w == 9 || w == 19) {
             PPForEnd(w, ice_len + 601 - 200);
@@ -16,8 +18,9 @@ void AScript() {
                 N(w, ice_len + 601 * 2 - 200, {{3, 9}, {4, 9}, {3, 8}, {4, 8}});
             });
             PPExceptOne(w, ice_len + 601 * 3 - 200);
-            WAStopGiga(w, ice_len + 601 * 3 - 200 + 1, { APUFF_SHROOM, ASUN_SHROOM, ASCAREDY_SHROOM, AUMBRELLA_LEAF }, 4300);
+            WAStopGiga(w, ice_len + 601 * 3 - 200 + 4, { APUFF_SHROOM, ASUN_SHROOM, ASCAREDY_SHROOM, AUMBRELLA_LEAF }, 4300);
             PPLast(w, 4300);
+            WAMaidDance(w, 3003, 4500);
         }
     }
 

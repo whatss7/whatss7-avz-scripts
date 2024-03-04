@@ -377,13 +377,16 @@ void WARemoveGraves(int wave, int time) {
 ATickRunner waStopGigaRunner;
 int waStopGiga_last_row, waStopGiga_last_col;
 
+// 禁止 `WAStopGiga()` 在特定列放置垫材。这是为了防止反复尝试在冰道上放置垫材导致发出大量音效。
+std::vector<int> waStopGigaBanCols;
+
 // 持续在最前面的巨人面前种植垫材。
 // 不设置to_time时，一直垫到下波僵尸刷新。
 void WAStopGiga(int wave, int time, const std::vector<APlantType> &plants_to_stop, int to_time = -999) {
     AConnect(ATime(wave, time), [plants_to_stop](){
         waStopGiga_last_row = waStopGiga_last_col = -1;
         waStopGigaRunner.Start([plants_to_stop](){
-            int min_x = 1000;
+            float min_x = 1000;
             int min_x_row = 0;
             AZombie *min_zombie = nullptr;
             for (auto &&zombie: aAliveZombieFilter) {
@@ -419,10 +422,12 @@ void WAStopGiga(int wave, int time, const std::vector<APlantType> &plants_to_sto
             if (!WAExistPlant(plants_to_stop, now_row, now_col) && !WAExistPlant(plants_to_stop, now_row, now_col)) {
                 for (APlantType plant: plants_to_stop) {
                     if (AGetSeedPtr(plant) && AGetSeedPtr(plant)->IsUsable()) {
-                        ACard(plant, now_row, now_col);
-                        waStopGiga_last_row = now_row;
-                        waStopGiga_last_col = now_col;
-                        break;
+                        if (std::find(waStopGigaBanCols.begin(), waStopGigaBanCols.end(), now_col) == waStopGigaBanCols.end()) {
+                            ACard(plant, now_row, now_col);
+                            waStopGiga_last_row = now_row;
+                            waStopGiga_last_col = now_col;
+                            break;
+                        }
                     }
                 }
             }
@@ -441,6 +446,21 @@ void WAStopGiga(int wave, int time, const std::vector<APlantType> &plants_to_sto
         waStopGigaRunner.Stop();
         ARemovePlant(waStopGiga_last_row, waStopGiga_last_col, std::vector<int>(plants_to_stop.begin(), plants_to_stop.end()));
     });
+}
+
+// 启用女仆秘籍。当到达to_time时停止。
+// 若to_time小于-999，则不会停止。
+void WAMaidDance(int wave, int time, int to_time = -1000) {
+    AConnect(ATime(wave, time), [](){ AMaidCheats::Dancing(); });
+    if (to_time > -1000) {
+        AConnect(ATime(wave, to_time), [](){ AMaidCheats::Stop(); });
+    }
+}
+
+// 启用女仆秘籍。当到达to_wave波次的to_time时停止。
+void WAMaidDance(int wave, int time, int to_wave, int to_time) {
+    AConnect(ATime(wave, time), [](){ AMaidCheats::Dancing(); });
+    AConnect(ATime(to_wave, to_time), [](){ AMaidCheats::Stop(); });
 }
 
 #pragma endregion
@@ -592,7 +612,7 @@ void PPForEnd(int wave, int time, float col = 9, std::vector<int> rows = {}) {
 // 本函数已进行 `ForEnd()` 判定。
 void PPExceptOne(int wave, int time, float col = 9) {
     std::string scene = WAGetCurrentScene();
-    int VCFT = (scene == "RE" || scene == "ME" ? 387 : 373);
+    int VCFT = (scene == "RE" || scene == "ME" ? RCFT : CFT);
     ForEnd(wave, time - VCFT, [=](){
         AConnect(ATime(wave, time - VCFT), [wave, time, col](){
             int dist[7] = { 0, 0, 0, 0, 0, 0, 0 };
@@ -860,19 +880,21 @@ void TempC(int wave, int time, APlantType card, int row, float col, int duration
 void BlockLast(int wave, int time, int to_time = -1000) {
     ForEnd(wave, time, [=](){
         AConnect(ATime(wave, time), [=](){
+            AZombie *zombie_to_stop = nullptr;
             for (auto &&zombie: aAliveZombieFilter) {
                 if (zombie.Hp() < 0) continue;
-                float col = (zombie.Abscissa() + 40) / 80.0f;
-                if (col < 1) col = 1;
-                if (col > 9) col = 9;
-                if (AGetSeedPtr(AWALL_NUT) && AGetSeedPtr(AWALL_NUT)->IsUsable()) {
-                    TempC(wave, time, AWALL_NUT, zombie.Row() + 1, col, to_time - time);
-                } else if (AGetSeedPtr(ATALL_NUT) && AGetSeedPtr(ATALL_NUT)->IsUsable()) {
-                    TempC(wave, time, ATALL_NUT, zombie.Row() + 1, col, to_time - time);
-                } else {
-                    TempC(wave, time, APUMPKIN, zombie.Row() + 1, col, to_time - time);
-                }
-                break;
+                zombie_to_stop = &zombie;
+                if (zombie.Type() != ABW_9) break;
+            }
+            float col = (zombie_to_stop->Abscissa() + 40) / 80.0f;
+            if (col < 1) col = 1;
+            if (col > 9) col = 9;
+            if (AGetSeedPtr(AWALL_NUT) && AGetSeedPtr(AWALL_NUT)->IsUsable()) {
+                TempC(wave, time, AWALL_NUT, zombie_to_stop->Row() + 1, col, to_time - time);
+            } else if (AGetSeedPtr(ATALL_NUT) && AGetSeedPtr(ATALL_NUT)->IsUsable()) {
+                TempC(wave, time, ATALL_NUT, zombie_to_stop->Row() + 1, col, to_time - time);
+            } else {
+                TempC(wave, time, APUMPKIN, zombie_to_stop->Row() + 1, col, to_time - time);
             }
         });
     });
