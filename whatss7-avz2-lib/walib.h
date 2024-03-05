@@ -150,8 +150,9 @@ bool WAExistPlant(std::vector<APlantType> types, int row, int col) {
 // `"NE"`: 路障 撑杆 橄榄 舞王 小丑 气球 矿工 跳跳 蹦极 白眼 红眼
 // `"PE"` 或 `"FE"`: 撑杆 橄榄 舞王 冰车 海豚 小丑 气球 矿工 蹦极 白眼 红眼
 // `"RE"` 或 `"ME"`: 路障 撑杆 橄榄 冰车 小丑 气球 跳跳 蹦极 扶梯 白眼 红眼
-// `"PEF"` PE快速关: 路障 撑杆 舞王 潜水 冰车 海豚 小丑 矿工 跳跳 蹦极 扶梯
-void WASelectZombies(std::string scene = "Auto") {
+// `"PEM"` PE中速关: 路障 撑杆 舞王 潜水 冰车 海豚 小丑 矿工 跳跳 蹦极 扶梯
+// `"PEF"` PE快速关: 路障 撑杆 舞王 潜水 冰车 海豚 小丑 矿工 蹦极 扶梯 白眼
+void WASelectZombies(std::string scene = "Auto", bool natural = false) {
     for (int i = 0; i < scene.length(); i++) {
         scene[i] = toupper(scene[i]);
     }
@@ -159,20 +160,22 @@ void WASelectZombies(std::string scene = "Auto") {
 
     std::vector<AZombieType> zombies;
     if (scene == "PE" || scene == "FE") {
-        zombies = { ACG_3, AGL_7, AWW_8, ABC_12, AHT_14, AXC_15, AQQ_16, AKG_17, ABJ_20, ABY_23, AHY_32 };
+        zombies = { APJ_0, ACG_3, AGL_7, AWW_8, ABC_12, AHT_14, AXC_15, AQQ_16, AKG_17, ABJ_20, ABY_23, AHY_32 };
     } else if (scene == "DE") {
         // DE没有水路僵尸
-        zombies = { ALZ_2, ACG_3, AGL_7, AWW_8, ABC_12, AXC_15, AQQ_16, AKG_17, ABJ_20, ABY_23, AHY_32 };
+        zombies = { APJ_0, ALZ_2, ACG_3, AGL_7, AWW_8, ABC_12, AXC_15, AQQ_16, AKG_17, ABJ_20, ABY_23, AHY_32 };
     } else if (scene == "NE") {
         // NE没有水路僵尸和冰车
-        zombies = { ALZ_2, ACG_3, AGL_7, AWW_8, AXC_15, AQQ_16, AKG_17, ATT_18, ABJ_20, ABY_23, AHY_32 };
+        zombies = { APJ_0, ALZ_2, ACG_3, AGL_7, AWW_8, AXC_15, AQQ_16, AKG_17, ATT_18, ABJ_20, ABY_23, AHY_32 };
     } else if (scene == "RE" || scene == "ME") {
         // RE和FE没有水路僵尸、舞王和矿工
-        zombies = { ALZ_2, ACG_3, AGL_7, ABC_12, AXC_15, AQQ_16, ATT_18, ABJ_20, AFT_21, ABY_23, AHY_32 };
+        zombies = { APJ_0, ALZ_2, ACG_3, AGL_7, ABC_12, AXC_15, AQQ_16, ATT_18, ABJ_20, AFT_21, ABY_23, AHY_32 };
     } else if (scene == "PEF") {
-        zombies = { ALZ_2, ACG_3, AWW_8, AQS_11, ABC_12, AHT_14, AXQ_13, AKG_17, ATT_18, ABJ_20, AFT_21 };
+        zombies = { APJ_0, ALZ_2, ACG_3, AWW_8, AQS_11, ABC_12, AHT_14, AXQ_13, AKG_17, ATT_18, ABJ_20, AFT_21 };
+    } else if (scene == "PEM") {
+        zombies = { APJ_0, ALZ_2, ACG_3, AWW_8, AQS_11, ABC_12, AHT_14, AXQ_13, AKG_17, ABJ_20, AFT_21, ABY_23 };
     }
-    if (!zombies.empty()) ASetZombies(std::vector<int>(zombies.begin(), zombies.end()));
+    if (!zombies.empty()) ASetZombies(std::vector<int>(zombies.begin(), zombies.end()), natural ? ASetZombieMode::INTERNAL : ASetZombieMode::AVERAGE);
 }
 
 void WASelectCards(std::vector<APlantType> plants = {}, bool fast = false) {
@@ -266,9 +269,9 @@ void WASkipTo(int wave, int time = -199) {
 
 // 启动测试模式：开启脚本循环，10倍速，当忧郁菇、冰瓜投手或玉米加农炮受损时弹窗提示。
 // 检测受损的植物类型可通过修改 waCheckPlants 进行设置。
-void WACheck() {
-    ASetReloadMode(AReloadMode::MAIN_UI_OR_FIGHT_UI);
-    ASetGameSpeed(10);
+void WACheck(bool reload = true, bool accelerate = true) {
+    if (reload) ASetReloadMode(AReloadMode::MAIN_UI_OR_FIGHT_UI);
+    if (accelerate) ASetGameSpeed(10);
     waCheckRunner.Start([](){
         for (auto &&plant: aAlivePlantFilter) {
             bool ignored = false;
@@ -477,7 +480,7 @@ bool WAIsValidTime(int wave, int time) {
 // 从 `aCobManager` 发射一对炮。
 // 若不设置位置，则泳池场景默认炸2-9和5-9，其他场景默认炸2-9和4-9。
 // 请注意，本函数先填列数，再填行数。
-// 若不设置时间，则 318cs (`PCP`) 时生效
+// 若不设置时间，则 316cs (`PCP`) 时生效
 // 屋顶场景，1-2路的炮优先选择风炮；3-5路优先选择平炮。
 void PP(int wave, int time = -1, float col = 9, std::vector<int> rows = {}) {
     if (rows.empty()) {
@@ -519,15 +522,14 @@ void PP(int wave, int time = -1, float col = 9, std::vector<int> rows = {}) {
             }
         }
     } else {
-        std::vector<APosition> pos;
-        for (int i: rows) {
-            if ((scene == "PE" || scene == "FE") && (i == 3 || i == 4)) {
-                AConnect(ATime(wave, time - 378), [i, col](){
-                    aCobManager.Fire(i, col);
+        for (int row: rows) {
+            if ((scene == "PE" || scene == "FE") && (row == 3 || row == 4)) {
+                AConnect(ATime(wave, time - 378), [row, col](){
+                    aCobManager.Fire(row, col);
                 });
             } else {
-                AConnect(ATime(wave, time - 373), [i, col](){
-                    aCobManager.Fire(i, col);
+                AConnect(ATime(wave, time - 373), [row, col](){
+                    aCobManager.Fire(row, col);
                 });
             }
         }
@@ -538,6 +540,28 @@ void PP(int wave, int time = -1, float col = 9, std::vector<int> rows = {}) {
 void P(int wave, int time, int row, float col) {
     std::vector<int> rows;
     rows.push_back(row);
+    PP(wave, time, col, rows);
+}
+
+// 从 `aCobManager` 发射一对炮。仅可用于泳池和屋顶场景。
+// 若不设置位置，则泳池场景默认炸1-8和5-8，屋顶场景默认炸2-8和4-8。
+// 请注意，本函数先填列数，再填行数。
+// 若不设置时间，则 423cs (`PCP + 107`) 时生效
+// 屋顶场景，1-2路的炮优先选择风炮；3-5路优先选择平炮。
+void DD(int wave, int time = -1, float col = 8, std::vector<int> rows = {}) {
+    std::string scene = WAGetCurrentScene();
+    if (scene == "DE" || scene == "NE") {
+        waLogger.Error("DD() 不可用于前院。");
+        return;
+    }
+    if (rows.empty()) {
+        if (scene == "PE" || scene == "FE") {
+            rows = {1, 5};
+        } else {
+            rows = {2, 4};
+        }
+    }
+    if (time < 0) time = PCP + 107;
     PP(wave, time, col, rows);
 }
 

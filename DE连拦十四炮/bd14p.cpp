@@ -15,6 +15,17 @@ void AScript() {
     // IP-P/PD | P/Bd
     for (int w: {1, 3, 5, 7, 9, 11, 13, 15, 17, 19}) {
         I(w, 100, 601);
+        // 旗帜波会漏气球，这里冰住之后再种三叶草，防止撑杆意外跳过
+        if (w == 11) {
+            AConnect(ATime(w, 105), [](){
+                for (auto &&zombie: aAliveZombieFilter) {
+                    if (zombie.Type() == AQQ_16 && zombie.AtWave() + 1 == 10) {
+                        ACard(ABLOVER, 3, 8);
+                        break;
+                    }
+                }
+            });
+        }
         // 上半场热过渡炸实，不然压制力不太够
         P(w, 359, 2, 9);
         // 激活炮
@@ -56,8 +67,8 @@ void AScript() {
         // 上半场炸
         P(w, 316, 2, 9);
         // 垫撑杆
-        TempC(w, 412, APUFF_SHROOM, 1, 9, 600 - 412);
-        TempC(w, 412, ASUN_SHROOM, 2, 9, 600 - 412);
+        TempC(w, 420, APUFF_SHROOM, 1, 9, 600 - 420);
+        TempC(w, 420, ASUN_SHROOM, 2, 9, 600 - 420);
         // 下半场连拦
         P(w, i_len - 200 + delay_1 + delay_2 - i_len, 4, 9);
         P(w, i_len - 200 + delay_1 + delay_2 - i_len + delay_3, 4, 2.45);
