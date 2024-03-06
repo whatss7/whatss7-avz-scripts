@@ -2,7 +2,10 @@
 #include "../whatss7-avz2-lib/walib.h"
 
 void AScript() {
-    WAInit({AICE_SHROOM, AM_ICE_SHROOM, ACOFFEE_BEAN, ACHERRY_BOMB, APUFF_SHROOM, ASUN_SHROOM, ASCAREDY_SHROOM, AFLOWER_POT, APUMPKIN, ABLOVER});
+    WAInit({
+        AICE_SHROOM, AM_ICE_SHROOM, ACOFFEE_BEAN, ACHERRY_BOMB, APUFF_SHROOM, 
+        ASUN_SHROOM, ASCAREDY_SHROOM, AFLOWER_POT, APUMPKIN, ABLOVER
+    });
     WAFixNuts();
     aIceFiller.Start({{3, 3}, {3, 4}, {3, 5}});
     const int i_len = 1149;

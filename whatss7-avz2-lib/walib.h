@@ -143,15 +143,19 @@ bool WAExistPlant(std::vector<APlantType> types, int row, int col) {
 #pragma region 初始化相关
 
 // 根据场地选择合理的僵尸。
+// 以下出怪尽可能在合理的情况下选出最难的出怪组合，但部分威胁较大的出怪也未选上。
+// 此时可以使用备选方案进一步测试（如`"DE2"`等）。
 // 场地支持传入的参数：
 // `"None"` 或其他任意下方未提到的参数: 不进行僵尸选择，使用自然出怪
 // `"Auto"` 或不传入参数: 自动根据场地选择下面的组合
-// `"DE"`: 路障 撑杆 橄榄 舞王 冰车 小丑 气球 矿工 蹦极 白眼 红眼
+// `"DE"`: 撑杆 舞王 冰车 小丑 气球 矿工 跳跳 蹦极 扶梯 白眼 红眼
+// `"DE2"`: 撑杆 橄榄 舞王 冰车 小丑 矿工 蹦极 扶梯 投篮 白眼 红眼  
 // `"NE"`: 路障 撑杆 橄榄 舞王 小丑 气球 矿工 跳跳 蹦极 白眼 红眼
 // `"PE"` 或 `"FE"`: 撑杆 橄榄 舞王 冰车 海豚 小丑 气球 矿工 蹦极 白眼 红眼
 // `"RE"` 或 `"ME"`: 路障 撑杆 橄榄 冰车 小丑 气球 跳跳 蹦极 扶梯 白眼 红眼
 // `"PEM"` PE中速关: 路障 撑杆 舞王 潜水 冰车 海豚 小丑 矿工 跳跳 蹦极 扶梯
 // `"PEF"` PE快速关: 路障 撑杆 舞王 潜水 冰车 海豚 小丑 矿工 蹦极 扶梯 白眼
+// `"DEA"`, `"NEA"`, `"PEA"`, `"FEA"`, `"REA"`, `"MEA"`: 同时选择所有可能出现在场上的僵尸，禁止使用自然出怪
 void WASelectZombies(std::string scene = "Auto", bool natural = false) {
     for (int i = 0; i < scene.length(); i++) {
         scene[i] = toupper(scene[i]);
@@ -160,10 +164,14 @@ void WASelectZombies(std::string scene = "Auto", bool natural = false) {
 
     std::vector<AZombieType> zombies;
     if (scene == "PE" || scene == "FE") {
-        zombies = { APJ_0, ACG_3, AGL_7, AWW_8, ABC_12, AHT_14, AXC_15, AQQ_16, AKG_17, ABJ_20, ABY_23, AHY_32 };
+        zombies = { APJ_0, ACG_3, AWW_8, ABC_12, AHT_14, AXC_15, AQQ_16, AKG_17, ABJ_20, AFT_21, ABY_23, AHY_32 };
     } else if (scene == "DE") {
         // DE没有水路僵尸
-        zombies = { APJ_0, ALZ_2, ACG_3, AGL_7, AWW_8, ABC_12, AXC_15, AQQ_16, AKG_17, ABJ_20, ABY_23, AHY_32 };
+        // 与DE2相比多路障、扶梯和跳跳（为了选僵尸合理选择的路障）
+        zombies = { APJ_0, ALZ_2, ACG_3, AWW_8, ABC_12, AXC_15, AKG_17, ATT_18, ABJ_20, AFT_21, ABY_23, AHY_32 };
+    } else if (scene == "DE2") {
+        // 与DE相比多橄榄、气球和投篮
+        zombies = { APJ_0, ACG_3, AGL_7, AWW_8, ABC_12, AXC_15, AQQ_16, AKG_17, ABJ_20, ATL_22, ABY_23, AHY_32 };
     } else if (scene == "NE") {
         // NE没有水路僵尸和冰车
         zombies = { APJ_0, ALZ_2, ACG_3, AGL_7, AWW_8, AXC_15, AQQ_16, AKG_17, ATT_18, ABJ_20, ABY_23, AHY_32 };
@@ -174,6 +182,14 @@ void WASelectZombies(std::string scene = "Auto", bool natural = false) {
         zombies = { APJ_0, ALZ_2, ACG_3, AWW_8, AQS_11, ABC_12, AHT_14, AXQ_13, AKG_17, ATT_18, ABJ_20, AFT_21 };
     } else if (scene == "PEM") {
         zombies = { APJ_0, ALZ_2, ACG_3, AWW_8, AQS_11, ABC_12, AHT_14, AXQ_13, AKG_17, ABJ_20, AFT_21, ABY_23 };
+    } else if (scene == "DEA") {
+        zombies = { APJ_0, ALZ_2, ACG_3, ATT_4, ADB_5, ATM_6, AGL_7, AWW_8, ABC_12, AXC_15, AQQ_16, AKG_17, ATT_18, ABJ_20, AFT_21, ATL_22, ABY_23, AHY_32 };
+    } else if (scene == "NEA") {
+        zombies = { APJ_0, ALZ_2, ACG_3, ATT_4, ADB_5, ATM_6, AGL_7, AWW_8, AXC_15, AQQ_16, AKG_17, ATT_18, ABJ_20, AFT_21, ATL_22, ABY_23, AHY_32 };
+    } else if (scene == "PEA" || scene == "FEA") {
+        zombies = { APJ_0, ALZ_2, ACG_3, ATT_4, ADB_5, ATM_6, AGL_7, AWW_8, AQS_11, ABC_12, AHT_14, AXC_15, AQQ_16, AKG_17, ATT_18, ABJ_20, AFT_21, ATL_22, ABY_23, AHY_32 };
+    } else if (scene == "REA" || scene == "MEA") {
+        zombies = { APJ_0, ALZ_2, ACG_3, ATT_4, ADB_5, ATM_6, AGL_7, ABC_12, AXC_15, AQQ_16, ATT_18, ABJ_20, AFT_21, ATL_22, ABY_23, AHY_32 };
     }
     if (!zombies.empty()) ASetZombies(std::vector<int>(zombies.begin(), zombies.end()), natural ? ASetZombieMode::INTERNAL : ASetZombieMode::AVERAGE);
 }
