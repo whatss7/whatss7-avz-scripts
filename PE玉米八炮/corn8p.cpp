@@ -38,14 +38,14 @@ void AScript() {
         PP(w);
         if (w == 10) {
             SmartA();
-            TempC(w, 300, AUMBRELLA_LEAF, {{3, 8}, {4, 8}}, 100);
+            TempC(w, 300, AUMBRELLA_LEAF, {{3, 8}, {4, 8}}, 400);
         }
     }
 
     for (int w: {20}) {
         PP(w);
         P(w, 225, 4, 7.5875);
-        TempC(w, 300, AUMBRELLA_LEAF, {{3, 8}, {4, 8}}, 100);
+        TempC(w, 300, AUMBRELLA_LEAF, {{3, 8}, {4, 8}}, 400);
         I(w, 400);
         ForEnd(w, (PCP + 601) * 2 - CFT, [w](){
             P(w, (PCP + 601) * 2, 2, 9);

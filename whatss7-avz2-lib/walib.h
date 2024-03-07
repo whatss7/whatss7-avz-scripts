@@ -468,7 +468,7 @@ void WAStopGiga(int wave, int time, const std::vector<APlantType> &plants_to_sto
 }
 
 // 启用女仆秘籍。当到达to_time时停止。
-// 若to_time小于-999，则不会停止。
+// 若不设置to_time，则不会停止。
 void WAMaidDance(int wave, int time, int to_time = -1000) {
     AConnect(ATime(wave, time), [](){ AMaidCheats::Dancing(); });
     if (to_time > -1000) {
@@ -873,10 +873,10 @@ void C(int wave, int time, APlantType plant, int col, float row) {
 }
 
 // 种植一个临时植物并在一段时间后移除。此函数还会帮忙临时种植花盆或睡莲。
-// 若给定的时长为负数，则不会移除该植物。
-void TempC(int wave, int time, APlantType card, std::vector<APosition> pos, int duration) {
+// 若不设定铲除时间，则不会移除该植物。
+void TempC(int wave, int time, APlantType card, std::vector<APosition> pos, int to_time = -1000) {
     std::string scene = WAGetCurrentScene();
-    AConnect(ATime(wave, time), [wave, time, card, pos, scene, duration](){
+    AConnect(ATime(wave, time), [wave, time, card, pos, scene, to_time](){
         for (APosition p: pos) {
             bool should_remove = false;
             APlant *ptr = nullptr;
@@ -890,15 +890,15 @@ void TempC(int wave, int time, APlantType card, std::vector<APosition> pos, int 
                 ptr = ACard(card, p.row, p.col);
             }
             if (ptr) {
-                if (duration >= 0) {
+                if (to_time >= time) {
                     if (should_remove){
-                        AConnect(ATime(wave, time + duration), [p, card](){
+                        AConnect(ATime(wave, to_time), [p, card](){
                             ARemovePlant(p.row, p.col, card);
                             ARemovePlant(p.row, p.col, AFLOWER_POT);
                             ARemovePlant(p.row, p.col, ALILY_PAD);
                         });
                     } else {
-                        AConnect(ATime(wave, time + duration), [p, card](){
+                        AConnect(ATime(wave, to_time), [p, card](){
                             ARemovePlant(p.row, p.col, card);
                         });
                     }
@@ -910,9 +910,9 @@ void TempC(int wave, int time, APlantType card, std::vector<APosition> pos, int 
 }
 
 // 种植一个临时植物并在一段时间后移除。此函数还会帮忙临时种植花盆或睡莲。
-// 若给定的时长为负数，则不会移除该植物。
-void TempC(int wave, int time, APlantType card, int row, float col, int duration) {
-    TempC(wave, time, card, {{row, col}}, duration);
+// 若不设定铲除时间，则不会移除该植物。
+void TempC(int wave, int time, APlantType card, int row, float col, int to_time = -1000) {
+    TempC(wave, time, card, {{row, col}}, to_time);
 }
 
 // 在场上的最后一列有僵尸的位置种植一个坚果类。
@@ -930,11 +930,11 @@ void BlockLast(int wave, int time, int to_time = -1000) {
             if (col < 1) col = 1;
             if (col > 9) col = 9;
             if (AGetSeedPtr(AWALL_NUT) && AGetSeedPtr(AWALL_NUT)->IsUsable()) {
-                TempC(wave, time, AWALL_NUT, zombie_to_stop->Row() + 1, col, to_time - time);
+                TempC(wave, time, AWALL_NUT, zombie_to_stop->Row() + 1, col, to_time);
             } else if (AGetSeedPtr(ATALL_NUT) && AGetSeedPtr(ATALL_NUT)->IsUsable()) {
-                TempC(wave, time, ATALL_NUT, zombie_to_stop->Row() + 1, col, to_time - time);
+                TempC(wave, time, ATALL_NUT, zombie_to_stop->Row() + 1, col, to_time);
             } else {
-                TempC(wave, time, APUMPKIN, zombie_to_stop->Row() + 1, col, to_time - time);
+                TempC(wave, time, APUMPKIN, zombie_to_stop->Row() + 1, col, to_time);
             }
         });
     });
@@ -1185,7 +1185,7 @@ void ZomboniN(int wave, int time, int row, float col) {
         N(wave, time, row, col);
     } else {
         AConnect(ATime(wave, 1), [wave, time, row, col](){
-            if (WAExistZombie(ABC_12, {row})) TempC(wave, time, ADOOM_SHROOM, 3, 9, -1);
+            if (WAExistZombie(ABC_12, {row})) TempC(wave, time, ADOOM_SHROOM, 3, 9, -1000);
             else N(wave, time, row, col);
         });
     }
@@ -1193,12 +1193,12 @@ void ZomboniN(int wave, int time, int row, float col) {
 
 // 使用一个樱桃炸弹。此函数不会使用模仿樱桃炸弹。
 void A(int wave, int time, int row, float col) {
-    TempC(wave, time - ADT, ACHERRY_BOMB, row, col, 101);
+    TempC(wave, time - ADT, ACHERRY_BOMB, row, col, time + 1);
 }
 
 // 使用一个火爆辣椒。此函数不会使用模仿火爆辣椒。
 void J(int wave, int time, int row, float col) {
-    TempC(wave, time - ADT, AJALAPENO, row, col, 101);
+    TempC(wave, time - ADT, AJALAPENO, row, col, time + 1);
 }
 
 // 使用智能樱桃消延迟。此函数不会使用模仿樱桃炸弹。
@@ -1218,9 +1218,9 @@ void SmartA(int wave = 10, int time = 400) {
                 }
             }
             if (uby * 2 + uhy * 3 < dby * 2 + dhy * 3) {
-                TempC(wave, time - ADT, ACHERRY_BOMB, {{5, 9}, {2, 9}}, 101);
+                TempC(wave, time - ADT, ACHERRY_BOMB, {{5, 9}, {2, 9}}, time + 1);
             } else {
-                TempC(wave, time - ADT, ACHERRY_BOMB, {{2, 9}, {5, 9}}, 101);
+                TempC(wave, time - ADT, ACHERRY_BOMB, {{2, 9}, {5, 9}}, time + 1);
             }
         });
     } else {
@@ -1244,7 +1244,7 @@ void SmartA(int wave = 10, int time = 400) {
             std::sort(choices.begin(), choices.end(), [status](APosition a, APosition b){
                 return status[a.row - 2] < status[b.row - 2];
             });
-            TempC(wave, time - ADT, ACHERRY_BOMB, choices, 101);
+            TempC(wave, time - ADT, ACHERRY_BOMB, choices, time + 1);
         });
     }
 }

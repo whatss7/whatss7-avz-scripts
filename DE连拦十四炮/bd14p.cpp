@@ -70,8 +70,8 @@ void AScript() {
         // 上半场炸
         P(w, 316, 2, 9);
         // 垫撑杆
-        TempC(w, 420, APUFF_SHROOM, 1, 9, 600 - 420);
-        TempC(w, 420, ASUN_SHROOM, 2, 9, 600 - 420);
+        TempC(w, 420, APUFF_SHROOM, 1, 9, 600);
+        TempC(w, 420, ASUN_SHROOM, 2, 9, 600);
         // 下半场连拦
         P(w, i_len - 200 + delay_1 + delay_2 - i_len, 4, 9);
         P(w, i_len - 200 + delay_1 + delay_2 - i_len + delay_3, 4, 2.45);
