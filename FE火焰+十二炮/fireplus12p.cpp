@@ -13,7 +13,7 @@ void AScript() {
         }
     });
     WAInit({AICE_SHROOM, ACHERRY_BOMB, ATORCHWOOD, APUMPKIN, ABLOVER});
-    WACheck(true, false);
+    WACheck(1);
     WAAutoManageCob();
     WAFixNuts();
     aPlantFixer.Start(ATORCHWOOD, {}, 10);

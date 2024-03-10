@@ -4,7 +4,7 @@ void AScript() {
     WASelectCards({AICE_SHROOM, AM_ICE_SHROOM, ACOFFEE_BEAN, APUMPKIN, ACHERRY_BOMB}, true);
     WABindKeys();
     // WASelectZombies();
-    WACheck(true, true);
+    WACheck();
 
     aIceFiller.Start({{4, 9}});
     WAFixNuts();

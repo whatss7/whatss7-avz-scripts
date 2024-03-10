@@ -2,7 +2,7 @@
 
 void AScript() {
     WAInit({AICE_SHROOM, AM_ICE_SHROOM, ADOOM_SHROOM, ACHERRY_BOMB, ABLOVER, APUMPKIN});
-    WACheck(true, false);
+    WACheck(1);
     WAAutoManageCob();
     WAStartBlover();
     WAFixNuts();
