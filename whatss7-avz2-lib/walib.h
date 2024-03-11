@@ -470,19 +470,33 @@ void WAStopGiga(int wave, int time, const std::vector<APlantType> &plants_to_sto
     });
 }
 
-// 启用女仆秘籍。当到达to_time时停止。
-// 若不设置to_time，则不会停止。
-void WAMaidDance(int wave, int time, int to_time = -1000) {
-    AConnect(ATime(wave, time), [](){ AMaidCheats::Dancing(); });
-    if (to_time > -1000) {
-        AConnect(ATime(wave, to_time), [](){ AMaidCheats::Stop(); });
-    }
+int waMaidDefaultMode = 0;
+
+// 设置默认的女仆秘籍模式。0表示关闭时采用Stop，1表示关闭时采用Move。
+void WAMaidDefault(int mode) {
+    if (mode == 1) AConnect(ATime(1, -599), [](){ AMaidCheats::Move(); });
+    waMaidDefaultMode = mode;
 }
 
 // 启用女仆秘籍。当到达to_wave波次的to_time时停止。
 void WAMaidDance(int wave, int time, int to_wave, int to_time) {
     AConnect(ATime(wave, time), [](){ AMaidCheats::Dancing(); });
-    AConnect(ATime(to_wave, to_time), [](){ AMaidCheats::Stop(); });
+    AConnect(ATime(to_wave, to_time), [](){ 
+        if (waMaidDefaultMode == 0) AMaidCheats::Stop();
+        else AMaidCheats::Move();
+    });
+}
+
+// 启用女仆秘籍。当到达to_time时停止。
+// 若不设置to_time，则不会停止。
+void WAMaidDance(int wave, int time, int to_time = -1000) {
+    AConnect(ATime(wave, time), [](){ AMaidCheats::Dancing(); });
+    if (to_time > -1000) {
+        AConnect(ATime(wave, to_time), [](){
+            if (waMaidDefaultMode == 0) AMaidCheats::Stop();
+            else AMaidCheats::Move();
+        });
+    }
 }
 
 #pragma endregion
@@ -918,8 +932,8 @@ void TempC(int wave, int time, APlantType card, std::vector<APosition> pos, int 
 
 // 种植一个临时植物并在一段时间后移除。此函数还会帮忙临时种植花盆或睡莲。
 // 若不设定铲除时间，则不会移除该植物。
-void TempC(int wave, int time, APlantType card, int row, float col, int duration = -1000) {
-    TempC(wave, time, card, {{row, col}}, ANowTime().time + duration);
+void TempC(int wave, int time, APlantType card, int row, float col, int to_time = -1000) {
+    TempC(wave, time, card, {{row, col}}, to_time);
 }
 
 // 种植一个临时植物并在一段时间后移除。此函数还会帮忙临时种植花盆或睡莲。
@@ -950,10 +964,10 @@ void BlockLast(int wave, int time, int to_time = -1000) {
             float col = (zombie_to_stop->Abscissa() + 40) / 80.0f;
             if (col < 1) col = 1;
             if (col > 9) col = 9;
-            if (AGetSeedPtr(AWALL_NUT) && AGetSeedPtr(AWALL_NUT)->IsUsable()) {
-                TempC(wave, time, AWALL_NUT, zombie_to_stop->Row() + 1, col, to_time);
-            } else if (AGetSeedPtr(ATALL_NUT) && AGetSeedPtr(ATALL_NUT)->IsUsable()) {
+            if (AGetSeedPtr(ATALL_NUT) && AGetSeedPtr(ATALL_NUT)->IsUsable()) {
                 TempC(wave, time, ATALL_NUT, zombie_to_stop->Row() + 1, col, to_time);
+            } else if (AGetSeedPtr(AWALL_NUT) && AGetSeedPtr(AWALL_NUT)->IsUsable()) {
+                TempC(wave, time, AWALL_NUT, zombie_to_stop->Row() + 1, col, to_time);
             } else {
                 TempC(wave, time, APUMPKIN, zombie_to_stop->Row() + 1, col, to_time);
             }
