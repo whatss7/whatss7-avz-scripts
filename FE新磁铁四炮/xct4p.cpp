@@ -1,4 +1,4 @@
-#include "../whatss7-avz2-lib/walib.h"
+#include "../walib.h"
 
 void AScript() {
     WAInit({

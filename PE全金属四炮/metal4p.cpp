@@ -1,4 +1,4 @@
-#include "../whatss7-avz2-lib/walib.h"
+#include "../walib.h"
 
 void AScript() {
     WAInit({AICE_SHROOM, AM_ICE_SHROOM, ADOOM_SHROOM, ACOFFEE_BEAN, ALILY_PAD, 
