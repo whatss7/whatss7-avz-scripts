@@ -1,11 +1,11 @@
 #include "../walib.h"
 
 void AScript() {
-    WAInit({
+    Init({
         AICE_SHROOM, AM_ICE_SHROOM, ADOOM_SHROOM, ALILY_PAD, ACHERRY_BOMB, 
         AJALAPENO, ASQUASH, ASPIKEWEED, AGARLIC, APUMPKIN
     });
-    WAFixNuts();
+    AutoFixNuts();
     // C6u: IC-PA|N|Ia-PA'|PP (19, 6, 19, 6)
     // w1-w9: PP|ICC-PA|N|IaC-PA'|PP|ICC-PA|N|IaC-PA'|PP
     // w10-w19: PP|ICC-PA|N|IaC-PA'|PP|ICC-PA|N|IaC-PA'|PP|ICC-PA
@@ -21,16 +21,16 @@ void AScript() {
     for (int w: {2, 6, 11, 15, 19}) {
         ManualI(w, 1, 1, 6, 601);
         AConnect(ATime(w, 400), [](){
-            if (WAExistZombie(ABC_12, {2})) {
+            if (ExistZombie(ABC_12, {2})) {
                 ACard(ASPIKEWEED, 2, 9);
             }
         });
         AConnect(ATime(w, 1200), [](){
-            if (WAExistZombie(ABC_12, {5})) {
+            if (ExistZombie(ABC_12, {5})) {
                 ACard(ASPIKEWEED, 5, 7);
             }
         });
-        if (WAExistZombie(ABC_12, {5})) C(w, 1200, ASPIKEWEED, 5, 7);
+        if (ExistZombie(ABC_12, {5})) C(w, 1200, ASPIKEWEED, 5, 7);
         A(w, 1900 - 200, 2, 9);
         P(w, 1900 - 200, 5, 8.5);
     }
@@ -38,12 +38,12 @@ void AScript() {
         ManualI(w, 1, 1, 6, 601);
         C(w, 400, ASQUASH, {{2, 9}, {2, 8}, {2, 7}});
         AConnect(ATime(w, 700), [](){
-            if (WAExistZombie(AXC_15, {2})) {
+            if (ExistZombie(AXC_15, {2})) {
                 ACard(AGARLIC, 2, 9);
             }
         });
         AConnect(ATime(w, 1200), [](){
-            if (WAExistZombie(ABC_12, {5})) {
+            if (ExistZombie(ABC_12, {5})) {
                 ACard(ASPIKEWEED, 5, 7);
             }
         });

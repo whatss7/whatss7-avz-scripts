@@ -46,17 +46,12 @@ ALogger<AConsole> waDebugLogger;
 #endif
 ALogger<AMsgBox> waLogger;
 ALogger<APvzGui> waIngameLogger;
-ATickRunner waRecoverEndRunner;
-ATickRunner waCheckRunner;
-ATickRunner waBloverTickRunner;
-ATickRunner waFixCobRunner;
-APlantFixer waWallNutFixer, waTallNutFixer, waPumpkinFixer;
 ACobManager waRoofCobManager[9];
 
-// 控制 `WACheck()` 函数所检查的植物类型。
+// 控制 `StartCheckMode()` 函数所检查的植物类型。
 std::vector<APlantType> waCheckPlants = { ACOB_CANNON, AGLOOM_SHROOM, AWINTER_MELON };
 
-// 控制 `WACheck()` 函数所排除的植物位置。
+// 控制 `StartCheckMode()` 函数所排除的植物位置。
 std::vector<APosition> waCheckIgnore = {  };
 
 // 控制 `ForEnd()` 和 `PPForEnd()` 函数所无视的僵尸类型。
@@ -97,7 +92,7 @@ private:
 
 #pragma region 场上信息获取
 // 获得当前所处的场地。
-std::string WAGetCurrentScene() {
+std::string GetCurrentScene() {
     std::string scenes[] = { "DE", "NE", "PE", "FE", "RE", "ME" };
     int scene_id = AGetMainObject()->Scene();
     if (scene_id < 0 || scene_id > 5) { waLogger.Error("未知的场地"); return ""; }
@@ -105,7 +100,7 @@ std::string WAGetCurrentScene() {
 }
 
 // 判断场上某行是否有指定类型的僵尸。此处行从 1 开始编号。
-bool WAExistZombie(std::vector<AZombieType> types, std::vector<int> rows = {1, 2, 3, 4, 5, 6}) {
+bool ExistZombie(std::vector<AZombieType> types, std::vector<int> rows = {1, 2, 3, 4, 5, 6}) {
     for (auto &&zombie: aAliveZombieFilter) {
         if (std::find(types.begin(), types.end(), zombie.Type()) != types.end()) {
             if (std::find(rows.begin(), rows.end(), zombie.Row() + 1) != rows.end()) {
@@ -117,12 +112,12 @@ bool WAExistZombie(std::vector<AZombieType> types, std::vector<int> rows = {1, 2
 }
 
 // 判断场上某行是否有指定类型的僵尸。此处行从 1 开始编号。
-bool WAExistZombie(AZombieType type, std::vector<int> rows = {1, 2, 3, 4, 5, 6}) {   
-    return WAExistZombie(std::vector<AZombieType>({type}), rows);
+bool ExistZombie(AZombieType type, std::vector<int> rows = {1, 2, 3, 4, 5, 6}) {   
+    return ExistZombie(std::vector<AZombieType>({type}), rows);
 }
 
 // 判断指定位置是否有指定的植物。
-bool WAExistPlant(APlantType type, int row, int col) {
+bool ExistPlant(APlantType type, int row, int col) {
     for (auto &&plant: aAlivePlantFilter) {
         if (plant.Type() == type && plant.Col() + 1 == col && plant.Row() + 1 == row) {
             return true;
@@ -132,9 +127,9 @@ bool WAExistPlant(APlantType type, int row, int col) {
 }
 
 // 判断指定位置是否有指定的植物。
-bool WAExistPlant(std::vector<APlantType> types, int row, int col) {
+bool ExistPlant(std::vector<APlantType> types, int row, int col) {
     for (auto type: types) {
-        if (WAExistPlant(type, row, col)) return true;
+        if (ExistPlant(type, row, col)) return true;
     }
     return false;
 }
@@ -157,11 +152,11 @@ bool WAExistPlant(std::vector<APlantType> types, int row, int col) {
 // `"PEM"` PE中速关: 路障 撑杆 舞王 潜水 冰车 海豚 小丑 矿工 跳跳 蹦极 扶梯
 // `"PEF"` PE快速关: 路障 撑杆 舞王 潜水 冰车 海豚 小丑 矿工 蹦极 扶梯 白眼
 // `"DEA"`, `"NEA"`, `"PEA"`, `"FEA"`, `"REA"`, `"MEA"`: 同时选择所有可能出现在场上的僵尸，禁止使用自然出怪
-void WASelectZombies(std::string scene = "Auto", bool natural = false) {
+void SelectZombiesForScene(std::string scene = "Auto", bool natural = false) {
     for (int i = 0; i < scene.length(); i++) {
         scene[i] = toupper(scene[i]);
     }
-    if (scene == "AUTO")  scene = WAGetCurrentScene();
+    if (scene == "AUTO")  scene = GetCurrentScene();
 
     std::vector<AZombieType> zombies;
     if (scene == "RANDOM") {
@@ -197,7 +192,7 @@ void WASelectZombies(std::string scene = "Auto", bool natural = false) {
     if (!zombies.empty()) ASetZombies(std::vector<int>(zombies.begin(), zombies.end()), natural ? ASetZombieMode::INTERNAL : ASetZombieMode::AVERAGE);
 }
 
-void WASelectCards(std::vector<APlantType> plants = {}, bool fast = false) {
+void SelectCardsAndFill(std::vector<APlantType> plants = {}, bool fast = false) {
     // 使用常用植物填充植物格防止漏带
     const std::vector<APlantType> extra_plants = {
         AICE_SHROOM,        // 寒冰菇
@@ -229,7 +224,7 @@ void WASelectCards(std::vector<APlantType> plants = {}, bool fast = false) {
 // `E`: 5倍速
 // `R`: 10倍速
 // `T`: 0.5倍速
-void WABindKeys() {
+void BindSpeedKeys() {
     AConnect('Q', [](){ ASetGameSpeed(1); });
     AConnect('W', [](){ ASetGameSpeed(2); });
     AConnect('E', [](){ ASetGameSpeed(5); });
@@ -237,28 +232,11 @@ void WABindKeys() {
     AConnect('T', [](){ ASetGameSpeed(0.5); });
 }
 
-// 初始化选卡并指定僵尸。传入空数组不指定僵尸，使用自然生成的僵尸。
-// 选卡剩下的格子会用一些常用的植物填充防止漏选。
-void WAInit(const std::vector<APlantType> &plants, const std::vector<AZombieType> &zombies, bool cycle = false, bool fast = false) {
-    if (!zombies.empty()) ASetZombies(std::vector<int>(zombies.begin(), zombies.end()));
-    WASelectCards(plants, fast);
-    WABindKeys();
-}
-
-// 初始化选卡，并根据场地选择合理的僵尸。
-// 选卡剩下的格子会用一些常用的植物填充防止漏选。
-// 场景可传入的参数参见 `WASelectZombies()`.
-void WAInit(const std::vector<APlantType> &plants, const char *scene = "Auto", bool fast = false) {
-    WASelectZombies(scene);
-    WASelectCards(plants, fast);
-    WABindKeys();
-}
-
 // 自动管理全场炮。若需要使用后续轨道语言函数，则此处必须进行自动管理。
 // 在屋顶场景，炮尾处于1-2列的炮和3列的炮分别单独归类。
-void WAAutoManageCob() {
+void AutoManageCob() {
     AConnect(ATime(1, -599), [] {
-        std::string scene = WAGetCurrentScene();
+        std::string scene = GetCurrentScene();
         if (scene == "RE" || scene == "ME") {
             std::vector<AGrid> grids[9];
             for (auto &&plant: aAlivePlantFilter) {
@@ -280,15 +258,36 @@ void WAAutoManageCob() {
     });
 }
 
-void WASkipTo(int wave, int time = -199) {
+
+// 初始化选卡，指定僵尸，并自动管理全场炮。传入空数组不指定僵尸，使用自然生成的僵尸。
+// 选卡剩下的格子会用一些常用的植物填充防止漏选。
+void Init(const std::vector<APlantType> &plants, const std::vector<AZombieType> &zombies, bool cycle = false, bool fast = false) {
+    if (!zombies.empty()) ASetZombies(std::vector<int>(zombies.begin(), zombies.end()));
+    SelectCardsAndFill(plants, fast);
+    BindSpeedKeys();
+    AutoManageCob();
+}
+
+// 初始化选卡，根据场地选择合理的僵尸，并自动管理全场炮。
+// 选卡剩下的格子会用一些常用的植物填充防止漏选。
+// 场景可传入的参数参见 `SelectZombiesForScene()`.
+void Init(const std::vector<APlantType> &plants, const char *scene = "Auto", bool fast = false) {
+    SelectZombiesForScene(scene);
+    SelectCardsAndFill(plants, fast);
+    BindSpeedKeys();
+}
+
+void SkipToTime(int wave, int time = -199) {
     AConnect(ATime(1, -590), [wave, time](){
         ASkipTick(wave, time);
     });
 }
 
+ATickRunner waCheckRunner;
+
 // 启动测试模式：开启脚本循环，10倍速，当忧郁菇、冰瓜投手或玉米加农炮受损时弹窗提示。
 // 检测受损的植物类型可通过修改 waCheckPlants 进行设置。
-void WACheck(float speed = 10, bool reload = true) {
+void StartCheckMode(float speed = 10, bool reload = true) {
     if (reload) ASetReloadMode(AReloadMode::MAIN_UI_OR_FIGHT_UI);
     ASetGameSpeed(speed);
     waCheckRunner.Start([](){
@@ -312,7 +311,7 @@ void WACheck(float speed = 10, bool reload = true) {
     });
 }
 
-void WARecordWaves() {
+void RecordWaves() {
     for (int w: WaveList(1, 20)) {
         AConnect(ATime(w, -1), [w](){
             waIngameLogger.Info("Wave " + std::to_string(w));
@@ -324,8 +323,9 @@ void WARecordWaves() {
 
 #pragma region 自动操作
 
+ATickRunner waBloverTickRunner;
 // 有概率漏气球时，加上三叶草保险
-void WAStartBlover(int row = 1, int column = 1) {
+void AutoBlover(int row = 1, int column = 1) {
     waBloverTickRunner.Start([row, column](){
         bool needBlow = false;
         for (auto &&zombie: aAliveZombieFilter) {
@@ -341,8 +341,10 @@ void WAStartBlover(int row = 1, int column = 1) {
         }
     });
 }
+
+APlantFixer waWallNutFixer, waTallNutFixer, waPumpkinFixer;
 // 在参数指定的时间，开始自动修补全场坚果。
-void WAFixNuts(int wave = 1, int time = -599) {
+void AutoFixNuts(int wave = 1, int time = -599) {
     AConnect(ATime(wave, time), [] {
         if(AGetSeedIndex(AWALL_NUT) != -1){
             waWallNutFixer.Start(AWALL_NUT, {}, 4000 / 3 * 2);
@@ -356,9 +358,10 @@ void WAFixNuts(int wave = 1, int time = -599) {
     });
 }
 
+ATickRunner waFixCobRunner;
 // 在参数指定的时间，开始自动修补全场炮。
 // 当炮的装填倒计时大于20秒时，才会进行修补。
-void WAFixCobs(int wave = 1, int time = -599) {
+void AutoFixCobs(int wave = 1, int time = -599) {
     AConnect(ATime(wave, time), [](){
         if (AGetSeedPtr(ACOB_CANNON) && AGetSeedPtr(AKERNEL_PULT)) {
             waFixCobRunner.Start([](){
@@ -384,7 +387,7 @@ void WAFixCobs(int wave = 1, int time = -599) {
 }
 
 // 在参数指定的时间，使用墓碑吞噬者尝试种植所有可能生长墓碑的位置。
-void WARemoveGraves(int wave, int time) {
+void RemoveGraves(int wave, int time) {
     AConnect(ATime(wave, time), [](){
         ACard(AGRAVE_BUSTER, {
             {1, 9}, {2, 9}, {3, 9}, {4, 9}, {5, 9},
@@ -399,12 +402,12 @@ void WARemoveGraves(int wave, int time) {
 ATickRunner waStopGigaRunner;
 int waStopGiga_last_row, waStopGiga_last_col;
 
-// 禁止 `WAStopGiga()` 在特定列放置垫材。这是为了防止反复尝试在冰道上放置垫材导致发出大量音效。
+// 禁止 `StopGiga()` 在特定列放置垫材。这是为了防止反复尝试在冰道上放置垫材导致发出大量音效。
 std::vector<int> waStopGigaBanCols;
 
 // 持续在最前面的巨人面前种植垫材。
 // 不设置to_time时，一直垫到下波僵尸刷新。
-void WAStopGiga(int wave, int time, const std::vector<APlantType> &plants_to_stop, int to_time = -999) {
+void StopGiga(int wave, int time, const std::vector<APlantType> &plants_to_stop, int to_time = -999) {
     AConnect(ATime(wave, time), [plants_to_stop](){
         waStopGiga_last_row = waStopGiga_last_col = -1;
         waStopGigaRunner.Start([plants_to_stop](){
@@ -441,7 +444,7 @@ void WAStopGiga(int wave, int time, const std::vector<APlantType> &plants_to_sto
             if (now_col > 9 || now_col < 1) return;
             // 在投掷小鬼或在举锤的不垫
             if (min_zombie->State() == 69 || min_zombie->State() == 70) return;
-            if (!WAExistPlant(plants_to_stop, now_row, now_col) && !WAExistPlant(plants_to_stop, now_row, now_col)) {
+            if (!ExistPlant(plants_to_stop, now_row, now_col) && !ExistPlant(plants_to_stop, now_row, now_col)) {
                 for (APlantType plant: plants_to_stop) {
                     if (AGetSeedPtr(plant) && AGetSeedPtr(plant)->IsUsable()) {
                         if (std::find(waStopGigaBanCols.begin(), waStopGigaBanCols.end(), now_col) == waStopGigaBanCols.end()) {
@@ -473,13 +476,13 @@ void WAStopGiga(int wave, int time, const std::vector<APlantType> &plants_to_sto
 int waMaidDefaultMode = 0;
 
 // 设置默认的女仆秘籍模式。0表示关闭时采用Stop，1表示关闭时采用Move。
-void WAMaidDefault(int mode) {
+void SetMaidDefault(int mode) {
     if (mode == 1) AConnect(ATime(1, -599), [](){ AMaidCheats::Move(); });
     waMaidDefaultMode = mode;
 }
 
 // 启用女仆秘籍。当到达to_wave波次的to_time时停止。
-void WAMaidDance(int wave, int time, int to_wave, int to_time) {
+void MaidDance(int wave, int time, int to_wave, int to_time) {
     AConnect(ATime(wave, time), [](){ AMaidCheats::Dancing(); });
     AConnect(ATime(to_wave, to_time), [](){ 
         if (waMaidDefaultMode == 0) AMaidCheats::Stop();
@@ -489,7 +492,7 @@ void WAMaidDance(int wave, int time, int to_wave, int to_time) {
 
 // 启用女仆秘籍。当到达to_time时停止。
 // 若不设置to_time，则不会停止。
-void WAMaidDance(int wave, int time, int to_time = -1000) {
+void MaidDance(int wave, int time, int to_time = -1000) {
     AConnect(ATime(wave, time), [](){ AMaidCheats::Dancing(); });
     if (to_time > -1000) {
         AConnect(ATime(wave, to_time), [](){
@@ -505,7 +508,7 @@ void WAMaidDance(int wave, int time, int to_time = -1000) {
 
 // 判断是否为有效的时间。
 // w1 / w10 / w20 的时间总是有效，而其他波次小于 -200 的时间无效。
-bool WAIsValidTime(int wave, int time) {
+bool IsValidTime(int wave, int time) {
     if (wave == 1 || wave == 10 || wave == 20) return true;
     else return time >= -200;
 }
@@ -517,7 +520,7 @@ bool WAIsValidTime(int wave, int time) {
 // 屋顶场景，1-2路的炮优先选择风炮；3-5路优先选择平炮。
 void PP(int wave, int time = -1, float col = 9, std::vector<int> rows = {}) {
     if (rows.empty()) {
-        std::string scene = WAGetCurrentScene();
+        std::string scene = GetCurrentScene();
         if (scene == "PE" || scene == "FE") {
             rows = {2, 5};
         } else {
@@ -525,7 +528,7 @@ void PP(int wave, int time = -1, float col = 9, std::vector<int> rows = {}) {
         }
     }
     if (time < 0) time = PCP;
-    std::string scene = WAGetCurrentScene();
+    std::string scene = GetCurrentScene();
     if (scene == "RE" || scene == "ME") {
         for (int row: rows) {
             if (row <= 2) {
@@ -582,7 +585,7 @@ void P(int wave, int time, int row, float col) {
 // 若不设置时间，则 423cs (`PCP + 107`) 时生效
 // 屋顶场景，1-2路的炮优先选择风炮；3-5路优先选择平炮。
 void DD(int wave, int time = -1, float col = 8, std::vector<int> rows = {}) {
-    std::string scene = WAGetCurrentScene();
+    std::string scene = GetCurrentScene();
     if (scene == "DE" || scene == "NE") {
         waLogger.Error("DD() 不可用于前院。");
         return;
@@ -602,7 +605,7 @@ void DD(int wave, int time = -1, float col = 8, std::vector<int> rows = {}) {
 // 若不设置位置，默认炸2-9和4-9。
 // 请注意，本函数先填列数，再填行数。
 void RoofPP(int wave, int time, int cobCol, float col = 9, std::vector<int> rows = {2, 4}) {
-    std::string scene = WAGetCurrentScene();
+    std::string scene = GetCurrentScene();
     if (scene != "RE" && scene != "ME") {
         waLogger.Error("RoofPP() 只能在屋顶使用");
         return;
@@ -627,7 +630,7 @@ void RoofP(int wave, int time, int cobCol, int row, float col) {
 }
 
 bool ForEndJudge(int wave) {
-    std::string scene = WAGetCurrentScene();
+    std::string scene = GetCurrentScene();
     if ((scene == "PE" || scene == "FE") && waForEndIgnoreInWater.empty()) {
         waForEndIgnoreInWater = waForEndIgnore;
     }
@@ -662,7 +665,7 @@ void ForEnd(int wave, int time, std::function<void()> action) {
 
 // 用于收尾的炮。是对应波次（处于下一波的刷新倒计时也算本波）且场上有僵尸才发射。注意此函数w9/w19不计伴舞。
 void PPForEnd(int wave, int time, float col = 9, std::vector<int> rows = {}) {
-    std::string scene = WAGetCurrentScene();
+    std::string scene = GetCurrentScene();
     int VCFT = (scene == "RE" || scene == "ME" ? 387 : 373);
     ForEnd(wave, time - VCFT, [=](){ PP(wave, time, col, rows); });
 }
@@ -672,7 +675,7 @@ void PPForEnd(int wave, int time, float col = 9, std::vector<int> rows = {}) {
 // 为了收尾的正常运行，请确保场上的红眼都是本波红眼。
 // 本函数已进行 `ForEnd()` 判定。
 void PPExceptOne(int wave, int time, float col = 9) {
-    std::string scene = WAGetCurrentScene();
+    std::string scene = GetCurrentScene();
     int VCFT = (scene == "RE" || scene == "ME" ? RCFT : CFT);
     ForEnd(wave, time - VCFT, [=](){
         AConnect(ATime(wave, time - VCFT), [wave, time, col](){
@@ -701,7 +704,7 @@ void PPExceptOne(int wave, int time, float col = 9) {
                 waDebugLogger.Info("distr of #: #", i, dist[i]);
             }
             #endif
-            std::string scene = WAGetCurrentScene();
+            std::string scene = GetCurrentScene();
             if (scene == "PE" || scene == "FE") {
                 // 六行场地收尾
                 if (dist[1] == 1) {
@@ -835,7 +838,7 @@ void PPExceptOne(int wave, int time, float col = 9) {
 // 如果场上没有红眼，则对最后一列有僵尸的位置开炮。
 // 本函数已进行 `ForEnd()` 判定。
 void PPLast(int wave, int time) {
-    std::string scene = WAGetCurrentScene();
+    std::string scene = GetCurrentScene();
     int VCFT = (scene == "RE" || scene == "ME" ? 387 : 373);
     ForEnd(wave, time - VCFT, [=](){
         AConnect(ATime(wave, time - VCFT), [wave, time](){
@@ -896,15 +899,15 @@ void C(int wave, int time, APlantType plant, int col, float row) {
 // 种植一个临时植物并在一段时间后移除。此函数还会帮忙临时种植花盆或睡莲。
 // 若不设定铲除时间，则不会移除该植物。
 void TempC(int wave, int time, APlantType card, std::vector<APosition> pos, int to_time = -1000) {
-    std::string scene = WAGetCurrentScene();
+    std::string scene = GetCurrentScene();
     AConnect(ATime(wave, time), [wave, time, card, pos, scene, to_time](){
         for (APosition p: pos) {
             bool should_remove = false;
             APlant *ptr = nullptr;
-            if ((scene == "RE" || scene == "ME") && card != AFLOWER_POT && !WAExistPlant(AFLOWER_POT, p.row, p.col)) {
+            if ((scene == "RE" || scene == "ME") && card != AFLOWER_POT && !ExistPlant(AFLOWER_POT, p.row, p.col)) {
                 ptr = ACard({AFLOWER_POT, card}, p.row, p.col)[1];
                 should_remove = true;
-            } else if ((scene == "PE" || scene == "FE") && card != ALILY_PAD && p.row >= 3 && p.row <= 4 && !WAExistPlant(ALILY_PAD, p.row, p.col)) {
+            } else if ((scene == "PE" || scene == "FE") && card != ALILY_PAD && p.row >= 3 && p.row <= 4 && !ExistPlant(ALILY_PAD, p.row, p.col)) {
                 ptr = ACard({ALILY_PAD, card}, p.row, p.col)[1];
                 should_remove = true;
             } else {
@@ -983,7 +986,7 @@ void BlockLast(int wave, int time, int to_time = -1000) {
 // 由于咖啡豆的不确定性，有概率延迟1cs生效。
 void I(int wave, int time = 1, int last_wave_length = -1) {
     time -= CBT + ADT;
-    if (!WAIsValidTime(wave, time) && last_wave_length > 0) {
+    if (!IsValidTime(wave, time) && last_wave_length > 0) {
         wave -= 1;
         time += last_wave_length;
     }
@@ -996,7 +999,7 @@ void I(int wave, int time = 1, int last_wave_length = -1) {
 // 此函数使得寒冰菇精准生效。
 void I3(int wave, int time = 11, int last_wave_length = -1) {
     time -= CBT + ADT;
-    if (!WAIsValidTime(wave, time) && last_wave_length > 0) {
+    if (!IsValidTime(wave, time) && last_wave_length > 0) {
         wave -= 1;
         time += last_wave_length;
     }
@@ -1008,13 +1011,13 @@ void I3(int wave, int time = 11, int last_wave_length = -1) {
 
 bool CanPlaceImitate(int wave, int time, int last_wave_length = -1) {
     bool isDay = true;
-    std::string scene = WAGetCurrentScene();
+    std::string scene = GetCurrentScene();
     if (scene == "NE" || scene == "FE" || scene == "ME") {
         isDay = false;
     }
     int VCBT = isDay ? CBT : 0;
     int imitate_wave = wave, imitate_time = time - (MDT + (isDay ? 1 : 0)) - VCBT - ADT;
-    if (!WAIsValidTime(imitate_wave, imitate_time) && last_wave_length > 0) {
+    if (!IsValidTime(imitate_wave, imitate_time) && last_wave_length > 0) {
         imitate_wave -= 1;
         imitate_time += last_wave_length;
     }
@@ -1025,7 +1028,7 @@ bool CanPlaceImitate(int wave, int time, int last_wave_length = -1) {
 void ManualShroom(int wave, int time, std::vector<APosition> pos, APlantType card, int last_wave_length, int protect, bool accurate = false) {
     bool isDay = true;
     APlantType imitated = (card == AICE_SHROOM ? AM_ICE_SHROOM : AM_DOOM_SHROOM);
-    std::string scene = WAGetCurrentScene();
+    std::string scene = GetCurrentScene();
     if (scene == "NE" || scene == "FE" || scene == "ME") {
         isDay = false;
     }
@@ -1033,12 +1036,12 @@ void ManualShroom(int wave, int time, std::vector<APosition> pos, APlantType car
 
     // 获取对应种植的时间
     int imitate_wave = wave, imitate_time = time - (MDT + (isDay ? 1 : 0)) - VCBT - ADT;
-    if (!WAIsValidTime(imitate_wave, imitate_time) && last_wave_length > 0) {
+    if (!IsValidTime(imitate_wave, imitate_time) && last_wave_length > 0) {
         imitate_wave -= 1;
         imitate_time += last_wave_length;
     }
     int normal_wave = wave, normal_time = time - VCBT - ADT;
-    if (!WAIsValidTime(normal_wave, normal_time) && last_wave_length > 0) {
+    if (!IsValidTime(normal_wave, normal_time) && last_wave_length > 0) {
         normal_wave -= 1;
         normal_time += last_wave_length;
     }
@@ -1049,10 +1052,10 @@ void ManualShroom(int wave, int time, std::vector<APosition> pos, APlantType car
             for (APosition p: pos) {
                 APlant *ptr = nullptr;
                 bool should_remove = false;
-                if ((scene == "RE" || scene == "ME") && !WAExistPlant(AFLOWER_POT, p.row, p.col)) {
+                if ((scene == "RE" || scene == "ME") && !ExistPlant(AFLOWER_POT, p.row, p.col)) {
                     ptr = ACard({AFLOWER_POT, card}, p.row, p.col)[1];
                     should_remove = true;
-                } else if ((scene == "PE" || scene == "FE") && p.row >= 3 && p.row <= 4 && !WAExistPlant(ALILY_PAD, p.row, p.col)) {
+                } else if ((scene == "PE" || scene == "FE") && p.row >= 3 && p.row <= 4 && !ExistPlant(ALILY_PAD, p.row, p.col)) {
                     ptr = ACard({ALILY_PAD, card}, p.row, p.col)[1];
                     should_remove = true;
                 } else {
@@ -1062,7 +1065,7 @@ void ManualShroom(int wave, int time, std::vector<APosition> pos, APlantType car
                     AConnect(ANowDelayTime(imitate ? MDT + (isDay ? 1 : 0) : 0), [=](){
                         bool should_remove_pumpkin = false;
                         if (accurate && isDay) ASetPlantActiveTime(card, (VCBT + ADT));
-                        if (protect > 1 && !WAExistPlant(APUMPKIN, p.row, p.col)) {
+                        if (protect > 1 && !ExistPlant(APUMPKIN, p.row, p.col)) {
                             should_remove_pumpkin = true;
                             ACard(APUMPKIN, p.row, p.col);
                         }
@@ -1141,18 +1144,18 @@ void ManualI3(int wave, int time, int row, float col, int last_wave_length = -1,
 // 不考虑模仿花盆、模仿睡莲、模仿咖啡豆和模仿南瓜头。
 void TempI(int wave, int time, std::vector<APosition> pos, int last_wave_length = -1, int protect = 0, bool accurate = false) {
     bool isDay = true;
-    std::string scene = WAGetCurrentScene();
+    std::string scene = GetCurrentScene();
     if (scene == "NE" || scene == "FE" || scene == "ME") {
         isDay = false;
     }
     int VCBT = isDay ? CBT : 0;
     int imitate_wave = wave, imitate_time = time - (MDT + (isDay ? 1 : 0)) - VCBT - ADT;
-    if (!WAIsValidTime(imitate_wave, imitate_time) && last_wave_length > 0) {
+    if (!IsValidTime(imitate_wave, imitate_time) && last_wave_length > 0) {
         imitate_wave -= 1;
         imitate_time += last_wave_length;
     }
     int normal_wave = wave, normal_time = time - VCBT - ADT;
-    if (!WAIsValidTime(normal_wave, normal_time) && last_wave_length > 0) {
+    if (!IsValidTime(normal_wave, normal_time) && last_wave_length > 0) {
         normal_wave -= 1;
         normal_time += last_wave_length;
     }
@@ -1214,13 +1217,13 @@ void N(int wave, int time, int row, float col, int last_wave_length = -1, int pr
 // 本路无冰车时，与N函数相同；而有冰车时，在生效时间点再放。
 // 不考虑模仿花盆。
 void ZomboniN(int wave, int time, int row, float col) {
-    const std::string scene = WAGetCurrentScene();
-    if (scene != "NE" && scene != "ME") {
-        waLogger.Warning("ZomboniN 仅用于 NE 与 ME. 将改用 N()");
+    const std::string scene = GetCurrentScene();
+    if (scene != "ME") {
+        waLogger.Warning("ZomboniN 仅用于 ME. 将改用 N()");
         N(wave, time, row, col);
     } else {
         AConnect(ATime(wave, 1), [wave, time, row, col](){
-            if (WAExistZombie(ABC_12, {row})) TempC(wave, time, ADOOM_SHROOM, 3, 9, -1000);
+            if (ExistZombie(ABC_12, {row})) TempC(wave, time, ADOOM_SHROOM, row, col);
             else N(wave, time, row, col);
         });
     }
@@ -1241,7 +1244,7 @@ void J(int wave, int time, int row, float col) {
 // 本函数未考虑冰车碾压。
 void SmartA(int wave = 10, int time = 400, int no_red_time = 550) {
     if (!AGetZombieTypeList()[AHY_32]) time = no_red_time;
-    std::string scene = WAGetCurrentScene();
+    std::string scene = GetCurrentScene();
     if (scene == "PE" || scene == "FE") {
         AConnect(ATime(wave, time - ADT), [wave, time](){
             if (!ForEndJudge(wave)) return;

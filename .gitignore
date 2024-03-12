@@ -6,3 +6,4 @@ clear.cpp
 learn.cpp
 *.seml
 dest/*
+semls/*

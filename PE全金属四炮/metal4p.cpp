@@ -1,12 +1,12 @@
 #include "../walib.h"
 
 void AScript() {
-    WAInit({AICE_SHROOM, AM_ICE_SHROOM, ADOOM_SHROOM, ACOFFEE_BEAN, ALILY_PAD, 
+    Init({AICE_SHROOM, AM_ICE_SHROOM, ADOOM_SHROOM, ACOFFEE_BEAN, ALILY_PAD, 
             ATALL_NUT, ACHERRY_BOMB, AUMBRELLA_LEAF, APUFF_SHROOM, ASUN_SHROOM});
     // ch4-N: I-PP | I-PP | I-N | PP
     const int i1_len = 1800, i2_len = 1200;
     aIceFiller.Start({{3, 1}, {4, 1}});
-    WAFixNuts(1, -598);
+    AutoFixNuts(1, -598);
     // w1-w5: N | PP | I-PP | I-PP | I-N | ...
     // 需要布好的睡莲：3-7高坚果，4-7高坚果，第一个核，3-1存冰位荷叶，4-1存冰位荷叶，3-4叶子保护伞
     // 3-7高坚果在w4 419cs前种下 -> 4-7要在(w4 -2582) = (w3 -782) = (w2 -181) = (w1 420)前种下
