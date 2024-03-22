@@ -261,7 +261,7 @@ void AutoManageCob() {
 
 // 初始化选卡，指定僵尸，并自动管理全场炮。传入空数组不指定僵尸，使用自然生成的僵尸。
 // 选卡剩下的格子会用一些常用的植物填充防止漏选。
-void Init(const std::vector<APlantType> &plants, const std::vector<AZombieType> &zombies, bool cycle = false, bool fast = false) {
+void Init(const std::vector<APlantType> &plants, const std::vector<AZombieType> &zombies, bool fast = false) {
     if (!zombies.empty()) ASetZombies(std::vector<int>(zombies.begin(), zombies.end()));
     SelectCardsAndFill(plants, fast);
     BindSpeedKeys();
@@ -309,6 +309,12 @@ void StartCheckMode(float speed = 10, bool reload = true) {
             }
         }
     });
+}
+
+// 启动重载模式：开启脚本循环，1倍速。与 `StartCheckMode()` 不同在于，不检查植物受损情况。
+void StartReloadMode(float speed = 1, bool reload = true) {
+    if (reload) ASetReloadMode(AReloadMode::MAIN_UI_OR_FIGHT_UI);
+    ASetGameSpeed(speed);
 }
 
 void RecordWaves() {
@@ -407,15 +413,17 @@ std::vector<int> waStopGigaBanCols;
 
 // 持续在最前面的巨人面前种植垫材。
 // 不设置to_time时，一直垫到下波僵尸刷新。
-void StopGiga(int wave, int time, const std::vector<APlantType> &plants_to_stop, int to_time = -999) {
-    AConnect(ATime(wave, time), [plants_to_stop](){
+// 不设置row时，自动寻找巨人；设置row时，只垫对应路巨人。
+void StopGiga(int wave, int time, const std::vector<APlantType> &plants_to_stop, int to_time = -999, int row = -1) {
+    AConnect(ATime(wave, time), [plants_to_stop, row](){
         waStopGiga_last_row = waStopGiga_last_col = -1;
-        waStopGigaRunner.Start([plants_to_stop](){
+        waStopGigaRunner.Start([plants_to_stop, row](){
             float min_x = 1000;
             int min_x_row = 0;
             AZombie *min_zombie = nullptr;
             for (auto &&zombie: aAliveZombieFilter) {
                 if (zombie.Type() != AHY_32 && zombie.Type() != ABY_23) continue;
+                if (row != -1 && zombie.Row() + 1 != row) continue;
                 if (zombie.Abscissa() < min_x) {
                     min_x = zombie.Abscissa();
                     min_x_row = zombie.Row() + 1;
