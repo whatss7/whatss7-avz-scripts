@@ -323,10 +323,10 @@ void RecordWaves() {
 
 #pragma region 自动操作
 
-ATickRunner waBloverTickRunner;
+ATickRunner autoBloverTickRunner;
 // 有概率漏气球时，加上三叶草保险
 void AutoBlover(int row = 1, int column = 1) {
-    waBloverTickRunner.Start([row, column](){
+    autoBloverTickRunner.Start([row, column](){
         bool needBlow = false;
         for (auto &&zombie: aAliveZombieFilter) {
             if (zombie.Type() == AQQ_16 && zombie.Abscissa() < 50) {
@@ -342,18 +342,18 @@ void AutoBlover(int row = 1, int column = 1) {
     });
 }
 
-APlantFixer waWallNutFixer, waTallNutFixer, waPumpkinFixer;
+APlantFixer autoWallNutFixer, autoTallNutFixer, autoPumpkinFixer;
 // 在参数指定的时间，开始自动修补全场坚果。
 void AutoFixNuts(int wave = 1, int time = -599) {
     AConnect(ATime(wave, time), [] {
         if(AGetSeedIndex(AWALL_NUT) != -1){
-            waWallNutFixer.Start(AWALL_NUT, {}, 4000 / 3 * 2);
+            autoWallNutFixer.Start(AWALL_NUT, {}, 4000 / 3 * 2);
         }
         if(AGetSeedIndex(ATALL_NUT) != -1){
-            waTallNutFixer.Start(ATALL_NUT, {}, 8000 / 3 * 2);
+            autoTallNutFixer.Start(ATALL_NUT, {}, 8000 / 3 * 2);
         }
         if(AGetSeedIndex(APUMPKIN) != -1){
-            waPumpkinFixer.Start(APUMPKIN, {}, 4000 / 3 * 2);
+            autoPumpkinFixer.Start(APUMPKIN, {}, 4000 / 3 * 2);
         }
     });
 }
