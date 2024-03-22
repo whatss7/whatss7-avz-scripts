@@ -96,7 +96,7 @@ Q: 明明可以放PE的阵为什么放FE A: 让火树开雾（
 
 ## FE 神之四炮 邻C6u
 
-[邻C6u: I-PP | I-PP | N | PP (17.5, 17.5, 8.75, 8.75)](./FE神之四炮/sideless4p.cpp)
+[邻C6u: I-PP | I-PP | N | PP (17.5, 17.5, 7.5, 10)](./FE神之四炮/sideless4p.cpp)
 
 一级阵补完计划！
 
