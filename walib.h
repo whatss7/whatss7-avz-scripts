@@ -24,6 +24,8 @@ const int ASH_DELAY_TIME = 100;
 const int COFFEE_BEAN_TIME = 198;
 // 模仿者种下至生效时间319cs或320cs（此处取319cs）
 const int IMITATOT_DELAY_TIME = 319;
+// 窝瓜种下至生效时间182cs
+const int SQUASH_DELAY_TIME = 182;
 
 // 常见预判炸时间点（有8列炮情况下最晚舞王不召唤时间点）
 const int PCP = PRE_COB_POINT;
@@ -35,8 +37,10 @@ const int RCFT = ROOF_COB_FLYING_TIME;
 const int ADT = ASH_DELAY_TIME;
 // 咖啡豆生效时间198cs或199cs（此处取198cs）
 const int CBT = COFFEE_BEAN_TIME;
-// 模仿者种下至生效时间319cd或320cs（此处取319cs）
+// 模仿者种下至生效时间319cs或320cs（此处取319cs）
 const int MDT = IMITATOT_DELAY_TIME;
+// 窝瓜种下至生效时间182cs
+const int SDT = SQUASH_DELAY_TIME;
 
 #ifdef WALIB_DEBUG
 ALogger<AConsole> waDebugLogger;
@@ -1223,10 +1227,9 @@ void N(int wave, int time, int row, float col, int last_wave_length = -1, int pr
 
 // 种植毁灭菇，但进行车底炸。仅用于夜间场景。
 // 本路无冰车时，与N函数相同；而有冰车时，在生效时间点再放。
-// 不考虑模仿花盆。
 void ZomboniN(int wave, int time, int row, float col) {
     const std::string scene = GetCurrentScene();
-    if (scene != "ME") {
+    if (scene != "FE" || scene != "ME") {
         waLogger.Warning("ZomboniN 仅用于 ME. 将改用 N()");
         N(wave, time, row, col);
     } else {
@@ -1242,9 +1245,27 @@ void A(int wave, int time, int row, float col) {
     TempC(wave, time - ADT, ACHERRY_BOMB, row, col, time + 1);
 }
 
+// 种植樱桃炸弹，但进行车底炸。
+// 本路无冰车时，与A函数相同；而有冰车时，在生效时间点再放。
+void ZomboniA(int wave, int time, int row, float col) {
+    AConnect(ATime(wave, 1), [wave, time, row, col](){
+        if (ExistZombie(ABC_12, {row})) TempC(wave, time, ACHERRY_BOMB, row, col);
+        else A(wave, time, row, col);
+    });
+}
+
 // 使用一个火爆辣椒。此函数不会使用模仿火爆辣椒。
 void J(int wave, int time, int row, float col) {
     TempC(wave, time - ADT, AJALAPENO, row, col, time + 1);
+}
+
+// 种植火爆辣椒，但进行车底炸。
+// 本路无冰车时，与J函数相同；而有冰车时，在生效时间点再放。
+void ZomboniJ(int wave, int time, int row, float col) {
+    AConnect(ATime(wave, 1), [wave, time, row, col](){
+        if (ExistZombie(ABC_12, {row})) TempC(wave, time, AJALAPENO, row, col);
+        else J(wave, time, row, col);
+    });
 }
 
 // 使用智能樱桃消延迟。此函数不会使用模仿樱桃炸弹。
