@@ -594,7 +594,7 @@ void P(int wave, int time, int row, float col) {
 // 从 `aCobManager` 发射一对炮。仅可用于泳池和屋顶场景。
 // 若不设置位置，则泳池场景默认炸1-8和5-8，屋顶场景默认炸2-8和4-8。
 // 请注意，本函数先填列数，再填行数。
-// 若不设置时间，则 423cs (`PCP + 107`) 时生效
+// 若不设置时间，则 426cs (`PCP + 110`) 时生效
 // 屋顶场景，1-2路的炮优先选择风炮；3-5路优先选择平炮。
 void DD(int wave, int time = -1, float col = 8, std::vector<int> rows = {}) {
     std::string scene = GetCurrentScene();
@@ -609,7 +609,7 @@ void DD(int wave, int time = -1, float col = 8, std::vector<int> rows = {}) {
             rows = {2, 4};
         }
     }
-    if (time < 0) time = PCP + 107;
+    if (time < 0) time = PCP + 110;
     PP(wave, time, col, rows);
 }
 
