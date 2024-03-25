@@ -50,7 +50,6 @@ ALogger<AConsole> waDebugLogger;
 #endif
 ALogger<AMsgBox> waLogger;
 ALogger<APvzGui> waIngameLogger;
-ACobManager waRoofCobManager[9];
 
 // 控制 `StartCheckMode()` 函数所检查的植物类型。
 std::vector<APlantType> waCheckPlants = { ACOB_CANNON, AGLOOM_SHROOM, AWINTER_MELON };
@@ -236,6 +235,9 @@ void BindSpeedKeys() {
     AConnect('T', [](){ ASetGameSpeed(0.5); });
 }
 
+bool RoofCMUsed[9];
+ACobManager waRoofCobManager[9];
+
 // 自动管理全场炮。若需要使用后续轨道语言函数，则此处必须进行自动管理。
 // 在屋顶场景，炮尾处于1-2列的炮和3列的炮分别单独归类。
 void AutoManageCob() {
@@ -249,12 +251,15 @@ void AutoManageCob() {
                 }
             }
             for (int i = 1; i <= 8; i++) {
-                #ifdef WALIB_DEBUG
-                for (auto j: grids[i]) {
-                    waDebugLogger.Info(std::to_string(i) + " " + std::to_string(j.row) + " " + std::to_string(j.col));
+                if (!grids[i].empty()) {
+                    waRoofCobManager[i].SetList(grids[i]);
+                    #ifdef WALIB_DEBUG
+                    waDebugLogger.Info("Added # cobs to col #", grids[i].size(), i);
+                    #endif
+                    RoofCMUsed[i] = true;
+                } else {
+                    RoofCMUsed[i] = false;
                 }
-                #endif
-                waRoofCobManager[i].SetList(grids[i]);
             }
         } else {
             aCobManager.AutoSetList();
@@ -279,6 +284,7 @@ void Init(const std::vector<APlantType> &plants, const char *scene = "Auto", boo
     SelectZombiesForScene(scene);
     SelectCardsAndFill(plants, fast);
     BindSpeedKeys();
+    AutoManageCob();
 }
 
 void SkipToTime(int wave, int time = -199) {
@@ -542,12 +548,15 @@ void PP(int wave, int time = -1, float col = 9, std::vector<int> rows = {}) {
     if (time < 0) time = PCP;
     std::string scene = GetCurrentScene();
     if (scene == "RE" || scene == "ME") {
+        #ifdef WALIB_DEBUG
+        waDebugLogger.Info("Roof scene");
+        #endif
         for (int row: rows) {
             if (row <= 2) {
                 AConnect(ATime(wave, time - RCFT), [row, col](){
                     bool success = false;
                     for (int i = 1; i <= 8; i++) {
-                        if (waRoofCobManager[i].GetRoofUsablePtr(col)) {
+                        if (RoofCMUsed[i] && waRoofCobManager[i].GetRoofUsablePtr(col) != nullptr) {
                             waRoofCobManager[i].RoofFire(row, col);
                             success = true;
                             break;
@@ -559,7 +568,7 @@ void PP(int wave, int time = -1, float col = 9, std::vector<int> rows = {}) {
                 AConnect(ATime(wave, time - RCFT), [row, col](){
                     bool success = false;
                     for (int i = 8; i >= 1; i--) {
-                        if (waRoofCobManager[i].GetRoofUsablePtr(col)) {
+                        if (RoofCMUsed[i] && waRoofCobManager[i].GetRoofUsablePtr(col) != nullptr) {
                             waRoofCobManager[i].RoofFire(row, col);
                             success = true;
                             break;
@@ -929,13 +938,13 @@ void TempC(int wave, int time, APlantType card, std::vector<APosition> pos, int 
                 if (to_time >= time) {
                     if (should_remove){
                         AConnect(ATime(wave, to_time), [p, card](){
-                            ARemovePlant(p.row, p.col, card);
-                            ARemovePlant(p.row, p.col, AFLOWER_POT);
-                            ARemovePlant(p.row, p.col, ALILY_PAD);
+                            ARemovePlant(p.row, p.col, std::vector<int>{card});
+                            ARemovePlant(p.row, p.col, std::vector<int>{AFLOWER_POT});
+                            ARemovePlant(p.row, p.col, std::vector<int>{ALILY_PAD});
                         });
                     } else {
                         AConnect(ATime(wave, to_time), [p, card](){
-                            ARemovePlant(p.row, p.col, card);
+                            ARemovePlant(p.row, p.col, std::vector<int>{card});
                         });
                     }
                 }
