@@ -105,9 +105,11 @@ void AScript() {
                 RoofP(w, 3550, 1, 2, 7);
                 RoofP(w, 3550, 4, 4, 7);
             }
-            TempC(w, 2900, AFLOWER_POT, 3, 6);
-            TempC(w, 2901, AJALAPENO, 3, 6, 3250);
-            TempC(w, 3002, ASQUASH, 3, 6, 3250);
+            // 巨人3143cs命中6普通，考虑约3140窝瓜生效，则约2950种，辣椒则可以2850种
+            // 若窝瓜没压到巨人，则巨人本身速度较慢，不构成对核的威胁
+            TempC(w, 2850, AFLOWER_POT, 3, 6);
+            TempC(w, 2851, AJALAPENO, 3, 6);
+            TempC(w, 2952, ASQUASH, 3, 6, 3250);
             N(w, 3550, 3, 6);
         });
     }
