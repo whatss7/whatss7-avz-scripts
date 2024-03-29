@@ -1,21 +1,24 @@
-#include "../whatss7-avz2-lib/walib.h"
+#include "../walib.h"
+
+// 若需挂机，则必须掉节操写内存调整伴舞位置
+// 否则，此脚本只能保证完成2f
+// 解除下行注释来挂机
+// #define CHEATING
 
 void FixMaid() {
-    AConnect(ATime(1, -599), [](){ AMaidCheats::Dancing(); });
-    AConnect(ATime(1, -598), [](){
-        // 未知问题导致开局伴舞前进1px
-        bool r1ok, r5ok;
+    #ifdef CHEATING
+    StartReloadMode();
+    #endif
+    AConnect(ATime(1, -599), [](){
+        AMaidCheats::Dancing();
+        #ifdef CHEATING
         for (auto &&zombie: aAliveZombieFilter) {
             if (zombie.Type() != ABW_9) continue;
-            if (!r1ok && zombie.Row() == 0) {
-                zombie.Abscissa() = 324;
-                r1ok = true;
-            }
-            if (!r5ok && zombie.Row() == 4) {
-                zombie.Abscissa() = 324;
-                r5ok = true;
+            if (zombie.Row() == 0 || zombie.Row() == 4) {
+                zombie.Abscissa() = 324.8;
             }
         }
+        #endif
     });
 }
 
@@ -32,7 +35,7 @@ void Puff(int wave, int time, int to_time) {
 }
 
 void AScript() {
-    WAInit({APUFF_SHROOM, AM_PUFF_SHROOM});
+    Init({APUFF_SHROOM, AM_PUFF_SHROOM});
     FixMaid();
     for (int w: WaveList(1, 20)) {
         Puff(w, 160, 600);
