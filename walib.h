@@ -921,7 +921,9 @@ void C(int wave, int time, APlantType plant, int col, float row) {
 // 若不设定铲除时间，则不会移除该植物。
 void TempC(int wave, int time, APlantType card, std::vector<APosition> pos, int to_time = -1000) {
     std::string scene = GetCurrentScene();
-    AConnect(ATime(wave, time), [wave, time, card, pos, scene, to_time](){
+    APlantType to_remove = card;
+    if (card >= AM_PEASHOOTER) to_remove = static_cast<APlantType>(card - AM_PEASHOOTER);
+    AConnect(ATime(wave, time), [wave, time, card, pos, scene, to_time, to_remove](){
         for (APosition p: pos) {
             bool should_remove = false;
             APlant *ptr = nullptr;
@@ -937,14 +939,14 @@ void TempC(int wave, int time, APlantType card, std::vector<APosition> pos, int 
             if (ptr) {
                 if (to_time >= time) {
                     if (should_remove){
-                        AConnect(ATime(wave, to_time), [p, card](){
-                            ARemovePlant(p.row, p.col, std::vector<int>{card});
+                        AConnect(ATime(wave, to_time), [p, to_remove](){
+                            ARemovePlant(p.row, p.col, std::vector<int>{to_remove});
                             ARemovePlant(p.row, p.col, std::vector<int>{AFLOWER_POT});
                             ARemovePlant(p.row, p.col, std::vector<int>{ALILY_PAD});
                         });
                     } else {
-                        AConnect(ATime(wave, to_time), [p, card](){
-                            ARemovePlant(p.row, p.col, std::vector<int>{card});
+                        AConnect(ATime(wave, to_time), [p, to_remove](){
+                            ARemovePlant(p.row, p.col, std::vector<int>{to_remove});
                         });
                     }
                 }
