@@ -42,19 +42,25 @@ void AScript() {
         P(w, 316, 2, 9);
         P(w, 359, 4, 9);
         if (w == 9 || w == 19) {
-            PPForEnd(w, 359 + 601);
+            PForEnd(w, 601 + 316, 2, 9);
+            PForEnd(w, 601 + 359, 4, 9);
             Puff(w, 160 + 601, 600 + 601);
-            PPForEnd(w, 359 + 601 * 2);
+            PForEnd(w, 601 * 2 + 316, 2, 9);
+            PForEnd(w, 601 * 2 + 359, 4, 9);
             Puff(w, 160 + 601 * 2, 600 + 601 * 2);
-            PPForEnd(w, 359 + 601 * 3);
+            PForEnd(w, 601 * 3 + 316, 2, 9);
+            PForEnd(w, 601 * 3 + 359, 4, 9);
         }
         if (w == 20) {
             PP(w, 350, 8);
-            PPForEnd(w, 359 + 601);
+            PForEnd(w, 601 + 316, 2, 9);
+            PForEnd(w, 601 + 359, 4, 9);
             Puff(w, 160 + 601, 600 + 601);
-            PPForEnd(w, 359 + 601 * 2);
+            PForEnd(w, 601 * 2 + 316, 2, 9);
+            PForEnd(w, 601 * 2 + 359, 4, 9);
             Puff(w, 160 + 601 * 2, 600 + 601 * 2);
-            PPForEnd(w, 359 + 601 * 3);
+            PForEnd(w, 601 * 3 + 316, 2, 9);
+            PForEnd(w, 601 * 3 + 359, 4, 9);
             AConnect(ATime(w, 3000), [](){
                 AMaidCheats::Move();
             });

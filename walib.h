@@ -287,6 +287,15 @@ void Init(const std::vector<APlantType> &plants, const char *scene = "Auto", boo
     AutoManageCob();
 }
 
+// 初始化选卡，并根据场地选择合理的僵尸。
+// 选卡剩下的格子会用一些常用的植物填充防止漏选。
+// 场景可传入的参数参见 `SelectZombiesForScene()`.
+void InitWithoutManage(const std::vector<APlantType> &plants, const char *scene = "Auto", bool fast = false) {
+    SelectZombiesForScene(scene);
+    SelectCardsAndFill(plants, fast);
+    BindSpeedKeys();
+}
+
 void SkipToTime(int wave, int time = -199) {
     AConnect(ATime(1, -590), [wave, time](){
         ASkipTick(wave, time);
@@ -568,7 +577,7 @@ void PP(int wave, int time = -1, float col = 9, std::vector<int> rows = {}) {
                 AConnect(ATime(wave, time - RCFT), [row, col](){
                     bool success = false;
                     for (int i = 8; i >= 1; i--) {
-                        if (RoofCMUsed[i] && waRoofCobManager[i].GetRoofUsablePtr(col) != nullptr) {
+                        if (RoofCMUsed[i] && waRoofCobManager[i].GetRoofUsablePtr(col)) {
                             waRoofCobManager[i].RoofFire(row, col);
                             success = true;
                             break;
@@ -622,32 +631,60 @@ void DD(int wave, int time = -1, float col = 8, std::vector<int> rows = {}) {
     PP(wave, time, col, rows);
 }
 
-// 在屋顶场景使用炮尾在指定列的炮发射一对炮。
-// 若不设置位置，默认炸2-9和4-9。
-// 请注意，本函数先填列数，再填行数。
-void RoofPP(int wave, int time, int cobCol, float col = 9, std::vector<int> rows = {2, 4}) {
+// 在屋顶场景使用炮尾在指定列的炮发射一炮。
+void RoofP(int wave, int time, std::vector<int> cobCols, int row, float col) {
     std::string scene = GetCurrentScene();
     if (scene != "RE" && scene != "ME") {
-        waLogger.Error("RoofPP() 只能在屋顶使用");
+        waLogger.Error("RoofP() 只能在屋顶使用");
+        return;
+    }
+    for (int i: cobCols) {
+        if (i < 1 || i > 8) {
+            waLogger.Error("炮列数超出范围");
+            return;
+        }
+    }
+    AConnect(ATime(wave, time - RCFT), [cobCols, row, col](){
+        bool success;
+        for (int i: cobCols) {
+            if (RoofCMUsed[i] && waRoofCobManager[i].GetRoofUsablePtr(col)) {
+                waRoofCobManager[i].RoofFire(row, col);
+                success = true;
+                break;
+            }
+        }
+        if (!success) waLogger.Error("指定列数的所有炮都无法发射");
+    });
+}
+
+// 在屋顶场景使用炮尾在指定列的炮发射一炮。
+void RoofP(int wave, int time, int cobCol, int row, float col) {
+    std::string scene = GetCurrentScene();
+    if (scene != "RE" && scene != "ME") {
+        waLogger.Error("RoofP() 只能在屋顶使用");
         return;
     }
     if (cobCol < 1 || cobCol > 8) {
         waLogger.Error("炮列数超出范围");
         return;
     }
-    std::vector<APosition> pos;
-    for (int i: rows) pos.push_back({i, col});
-    AConnect(ATime(wave, time - RCFT), [pos, cobCol](){
-        waRoofCobManager[cobCol].RoofFire(pos);
+    AConnect(ATime(wave, time - RCFT), [cobCol, row, col](){
+        waRoofCobManager[cobCol].RoofFire(row, col);
     });
 }
 
-
-// 在屋顶场景使用炮尾在指定列的炮发射一炮。
-void RoofP(int wave, int time, int cobCol, int row, float col) {
-    std::vector<int> rows;
-    rows.push_back(row);
-    RoofPP(wave, time, cobCol, col, rows);
+// 使用指定的 ACobManager 对指定位置开炮。
+void ManualP(int wave, int time, int row, float col, ACobManager &mgr) {
+    std::string scene = GetCurrentScene();
+    if (scene == "RE" || scene == "ME") {
+        AConnect(ATime(wave, time - RCFT), [&mgr, row, col](){
+            mgr.RoofFire(row, col);
+        });
+    } else {
+        AConnect(ATime(wave, time - CFT), [&mgr, row, col](){
+            mgr.Fire(row, col);
+        });
+    }
 }
 
 bool ForEndJudge(int wave) {
@@ -689,6 +726,13 @@ void PPForEnd(int wave, int time, float col = 9, std::vector<int> rows = {}) {
     std::string scene = GetCurrentScene();
     int VCFT = (scene == "RE" || scene == "ME" ? 387 : 373);
     ForEnd(wave, time - VCFT, [=](){ PP(wave, time, col, rows); });
+}
+
+// 用于收尾的炮。是对应波次（处于下一波的刷新倒计时也算本波）且场上有僵尸才发射。注意此函数w9/w19不计伴舞。
+void PForEnd(int wave, int time, int row, float col) {
+    std::string scene = GetCurrentScene();
+    int VCFT = (scene == "RE" || scene == "ME" ? 387 : 373);
+    ForEnd(wave, time - VCFT, [=](){ P(wave, time, row, col); });
 }
 
 // 在泳池场景，对除了某列以外的所有红眼开炮。常用于拖收尾。
@@ -1268,7 +1312,7 @@ void N(int wave, int time, int row, float col, int last_wave_length = -1, int pr
 // 本路无冰车时，与N函数相同；而有冰车时，在生效时间点再放。
 void ZomboniN(int wave, int time, int row, float col) {
     const std::string scene = GetCurrentScene();
-    if (scene != "FE" || scene != "ME") {
+    if (scene != "FE" && scene != "ME") {
         waLogger.Warning("ZomboniN 仅用于 ME. 将改用 N()");
         N(wave, time, row, col);
     } else {
