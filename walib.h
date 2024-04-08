@@ -1073,6 +1073,16 @@ void BlockLast(int wave, int time, int to_time = -1000) {
     });
 }
 
+void Remove(int wave, int time, std::vector<APlantType> cards, int row, float col) {
+    AConnect(ATime(wave, time), [row, col, cards](){
+        ARemovePlant(row, col, std::vector<int>(cards.begin(), cards.end()));
+    });
+}
+
+void Remove(int wave, int time, APlantType card, int row, float col) {
+    Remove(wave, time, std::vector<APlantType>{card}, row, col);
+}
+
 #pragma endregion
 
 #pragma region 仿轨道语言：冰核相关
@@ -1290,7 +1300,6 @@ void TempI3(int wave, int time, std::vector<APosition> pos, int last_wave_length
 void TempI3(int wave, int time, int row, float col, int last_wave_length = -1, int protect = 0) {
     TempI(wave, time, row, col, last_wave_length, protect, true);
 }
-
 
 // 种植毁灭菇。由于咖啡豆和模仿者的不确定性，有概率延迟1cs生效。
 // 若存在模仿核等需要早种的情况，则需要假设波长或提供上波波长。所以用不到模仿核时，使用此函数请不要携带模仿核。
