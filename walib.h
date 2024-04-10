@@ -64,7 +64,6 @@ std::vector<AZombieType> waForEndIgnore = { AKG_17, AXG_24 };
 // 在其中插入一个不会在水路生成的僵尸以禁用上述行为。
 std::vector<AZombieType> waForEndIgnoreInWater = {};
 
-
 #pragma region 辅助类
 
 class WaveList {
@@ -721,6 +720,20 @@ void ForEnd(int wave, int time, std::function<void()> action) {
     });
 }
 
+ATickRunner atEndRunner;
+void AtEnd(std::function<void()> action) {
+    AConnect(ATime(20, 1), [=](){
+        atEndRunner.Start([=](){
+            for (auto &&_ : aAliveZombieFilter) {
+                (void)_;
+                return;
+            }
+            action();
+            atEndRunner.Stop();
+        });
+    });
+}
+
 // 用于收尾的炮。是对应波次（处于下一波的刷新倒计时也算本波）且场上有僵尸才发射。注意此函数w9/w19不计伴舞。
 void PPForEnd(int wave, int time, float col = 9, std::vector<int> rows = {}) {
     std::string scene = GetCurrentScene();
@@ -740,11 +753,11 @@ void PForEnd(int wave, int time, int row, float col) {
 // 为了收尾的正常运行，请确保场上的红眼都是本波红眼。
 // 本函数已进行 `ForEnd()` 判定。
 // 若设置 `stop_giga_plants`，则会使用其中的植物阻挡巨人到4300cs或5500cs(w20)。
-void PPExceptOne(int wave, int time, float col = 9, std::vector<APlantType> stop_giga_plants = {}) {
+void PPExceptOne(int wave, int time, float col = 9, std::vector<APlantType> stop_giga_plants = {}, int stop_giga_to_time = -1) {
     std::string scene = GetCurrentScene();
     int VCFT = (scene == "RE" || scene == "ME" ? RCFT : CFT);
     ForEnd(wave, time - VCFT, [=](){
-        AConnect(ATime(wave, time - VCFT), [wave, time, col, stop_giga_plants](){
+        AConnect(ATime(wave, time - VCFT), [=](){
             int choice = -1;
             int dist[7] = { 0, 0, 0, 0, 0, 0, 0 };
             int sum = 0;
@@ -776,53 +789,74 @@ void PPExceptOne(int wave, int time, float col = 9, std::vector<APlantType> stop
                 // 六行场地收尾
                 if (dist[1] == 1) {
                     choice = 1;
-                    if (dist[2] != 0) {
+                    if (dist[2] != 0 || dist[3] != 0) {
                         P(ANowTime().wave, time, 3, col);
                     }
-                    if (dist[5] != 0 || dist[6] != 0) {
+                    if (dist[4] != 0 || dist[5] != 0 || dist[6] != 0) {
                         P(ANowTime().wave, time, 5, col);
                     }
                 } else if (dist[6] == 1) {
                     choice = 6;
-                    if (dist[5] != 0) {
+                    if (dist[4] != 0 || dist[5] != 0) {
                         P(ANowTime().wave, time, 4, col);
                     }
-                    if (dist[1] != 0 || dist[2] != 0) {
+                    if (dist[1] != 0 || dist[2] != 0 || dist[3] != 0) {
                         P(ANowTime().wave, time, 2, col);
                     }
                 } else if (dist[1] == 0 && dist[2] == 1) {
                     choice = 2;
-                    if (dist[5] != 0 || dist[6] != 0) {
+                    bool middle_done = false;
+                    if (dist[3] != 0) {
+                        P(ANowTime().wave, time, 4, col);
+                        middle_done = true;
+                    }
+                    if (dist[6] != 0) {
                         P(ANowTime().wave, time, 5, col);
+                        middle_done = true;
+                    }
+                    if (!middle_done && (dist[4] != 0 || dist[5] != 0)) {
+                        P(ANowTime().wave, time, 4, col);
                     }
                 } else if (dist[5] == 0 && dist[6] == 1) {
                     choice = 5;
-                    if (dist[1] != 0 || dist[2] != 0) {
+                    bool middle_done = false;
+                    if (dist[1] != 0) {
+                        P(ANowTime().wave, time, 2, col);
+                        middle_done = true;
+                    }
+                    if (dist[4] != 0) {
+                        P(ANowTime().wave, time, 3, col);
+                        middle_done = true;
+                    }
+                    if (!middle_done && (dist[2] != 0 || dist[3] != 0)) {
                         P(ANowTime().wave, time, 2, col);
                     }
                 } else if (dist[1]) {
                     choice = 1;
-                    if (dist[2] != 0) {
+                    if (dist[2] != 0 || dist[3] != 0) {
                         P(ANowTime().wave, time, 3, col);
                     }
-                    if (dist[5] != 0 || dist[6] != 0) {
+                    if (dist[4] != 0 || dist[5] != 0 || dist[6] != 0) {
                         P(ANowTime().wave, time, 5, col);
                     }
                 } else if (dist[6]) {
                     choice = 6;
-                    if (dist[5] != 0) {
+                    if (dist[4] != 0 || dist[5] != 0) {
                         P(ANowTime().wave, time, 4, col);
                     }
-                    if (dist[1] != 0 || dist[2] != 0) {
+                    if (dist[1] != 0 || dist[2] != 0 || dist[3] != 0) {
                         P(ANowTime().wave, time, 2, col);
                     }
                 } else if (dist[2]) {
                     choice = 2;
-                    if (dist[5] != 0 || dist[6] != 0) {
-                        P(ANowTime().wave, time, 5, col);
+                    if (dist[3] != 0 || dist[4] != 0 || dist[5] != 0) {
+                        P(ANowTime().wave, time, 4, col);
                     }
                 } else if (dist[5]) {
                     choice = 5;
+                    if (dist[3] != 0 || dist[4] != 0) {
+                        P(ANowTime().wave, time, 3, col);
+                    }
                 }
                 if (!stop_giga_plants.empty()) {
                     StopGiga(ANowTime().wave, ANowTime().time, stop_giga_plants, ANowTime().wave == 20 ? 5500 : 4300, choice);
@@ -920,7 +954,11 @@ void PPExceptOne(int wave, int time, float col = 9, std::vector<APlantType> stop
                     choice = 4;
                 }
                 if (!stop_giga_plants.empty()) {
-                    StopGiga(ANowTime().wave, ANowTime().time, stop_giga_plants, ANowTime().wave == 20 ? 5500 : 4300, choice);
+                    if (stop_giga_to_time < 0) {
+                        StopGiga(ANowTime().wave, ANowTime().time, stop_giga_plants, ANowTime().wave == 20 ? 5500 : 4300, choice);
+                    } else {
+                        StopGiga(ANowTime().wave, ANowTime().time, stop_giga_plants, stop_giga_to_time, choice);
+                    }
                 }
             }
         });
@@ -1059,6 +1097,7 @@ void BlockLast(int wave, int time, int to_time = -1000) {
                 zombie_to_stop = &zombie;
                 if (zombie.Type() != ABW_9) break;
             }
+            if (!zombie_to_stop) return;
             float col = (zombie_to_stop->Abscissa() + 40) / 80.0f;
             if (col < 1) col = 1;
             if (col > 9) col = 9;
