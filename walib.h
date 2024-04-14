@@ -1086,6 +1086,38 @@ void TempCNow(APlantType card, int row, float col, int duration = -1000) {
     TempC(ANowTime().wave, ANowTime().time, card, row, col, ANowTime().time + duration);
 }
 
+void MultiTempC(int wave, int time, const std::vector<APlantType> &plants, float col, const std::vector<int> &rows, int to_time = -1000) {
+    AConnect(ATime(wave, time), [=](){
+        int plant_ptr = 0;
+        for (int row: rows) {
+            while (plant_ptr < plants.size()) {
+                APlantType plant = plants[plant_ptr];
+                plant_ptr++;
+                if (AGetSeedPtr(plant) && AGetSeedPtr(plant)->IsUsable()) {
+                    TempCNow(plant, row, col, to_time - time);
+                    break;
+                }
+            }
+        }
+    });
+}
+
+void MultiTempC(int wave, int time, const std::vector<APlantType> &plants, std::vector<APosition> pos, int to_time = -1000) {
+    AConnect(ATime(wave, time), [=](){
+        int plant_ptr = 0;
+        for (APosition p: pos) {
+            while (plant_ptr < plants.size()) {
+                APlantType plant = plants[plant_ptr];
+                plant_ptr++;
+                if (AGetSeedPtr(plant) && AGetSeedPtr(plant)->IsUsable()) {
+                    TempCNow(plant, p.row, p.col, to_time - time);
+                    break;
+                }
+            }
+        }
+    });
+}
+
 // 在场上的最后一列有僵尸的位置种植一个坚果类。
 // 本函数已进行 `ForEnd()` 判定。
 void BlockLast(int wave, int time, int to_time = -1000) {
