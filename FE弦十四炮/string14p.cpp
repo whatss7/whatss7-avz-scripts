@@ -3,7 +3,7 @@
 void AScript() {
     Init({
         ALILY_PAD, ADOOM_SHROOM, AM_DOOM_SHROOM, ACHERRY_BOMB, AJALAPENO,
-        APUFF_SHROOM, ASUN_SHROOM, ASCAREDY_SHROOM, AFLOWER_POT, ATALL_NUT
+        APUFF_SHROOM, ASUN_SHROOM, ASCAREDY_SHROOM, AFLOWER_POT, AWALL_NUT
     });
     const int a_len = 875, n_len = 850;
     const int c1_time = 196, c2_a_time = a_len - 200 + 143, c2_n_time = n_len - 200 + 143;
@@ -20,11 +20,13 @@ void AScript() {
             TempC(w, a_len + c1_time, ASCAREDY_SHROOM, 2, 9, a_len + c1_time + 100);
             TempC(w, a_len + c1_time, AFLOWER_POT, 5, 9, a_len + c1_time + 100);
             PP(w, a_len + a_len - 200, 8.4);
-            DD(w, a_len + a_len - 200 + 116, 7.125);
+            DD(w, a_len + a_len - 200 + 116, 7.4);
             TempC(w, a_len + c2_a_time, APUFF_SHROOM, 2, 8, a_len + c2_a_time + 100);
             TempC(w, a_len + c2_a_time, ASUN_SHROOM, 5, 8, a_len + c2_a_time + 100);
             // 开始拖收尾
-            PPExceptOne(w, a_len + a_len + n_len - 200 + 111 + 10, 7.5, { APUFF_SHROOM, ASUN_SHROOM, ASCAREDY_SHROOM, AFLOWER_POT });
+            TempC(w, a_len + a_len + c1_time, ASCAREDY_SHROOM, 2, 8, a_len + a_len + c1_time + 100);
+            TempC(w, a_len + a_len + c1_time, AFLOWER_POT, 5, 8, a_len + a_len + c1_time + 100);
+            PPExceptOne(w, a_len + a_len + n_len - 200 + 116 + 5, 7.125, { APUFF_SHROOM, ASUN_SHROOM, ASCAREDY_SHROOM, AFLOWER_POT });
             PPLast(w, 4300);
         }
     }

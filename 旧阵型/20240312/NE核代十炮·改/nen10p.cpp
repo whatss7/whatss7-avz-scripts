@@ -29,14 +29,8 @@ void SlowGiga() {
 }
 
 void AScript() {
-    WAInit({
-        ADOOM_SHROOM, AICE_SHROOM, AGRAVE_BUSTER, ACHERRY_BOMB, AKERNEL_PULT, 
-        ACOB_CANNON, APUFF_SHROOM, AM_PUFF_SHROOM
-    }, "Random", true);
-    waCheckPlants = {};
-    WACheck(5);
+    WAInit({ ADOOM_SHROOM, AICE_SHROOM, AGRAVE_BUSTER, ACHERRY_BOMB, APUFF_SHROOM, AM_PUFF_SHROOM });
     WAAutoManageCob();
-    WAStartBlover(1, 9);
     waForEndIgnore = { AXG_24, ATT_18 };
 
     // P6: PP|PP|PP|PP|PP|N
@@ -55,14 +49,14 @@ void AScript() {
             PPForEnd(w, 601 * 3 + PCP, 9);
             PPForEnd(w, 601 * 4 + PCP, 8.5);
         }
-        if (w == 10 && AGetZombieTypeList()[ABJ_20]) ManualI(w, 550, {{1, 7}, {2, 7}, {3, 7}, {4, 7}, {5, 7}});
-        if (w == 20) ManualI(w, 550, {{1, 7}, {2, 7}, {3, 7}, {4, 7}, {5, 7}});
+        if (w == 10 && AGetZombieTypeList()[ABJ_20]) ManualI(w, 401, {{1, 7}, {2, 7}, {3, 7}, {4, 7}, {5, 7}});
+        if (w == 20) ManualI(w, 401, {{1, 7}, {2, 7}, {3, 7}, {4, 7}, {5, 7}});
     }
     for (int w: {5, 15}) {
         N(w, PCP, {{3, 9}, {3, 8}, {2, 9}, {2, 8}});
     }
     // 上轮墓碑吞噬者被意外干掉的情况
-    WARemoveGraves(10, -700);
+    // WARemoveGraves(10, -700);
     // 解决本轮墓碑
     AConnect(ATime(20, 200), [](){
         bool success = false;

@@ -4,8 +4,8 @@ ATickRunner slowGigaRunner;
 
 void AScript(){
     Init({
-        AICE_SHROOM, AM_ICE_SHROOM, ACOFFEE_BEAN, ACHERRY_BOMB, ADOOM_SHROOM,
-        APUMPKIN, APUFF_SHROOM, ASUN_SHROOM, ASCAREDY_SHROOM, AFLOWER_POT
+        AICE_SHROOM, AM_ICE_SHROOM, ACOFFEE_BEAN, ACHERRY_BOMB, APUMPKIN,
+        APUFF_SHROOM, ASUN_SHROOM, ASCAREDY_SHROOM, AFLOWER_POT
     });
     aIceFiller.Start({{1, 1}, {5, 1}});
     AutoFixNuts();
@@ -64,6 +64,7 @@ void AScript(){
     // PP
     for (int w: {1, 2, 5, 8, 10, 12, 15, 18, 20}) {
         PP(w);
+        if (w == 10) SmartA();
         if (w == 20) {
             I(w, 601 + 1);
             PP(w, 601 + i_len - 200, 8.5);
