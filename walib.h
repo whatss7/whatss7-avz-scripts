@@ -15,7 +15,7 @@
 // 常见预判炸时间点（有8列炮情况下最晚舞王不召唤时间点）
 const int PRE_COB_POINT = 316;
 // 考虑泳池延迟后，玉米加农炮发射到生效修正用时
-const int COB_FLYING_TIME = 376;
+const int COB_FLYING_TIME = 378;
 // 屋顶修正玉米加农炮发射到生效用时
 const int ROOF_COB_FLYING_TIME = 387;
 // 灰烬植物和寒冰菇种下到生效用时
@@ -589,7 +589,7 @@ void PP(int wave, int time = -1, float col = 9, std::vector<int> rows = {}) {
     } else {
         for (int row: rows) {
             if ((scene == "PE" || scene == "FE") && (row == 3 || row == 4)) {
-                AConnect(ATime(wave, time - 376), [row, col](){
+                AConnect(ATime(wave, time - 378), [row, col](){
                     aCobManager.Fire(row, col);
                 });
             } else {
@@ -679,8 +679,12 @@ void ManualP(int wave, int time, int row, float col, ACobManager &mgr) {
         AConnect(ATime(wave, time - RCFT), [&mgr, row, col](){
             mgr.RoofFire(row, col);
         });
+    } else if ((scene == "PE" || scene == "FE") && (row == 3 || row == 4)) {
+        AConnect(ATime(wave, time - 378), [row, col](){
+            aCobManager.Fire(row, col);
+        });
     } else {
-        AConnect(ATime(wave, time - CFT), [&mgr, row, col](){
+        AConnect(ATime(wave, time - 373), [&mgr, row, col](){
             mgr.Fire(row, col);
         });
     }
