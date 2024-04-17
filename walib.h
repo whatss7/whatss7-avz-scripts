@@ -296,7 +296,7 @@ void InitWithoutManage(const std::vector<APlantType> &plants, const char *scene 
 }
 
 void SkipToTime(int wave, int time = -199) {
-    AConnect(ATime(1, -590), [wave, time](){
+    AConnect(ATime(1, -599), [wave, time](){
         ASkipTick(wave, time);
     });
 }
@@ -307,7 +307,7 @@ ATickRunner waCheckRunner;
 // 检测受损的植物类型可通过修改 waCheckPlants 进行设置。
 void StartCheckMode(float speed = 10, bool reload = true) {
     if (reload) ASetReloadMode(AReloadMode::MAIN_UI_OR_FIGHT_UI);
-    ASetGameSpeed(speed);
+    AConnect(ATime(1, -599), [speed](){ ASetGameSpeed(speed); });
     waCheckRunner.Start([](){
         for (auto &&plant: aAlivePlantFilter) {
             bool ignored = false;
@@ -332,7 +332,7 @@ void StartCheckMode(float speed = 10, bool reload = true) {
 // 启动重载模式：开启脚本循环，1倍速。与 `StartCheckMode()` 不同在于，不检查植物受损情况。
 void StartReloadMode(float speed = 1, bool reload = true) {
     if (reload) ASetReloadMode(AReloadMode::MAIN_UI_OR_FIGHT_UI);
-    ASetGameSpeed(speed);
+    AConnect(ATime(1, -599), [speed](){ ASetGameSpeed(speed); });
 }
 
 void RecordWaves() {
