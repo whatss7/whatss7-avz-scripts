@@ -174,10 +174,10 @@ void SelectZombiesForScene(std::string scene = "Auto", bool natural = false) {
         zombies = { APJ_0, ACG_3, AGL_7, AWW_8, ABC_12, AXC_15, AQQ_16, AKG_17, ABJ_20, ATL_22, ABY_23, AHY_32 };
     } else if (scene == "NE") {
         // NE没有水路僵尸和冰车
-        zombies = { APJ_0, ALZ_2, ACG_3, AGL_7, AWW_8, AXC_15, AQQ_16, AKG_17, ATT_18, ABJ_20, ABY_23, AHY_32 };
+        zombies = { APJ_0, ALZ_2, ACG_3, AWW_8, AXC_15, AQQ_16, AKG_17, ATT_18, ABJ_20, ATL_22, ABY_23, AHY_32 };
     } else if (scene == "RE" || scene == "ME") {
         // RE和FE没有水路僵尸、舞王和矿工
-        zombies = { APJ_0, ALZ_2, ACG_3, AGL_7, ABC_12, AXC_15, AQQ_16, ATT_18, ABJ_20, AFT_21, ABY_23, AHY_32 };
+        zombies = { APJ_0, ALZ_2, ACG_3, ABC_12, AXC_15, AQQ_16, ATT_18, ABJ_20, AFT_21, ATL_22, ABY_23, AHY_32 };
     } else if (scene == "PEF") {
         zombies = { APJ_0, ALZ_2, ACG_3, AWW_8, AQS_11, ABC_12, AHT_14, AXQ_13, AKG_17, ATT_18, ABJ_20, AFT_21 };
     } else if (scene == "PEM") {

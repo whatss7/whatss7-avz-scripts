@@ -11,15 +11,16 @@ std::vector<PlantInfo> plants = {
     PlantInfo(2, 6, ACOB_CANNON),
     PlantInfo(3, 7, ACOB_CANNON),
     PlantInfo(4, 7, ACOB_CANNON),
+    PlantInfo(5, 6, ACOB_CANNON),
 };
 
 // 在此处输入用冰位置、带卡、出僵尸等。
 // 可能被炸掉的植物也需要在带卡中。
 void PreOperations() {
-    Init({AICE_SHROOM, ACOFFEE_BEAN, AFLOWER_POT, ACOB_CANNON}, {AFT_21, AXC_15, ATL_22}, true);
-    AConnect(ATime(1, -599), [](){ aIceFiller.Start({{2, 1}}); });
+    Init({AICE_SHROOM, ACOFFEE_BEAN, AFLOWER_POT, ACOB_CANNON}, "Auto", true);
+    AConnect(ATime(1, -599), [](){ aIceFiller.Start({{2, 3}}); });
     StartReloadMode(10);
-    SkipToTime(20, 1);
+    SkipToTime(20, 2049);
 }
 
 // 在此处输入每波的操作，返回此波波长。所有波的波长必须一致。
@@ -27,12 +28,12 @@ void PreOperations() {
 int WaveOperations(int wave) {
     const int len = 1750;
     int w = wave;
-    I3(w, 11, 1800);
+    I3(w, 11, len);
     RoofP(w, 410, 2, 2, 9);
     RoofP(w, 410, 6, 4, 9);
     RoofP(w, 630, 1, 2, 8.5);
     RoofP(w, 630, 3, 4, 8.5);
-    TempC(w, 1000, AFLOWER_POT, 2, 9, 1200);
+    TempC(w, 950, AFLOWER_POT, 2, 9, 1150);
     RoofP(w, 1140, 7, 4, 8.1);
     return len;
 }
@@ -46,9 +47,9 @@ void AScript() {
     CommonTesting(false);
     PreOperations();
     int len = 0;
-    for (int w: WaveList(1, 9) + WaveList(11, 19)) {
+    for (int w: WaveList(1, 20)) {
         len = WaveOperations(w);
-        ASetWavelength({ATime(w, len)});
+        if (w != 9 && w != 19 && w != 20) ASetWavelength({ATime(w, len)});
         AConnect(ATime(w, len - 200), [](){
             InstantKill();
             int check_count = 0;
@@ -94,11 +95,4 @@ void AScript() {
             }
         });
     }
-    for (int w: { 10, 20 }) {
-        AConnect(ATime(w, 1), [](){
-            InstantKill();
-        });
-    }
-    ASetWavelength({ATime(10, len)});
-    
 }
