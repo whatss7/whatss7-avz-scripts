@@ -18,7 +18,7 @@
 - [PE 神之六炮·改](./旧阵型/20240312/README.md#pe-神之六炮改-s4) [阵图](./考级阵图/L1/PE%20神之六炮·改.jpg)
 - [ME 田八炮](./旧阵型/20240305/README.md#me-田八炮-对c8u-挂机-不稳定) [阵图](./考级阵图/L1/ME%20田八炮.jpg) [【视频】](https://www.bilibili.com/video/BV1DC411H7qM)
 - [FE 神之四炮](./旧阵型/20240312/README.md#fe-神之四炮-邻c6u) [阵图](./考级阵图/L1/FE%20神之四炮.jpg) [【视频】](https://www.bilibili.com/video/BV1UZ421b79c)
-- [PE 冰雨十二炮·改](./旧阵型/20240312/README.md#pe-冰雨十二炮改-p6)* [阵图](./考级阵图/L1/PE%20冰雨十二炮·改.jpg) [【视频】](https://www.bilibili.com/video/BV1mJ4m1G7AA)
+- [PE 冰雨十二炮·改](./旧阵型/20240312/README.md#pe-冰雨十二炮改-p6)* [阵图](./考级阵图/L1/PE%20冰雨十二炮·改.jpg) [【视频】](https://www.bilibili.com/video/BV1mJ4m1G7AA?t=212)
 
 ## 2 级 9/14
 

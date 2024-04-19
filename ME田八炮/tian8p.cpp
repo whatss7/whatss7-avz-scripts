@@ -1,4 +1,4 @@
-#include "../whatss7-avz2-lib/walib.h"
+#include "../walib.h"
 
 void SlowGiga(int wave, int time) {
     AConnect(ATime(wave, time), [](){
@@ -30,7 +30,7 @@ void SlowGiga(int wave, int time) {
 
 
 void AScript() {
-    WAInit({AICE_SHROOM, AM_ICE_SHROOM, AFLOWER_POT, ACHERRY_BOMB});
+    Init({AICE_SHROOM, AM_ICE_SHROOM, AFLOWER_POT, ACHERRY_BOMB});
 
     // 对C8u: I-PP|PP|PP|I-PP|PP|PP (1253, 746, 746, 1253, 746, 746)
     const int ice_len = 1253;
@@ -52,7 +52,7 @@ void AScript() {
         SlowGiga(w, a_len - 200 + 30);
         if (w == 9 || w == 19) {
             AConnect(ATime(w, 1), [w](){
-                if (WAExistZombie(AHY_32)) {
+                if (ExistZombie(AHY_32)) {
                     ManualI3(w, a_len - 200 + 210, 3, 3);
                 }
             });
