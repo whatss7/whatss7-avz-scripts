@@ -307,6 +307,12 @@ void InitWithoutManage(const std::vector<APlantType> &plants, const char *scene 
     BindSpeedKeys();
 }
 
+void StartIceFiller(const std::vector<AGrid> &pos, int wave = 1, int time = -599) {
+    AConnect(ATime(wave, time), [pos](){
+        aIceFiller.Start(pos);
+    });
+}
+
 void SkipToTime(int wave, int time = -199) {
     AConnect(ATime(1, -599), [wave, time](){
         ASkipTick(wave, time);

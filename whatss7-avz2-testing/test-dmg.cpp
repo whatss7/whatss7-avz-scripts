@@ -6,6 +6,9 @@ struct PlantInfo {
     PlantInfo(int r, int c, APlantType t) : row(r), col(c), type(t) {}
 };
 
+// 需要额外输出信息时，设置此变量可以将其附加在每波信息的后面。
+std::string logMessage;
+
 // 在此处输入需要保护的植物。
 std::vector<PlantInfo> plants = {
     PlantInfo(2, 6, ACOB_CANNON),
@@ -13,6 +16,24 @@ std::vector<PlantInfo> plants = {
     PlantInfo(4, 7, ACOB_CANNON),
     PlantInfo(5, 6, ACOB_CANNON),
 };
+
+// 以下是walib默认出怪，可供参考
+// if (scene == "PE" || scene == "FE") {
+//     zombies = { APJ_0, ACG_3, AWW_8, ABC_12, AHT_14, AXC_15, AQQ_16, AKG_17, ABJ_20, AFT_21, ABY_23, AHY_32 };
+// } else if (scene == "DE") {
+//     // DE没有水路僵尸
+//     // 与DE2相比多路障、扶梯和跳跳（为了选僵尸合理选择的路障）
+//     zombies = { APJ_0, ALZ_2, ACG_3, AWW_8, ABC_12, AXC_15, AKG_17, ATT_18, ABJ_20, AFT_21, ABY_23, AHY_32 };
+// } else if (scene == "DE2") {
+//     // 与DE相比多橄榄、气球和投篮
+//     zombies = { APJ_0, ACG_3, AGL_7, AWW_8, ABC_12, AXC_15, AQQ_16, AKG_17, ABJ_20, ATL_22, ABY_23, AHY_32 };
+// } else if (scene == "NE") {
+//     // NE没有水路僵尸和冰车
+//     zombies = { APJ_0, ALZ_2, ACG_3, AWW_8, AXC_15, AQQ_16, AKG_17, ATT_18, ABJ_20, ATL_22, ABY_23, AHY_32 };
+// } else if (scene == "RE" || scene == "ME") {
+//     // RE和FE没有水路僵尸、舞王和矿工
+//     zombies = { APJ_0, ALZ_2, ACG_3, ABC_12, AXC_15, AQQ_16, ATT_18, ABJ_20, AFT_21, ATL_22, ABY_23, AHY_32 };
+// }
 
 // 在此处输入用冰位置、带卡、出僵尸等。
 // 可能被炸掉的植物也需要在带卡中。
@@ -68,6 +89,8 @@ void AScript() {
                     }
                 }
             }
+            std::string msg;
+            if (!logMessage.empty()) msg = " MSG@" + logMessage;
             if (check_count < plants.size()) {
                 std::string scene = GetCurrentScene();
                 for (auto &objective: plants) {
@@ -88,10 +111,10 @@ void AScript() {
                     ACard(objective.type, objective.row, objective.col);
                 }
                 fail_count++;
-                logger.Info("FAIL #-# DMG@# MISS@#", success_count, fail_count, dmg_str, miss_str);
+                logger.Info("FAIL #-# DMG@# MISS@##", success_count, fail_count, dmg_str, miss_str, msg);
             } else {
                 success_count++;
-                logger.Info("OK #-#", success_count, fail_count);
+                logger.Info("OK #-##", success_count, fail_count, msg);
             }
         });
     }
