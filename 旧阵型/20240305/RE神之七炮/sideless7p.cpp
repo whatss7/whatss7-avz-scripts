@@ -1,7 +1,7 @@
 #include "../whatss7-avz2-lib/walib.h"
 
 void AScript() {
-    WAInit({AICE_SHROOM, AM_ICE_SHROOM, ACOFFEE_BEAN, AFLOWER_POT, ACHERRY_BOMB, AJALAPENO, AKERNEL_PULT, ACOB_CANNON});
+    WAInit({AICE_SHROOM, AM_ICE_SHROOM, ACOFFEE_BEAN, AFLOWER_POT, ACHERRY_BOMB, AJALAPENO});
     WAAutoManageCob();
     WAFixCobs();
     aIceFiller.Start({{2, 3}, {4, 3}});
