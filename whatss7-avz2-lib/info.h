@@ -99,7 +99,7 @@ bool ExistPlant(std::vector<APlantType> types, int row, int col) {
 
 // 判断是否为有效的时间。普通波次小于 -200 的时间无效。
 bool IsValidTime(int wave, int time) {
-    if (wave == 1 || wave == 10 || wave == 20) return time >= -599;
+    if (wave == 1) return time >= -599;
     else if (wave == 10 || wave == 20) return time >= -945;
     else return time >= -200;
 }

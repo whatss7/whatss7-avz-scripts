@@ -12,12 +12,15 @@ void DynamicP(int w, int t, int row, float col) {
 // 将一个巨人移至1路保证收尾正确
 void EnsureGiga(int wave) {
     AConnect(ATime(wave, 1), [=](){
+        std::vector<AZombie *> candidates;
         for (auto &&zombie: aAliveZombieFilter) {
             if (zombie.AtWave() + 1 != wave || zombie.Type() != AHY_32) continue;
-            zombie.Row() = 0;
-            zombie.Ordinate() = 50;
-            break;
+            if (zombie.Row() + 1 == 1) return;
+            candidates.push_back(&zombie);
         }
+        auto &&zombie = *candidates[rand() % candidates.size()];
+        zombie.Row() = 1 - 1;
+        zombie.Ordinate() = 40;
     });
 }
 
@@ -29,14 +32,13 @@ void AScript() {
     StartIceFiller({{2, 3}, {4, 6}, {1, 1}});
     const int i_len = 1800;
     for (int w: {1}) {
-        C(w, -599, AFLOWER_POT, 5, 8);
-        TempC(w, -599 + 751, AFLOWER_POT, 1, 8, 379 + 1);
+        TempC(w, -599, AFLOWER_POT, 3, 9);
+        TempC(w, -599 + 751, AFLOWER_POT, 4, 9);
         C(w, -599 + 751 + 751, AFLOWER_POT, 1, 1);
         RoofP(w, 250, 1, 4, 9.125);
-        N(w, 379, 5, 8);
-        J(w, 379, 1, 8);
-        RoofP(w, 379 + 115, 4, 2, 7.725);
-        RoofP(w, 379 + 115, 7, 4, 9);
+        N(w, 270, 3, 9);
+        A(w, 270 + 110, 4, 9);
+        RoofP(w, 270 + 215, 7, 2, 5);
     }
     for (int w: {2, 10}) {
         // PPDDDD, 第二个D解决下波冰车
@@ -64,9 +66,9 @@ void AScript() {
         // Pd/PD，上半解决漏的跳跳
         RoofP(w, 410, 2, 2, 9);
         RoofP(w, 410, 4, 4, 9);
-        // if (w == 3) RoofP(w, 410 + 220, 4, 4, 8.5); else 
+        if (w == 4) RoofP(w, 410 + 220, 4, 4, 8.5);
         // FIXME: 樱桃蹭巨人，另外需要验证尾炸炮全收跳跳
-        A(w, 410 + 215, 4, 9);
+        else A(w, 410 + 215, 4, 9);
         RoofP(w, 410 + 320, 1, 2, 5);
         // 垫一下小丑
         if (w == 3) TempC(w, 950, AFLOWER_POT, 2, 9, 1150);
@@ -129,9 +131,9 @@ void AScript() {
         EnsureGiga(w);
         RoofP(w, 2780, 2, 3, 8.5);
         RoofP(w, 2370, 4, 4, 9);
-        TempC(w, 2000, AFLOWER_POT, 1, 6, 4301);
+        TempC(w, 2000, AFLOWER_POT, 1, 6, 4500 + 745);
         TempC(w, 2000, ASNOW_PEA, 1, 6, 4300 - SDT - 1);
-        TempC(w, 4300 - SDT, ASQUASH, 1, 6, 4301);
+        TempC(w, 4300 - SDT, ASQUASH, 1, 6, 4500 + 745);
     }
     for (int w: {20}) {
         I3(w, 1, i_len);
