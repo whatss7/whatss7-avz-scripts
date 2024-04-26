@@ -27,51 +27,53 @@ void EnsureGiga(int wave) {
 void AScript() {
     Init({
         AICE_SHROOM, AM_ICE_SHROOM, ACOFFEE_BEAN, AFLOWER_POT, ADOOM_SHROOM, 
-        ACHERRY_BOMB, AJALAPENO, ASNOW_PEA, ASQUASH, AWALL_NUT
+        ACHERRY_BOMB, AJALAPENO, ASNOW_PEA, ASQUASH, ATALL_NUT
     });
     StartIceFiller({{2, 3}, {4, 6}, {1, 1}});
+    StartReloadMode();
     const int i_len = 1800;
     for (int w: {1}) {
         TempC(w, -599, AFLOWER_POT, 1, 1);
         C(w, -599 + 751, AFLOWER_POT, 3, 9);
-        // TempC(w, -599 + 751 + 751, AFLOWER_POT, 1, 1);
-        RoofP(w, 270, 1, 4, 9.075);
+        RoofP(w, 270, 4, 4, 9);
         N(w, 450, 3, 9);
         RoofP(w, 450 + 110, 6, 4, 9);
         RoofP(w, 450 + 215, 7, 2, 5);
     }
     for (int w: {2}) {
-        // PPDDDD, 第二个D解决下波冰车
-        // 上半第一D不能全伤三行，不然炸不到冰车
-        ZomboniA(w, 379, 4, 9);
+        // PPDDDA, 第二个D解决下波冰车
+        // 可用的炮：?42414, ?=3/5
         DynamicP(w, 379, 2, 9);
-        RoofP(w, 379 + 119, 2, 2, 8.4);
-        RoofP(w, 379 + 119, 4, 4, 8.45);
+        RoofP(w, 379, 4, 4, 9);
+        // PP之后，全部开始投掷，2列炮拦上半区，所以4列炮只用拦两行；为了樱桃能炸到冰车，515激活，下波21冰
+        // 这里第一D上半因为要拦两波，没办法再同时全伤三行巨人
+        RoofP(w, 379 + 119, 2, 2, 8.35);
+        RoofP(w, 379 + 136, 4, 4, 8.45);
         RoofP(w, 379 + 119 + 137, 1, 2, 8.7);
-        RoofP(w, 379 + 119 + 137, 4, 4, 8.8125);
+        A(w, 379 + 136 + 120, 4, 9);
     }
     for (int w: {10}) {
-        // PPSSdd，尾炸收蹦极，不管上半冰车，下半冰车稍后樱桃收掉
-        // FIXME: 双尾炸不成立
+        // PPDDDdA', 第二个D解决下波冰车，d炸三路解决蹦极，炸不到的一列用辣椒补，上半的冰车随后用樱桃收掉，顺便还能解决跳跳
+        // 可用的炮：?62414, ?=3/5
         DynamicP(w, 379, 2, 9);
         RoofP(w, 379, 6, 4, 9);
-        RoofP(w, 379, 2, 2, 9);
-        RoofP(w, 379, 4, 4, 9);
-        RoofP(w, 379 + 205, 1, 2, 4.5);
-        RoofP(w, 379 + 205, 4, 4, 4.5);
+        RoofP(w, 379 + 119, 2, 2, 8.4);
+        RoofP(w, 379 + 119, 4, 4, 8.45);
+        J(w, 379 + 119 + 137, 1, 6);
+        RoofP(w, 379 + 119 + 205, 1, 3, 4.5);
+        RoofP(w, 379 + 119 + 137, 4, 4, 8.8125);
     }
     for (int w: {3, 11}) {
         // I-B-PP
-        I3(w, 11, 601);
+        I3(w, 21, 601);
         if (w == 11) {
-            // 收掉1列跳跳，同时w11解决1-1蹦极
-            TempC(w - 1, 601 + 349 - ADT - 751, AFLOWER_POT, 1, 7, 601 + 349 + ADT + 1);
-            J(w, 349, 1, 7);
-            ZomboniA(w, 349, 4, 9);
+            TempC(w, 950 - 751, AFLOWER_POT, 1, 9, 320);
+            A(w, 315, 1, 9);
         }
         TempC(w, 950, AFLOWER_POT, 2, 9, 1150);
         C(w, 950 + 751, AFLOWER_POT, 1, 1);
-        RoofP(w, 1140, 7, 4, 8.1);
+        // 晚10cs冰，所以早10cs分离
+        RoofP(w, 1130, 7, 4, 8.1);
         DynamicP(w, i_len - 200, 2, 9);
         RoofP(w, i_len - 200, 6, 6, 9);
     }
@@ -79,12 +81,11 @@ void AScript() {
         // I3
         I3(w, 11, i_len);
         // Pd/PD，上半解决漏的跳跳
+        if (w == 4) J(w, 300, 1, 1);
         RoofP(w, 410, 2, 2, 9);
         RoofP(w, 410, 4, 4, 9);
-        RoofP(w, 410 + 220, 4, 4, 8.5);
-        RoofP(w, 410 + 335, 1, 2, 4.7625);
-        // 补刀1路跳跳
-        if (w == 4) J(w, 517, 1, 1);
+        RoofP(w, 410 + 220, 1, 4, 8.7);
+        RoofP(w, 410 + 335, 4, 2, 4.7625);
         // 垫一下小丑
         TempC(w, 950, AFLOWER_POT, 2, 9, 1150);
         // B
@@ -116,43 +117,29 @@ void AScript() {
         RoofP(w, 410, 4, 4, 9);
         RoofP(w, 630, 1, 2, 8.5);
         RoofP(w, 630, 4, 4, 8.5);
-        // if (w == 9) {
-        //     // 此时上波3路红眼被创5-6次肯定是没有的，那么3路9列威胁只有各种快速僵尸
-        //     // 套一个临时南瓜头，等咖啡豆唤醒成功后铲掉，确保不会被砸
-        //     C(w, 1085 + 200 - 100 - 751, AFLOWER_POT, 3, 9);
-        //     TempC(w, 1085 + 200 - 100 - 651, AWALL_NUT, 3, 9, 1085 - ADT - CBT - 1);
-        //     TempC(w, 1085 - ADT - CBT, APUMPKIN, 3, 9, 1085 - ADT);
-        //     C(w, 1085 - ADT - CBT, {ADOOM_SHROOM, ACOFFEE_BEAN}, 3, 9);
-        //     A(w, 1085 + 200, 2, 9);
-        //     RoofP(w, 1085 + 200, 7, 4, 9);
-        //     DynamicP(w, 1085 + 200 + 220, 2, 8.95);
-        //     RoofP(w, 1085 + 200 + 220, 6, 4, 8.95);
-        // } else {
         // 巨人1282才能对9普通举锤，篮球1091碾压，1039全伤巨人，可以1085生效
         // PA-N-PP
-        // FIXME: 拦截存在问题
         C(w, 1085 - ADT - 751, AFLOWER_POT, 2, 8);
         A(w, 1085, 2, 9);
         RoofP(w, 1085, 7, 4, 9);
         N(w, 1085 + 220, 2, 8);
-        DynamicP(w, 1085 + 220 + 220, 2, 8.95);
-        RoofP(w, 1085 + 220 + 220, 6, 4, 8.95);
+        DynamicP(w, 1085 + 220 + 215, 2, 8.95);
+        RoofP(w, 1085 + 220 + 215, 6, 4, 8.95);
         // }
         // 现在只剩一血红了
         // 需要原来的热过渡炮收尾，这一炮2085转好
         // 1085+220=1305激活
-        // walk([453, 450])=671，原速下1179不会锤8炮，11冰下则是2379不会锤8炮，此时再垫一下可以到2587
-        // walk([453, 865])=592，原速下1594不会锤7炮，11冰下则是2794不会锤7炮
-        // 上路2790收尾，下路2580收尾炮；取2580
+        // walk([453, 450])=671，原速下1179不会锤8炮，11冰下则是2379不会锤8炮
         EnsureGiga(w);
         RoofP(w, 2370, 2, 3, 8.5);
         RoofP(w, 2370, 4, 4, 9);
-        TempC(w, 2000, AFLOWER_POT, 1, 6, 4500 + 745);
+        TempC(w, 2000, AFLOWER_POT, 1, 6, 4500 + 745 + 635 + 1);
         TempC(w, 2000, ASNOW_PEA, 1, 6, 4300 - SDT - 1);
         TempC(w, 4300 - SDT, ASQUASH, 1, 6, 4500 + 745);
     }
     for (int w: {20}) {
         I3(w, 1, i_len);
+        Remove(w, 2, AFLOWER_POT, 1, 1);
         // 可以参与收尾的炮：1244D67，下一个14在600转好，因此先打一个PSD
         // 热过渡
         RoofP(w, 401, 1, 2, 9);
@@ -168,5 +155,16 @@ void AScript() {
         RoofP(w, 1270, 4, 4, 9);
         RoofP(w, 1320, 7, 2, 9);
         DynamicP(w, 1480, 4, 9);
+        PPExceptOne(w, 2230);
+        BlockLast(w, 2235, 5700);
+        AConnect(ATime(w, 5500 - SDT), [](){
+            for (auto &&plant: aAlivePlantFilter) {
+                if (plant.Type() == ATALL_NUT) {
+                    int r = plant.Row() + 1, c = plant.Col() + 1;
+                    ARemovePlant(r, c, ATALL_NUT);
+                    ACard(ASQUASH, r, c);
+                }
+            }
+        });
     }
 }
