@@ -16,7 +16,7 @@
 - [DE 双冰六炮](./README.md#de-双冰六炮-ch5) [阵图](./考级阵图/L1/DE%20双冰六炮.jpg)
 - [PE 玉米八炮](./README.md#pe-玉米八炮-对ch6) [阵图](./考级阵图/L1/PE%20玉米八炮.jpg) [【视频】](https://www.bilibili.com/video/BV15t42137S3)
 - [PE 神之六炮·改](./旧阵型/20240312/README.md#pe-神之六炮改-s4) [阵图](./考级阵图/L1/PE%20神之六炮·改.jpg)
-- [ME 田八炮](./旧阵型/20240305/README.md#me-田八炮-对c8u-挂机-不稳定) [阵图](./考级阵图/L1/ME%20田八炮.jpg) [【视频】](https://www.bilibili.com/video/BV1DC411H7qM)
+- [ME 田八炮](./README.md#me-田八炮) [阵图](./考级阵图/L1/ME%20田八炮.jpg) [【视频】](https://www.bilibili.com/video/BV1DC411H7qM)
 - [FE 神之四炮](./旧阵型/20240312/README.md#fe-神之四炮-邻c6u) [阵图](./考级阵图/L1/FE%20神之四炮.jpg) [【视频】](https://www.bilibili.com/video/BV1UZ421b79c)
 - [PE 冰雨十二炮·改](./旧阵型/20240312/README.md#pe-冰雨十二炮改-p6)* [阵图](./考级阵图/L1/PE%20冰雨十二炮·改.jpg) [【视频】](https://www.bilibili.com/video/BV1mJ4m1G7AA?t=212)
 
@@ -29,10 +29,10 @@
 - [PE 无冰瓜二十炮](./README.md#pe-无冰瓜二十炮-p6-2i-挂机) [阵图](./考级阵图/L2/PE%20无冰瓜二十炮.jpg) 挂机
 - ~~PE 经典十八炮~~ [阵图](./考级阵图/L2/PE%20经典十八炮.jpg)
 - [PE 双冰十六炮·改](./旧阵型/20240312/README.md#pe-双冰十六炮改-ch6) [阵图](./考级阵图/L2/PE%20双冰十六炮·改.jpg)
-- ~~[PE 全金属四炮](./README.md#pe-全金属四炮-ch4-n-手动-不稳定)~~ [阵图](./考级阵图/L2/PE%20全金属四炮.jpg)
+- ~~[PE 全金属四炮](./README.md#pe-全金属四炮-ch4-n-手动-未完成)~~ [阵图](./考级阵图/L2/PE%20全金属四炮.jpg)
 - [RE 中开六炮](./README.md#re-中开六炮-c6i-n-不稳定) [阵图](./考级阵图/L2/RE%20中开六炮.png)
 - [PE 空炸十八炮](./旧阵型/20240312/README.md#pe-空炸十八炮-p6-挂机) [阵图](./考级阵图/L2/PE%20空炸十八炮.jpg) 挂机
-- [NE 土豆四炮](./README.md#ne-土豆四炮-邻c7u)* [阵图](./考级阵图/L2/NE%20土豆四炮.jpg) [【视频】](https://www.bilibili.com/video/BV141421Q7KR)
+- [NE 土豆四炮](./README.md#ne-土豆四炮-邻c7u-不稳定)* [阵图](./考级阵图/L2/NE%20土豆四炮.jpg) [【视频】](https://www.bilibili.com/video/BV141421Q7KR)
 - ~~NE 压碑五炮*~~ [阵图](./考级阵图/L2/NE%20压碑五炮.jpg)
 - [FE 新磁铁四炮](./README.md#fe-新磁铁四炮-对c6u-不稳定)* [阵图](./考级阵图/L2/FE%20新磁铁四炮.jpg)
 - ~~ME 核聚变六炮*~~ [阵图](./考级阵图/L2/ME%20核聚变六炮.jpg)
