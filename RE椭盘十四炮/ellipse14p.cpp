@@ -35,7 +35,7 @@ void AScript() {
     for (int w: {1}) {
         TempC(w, -599, AFLOWER_POT, 1, 1);
         C(w, -599 + 751, AFLOWER_POT, 3, 9);
-        RoofP(w, 270, 4, 4, 9);
+        RoofP(w, 265, 4, 4, 9);
         N(w, 450, 3, 9);
         RoofP(w, 450 + 110, 6, 4, 9);
         RoofP(w, 450 + 215, 7, 2, 5);
