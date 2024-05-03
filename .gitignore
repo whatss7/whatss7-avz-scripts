@@ -7,3 +7,4 @@ learn.cpp
 *.seml
 dest/*
 semls/*
+*-test.cpp

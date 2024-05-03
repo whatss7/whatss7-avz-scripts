@@ -124,6 +124,15 @@ void Init(const std::vector<APlantType> &plants, const char *scene = "Auto", boo
 // 初始化选卡，并根据场地选择合理的僵尸。
 // 选卡剩下的格子会用一些常用的植物填充防止漏选。
 // 场景可传入的参数参见 `SelectZombiesForScene()`.
+void InitWithoutManage(const std::vector<APlantType> &plants, const std::vector<AZombieType> &zombies, bool fast = false) {
+    if (!zombies.empty()) ASetZombies(std::vector<int>(zombies.begin(), zombies.end()));
+    SelectCardsAndFill(plants, fast);
+    BindSpeedKeys();
+}
+
+// 初始化选卡，并根据场地选择合理的僵尸。
+// 选卡剩下的格子会用一些常用的植物填充防止漏选。
+// 场景可传入的参数参见 `SelectZombiesForScene()`.
 void InitWithoutManage(const std::vector<APlantType> &plants, const char *scene = "Auto", bool fast = false) {
     SelectZombiesForScene(scene);
     SelectCardsAndFill(plants, fast);

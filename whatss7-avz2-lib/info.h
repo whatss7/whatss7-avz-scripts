@@ -62,6 +62,32 @@ bool IsNightScene() {
     return scene_id == 1 || scene_id == 3 || scene_id == 5;
 }
 
+bool IsFrontyardScene() {
+    int scene_id = AGetMainObject()->Scene();
+    if (scene_id < 0 || scene_id > 5) { waLogger.Error("未知的场地"); return false; }
+    return scene_id == 0 || scene_id == 1;
+}
+
+bool IsBackyardScene() {
+    int scene_id = AGetMainObject()->Scene();
+    if (scene_id < 0 || scene_id > 5) { waLogger.Error("未知的场地"); return false; }
+    return scene_id == 2 || scene_id == 3;
+}
+
+bool IsRoofScene() {
+    int scene_id = AGetMainObject()->Scene();
+    if (scene_id < 0 || scene_id > 5) { waLogger.Error("未知的场地"); return false; }
+    return scene_id == 4 || scene_id == 5;
+}
+
+// 获取当前场景最大可能的炮飞行时间。
+int GetCFT() {
+    if (IsFrontyardScene()) return CFT;
+    else if (IsBackyardScene()) return PCFT;
+    else if (IsRoofScene()) return RCFT;
+    return -1;
+}
+
 // 判断场上某行是否有指定类型的僵尸。此处行从 1 开始编号。
 bool ExistZombie(std::vector<AZombieType> types, std::vector<int> rows = {1, 2, 3, 4, 5, 6}) {
     for (auto &&zombie: aAliveZombieFilter) {
@@ -111,16 +137,22 @@ std::vector<AZombieType> waForEndIgnore = { AKG_17, AXG_24 };
 
 // 控制 `ForEnd()` 和 `PPForEnd()` 函数所无视的水路僵尸类型。若为空，则沿用 `waForEndIgnore` 的设置。
 // 在其中插入一个不会在水路生成的僵尸以禁用上述行为。
-std::vector<AZombieType> waForEndIgnoreInWater = {};bool ForEndJudge(int wave) {
+std::vector<AZombieType> waForEndIgnoreInWater = {};
+
+// 判断当前是否符合 `ForEnd()` 的条件。
+bool ForEndJudge(int wave) {
     std::string scene = GetCurrentScene();
-    if ((scene == "PE" || scene == "FE") && waForEndIgnoreInWater.empty()) {
+    // 若为后院且水路无视未设置，则使用陆路设置
+    if (IsBackyardScene() && waForEndIgnoreInWater.empty()) {
         waForEndIgnoreInWater = waForEndIgnore;
     }
     ATime now = ANowTime();
+    // 已经不是当前波次则不执行
     if (now.wave != wave) return false;
     bool hasZombie = false;
+    // 场上只有被忽略的僵尸时不执行
     for (auto &&zombie: aAliveZombieFilter) {
-        if ((scene == "PE" || scene == "FE") && (zombie.Row() == 2 || zombie.Row() == 3)) {
+        if (IsBackyardScene() && (zombie.Row() == 2 || zombie.Row() == 3)) {
             if (std::find(waForEndIgnoreInWater.begin(), waForEndIgnoreInWater.end(), zombie.Type()) != waForEndIgnoreInWater.end()) {
                 continue;
             }
@@ -131,6 +163,7 @@ std::vector<AZombieType> waForEndIgnoreInWater = {};bool ForEndJudge(int wave) {
         }
         if ((zombie.Type() != ABW_9 && zombie.AtWave() + 1 == wave) || (wave != 9 && wave != 19)) {
             hasZombie = true;
+            break;
         }
     }
     if (!hasZombie) return false;

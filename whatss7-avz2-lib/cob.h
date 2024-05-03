@@ -89,11 +89,11 @@ void PP(int wave, int time = -1, float col = 9, std::vector<int> rows = {}) {
     } else {
         for (int row: rows) {
             if ((scene == "PE" || scene == "FE") && (row == 3 || row == 4)) {
-                AConnect(ATime(wave, time - 378), [row, col](){
+                AConnect(ATime(wave, time - PCFT), [row, col](){
                     aCobManager.Fire(row, col);
                 });
             } else {
-                AConnect(ATime(wave, time - 373), [row, col](){
+                AConnect(ATime(wave, time - CFT), [row, col](){
                     aCobManager.Fire(row, col);
                 });
             }
@@ -227,7 +227,7 @@ void PForEnd(int wave, int time, int row, float col) {
 // 若设置 `stop_giga_plants`，则会使用其中的植物阻挡巨人到4300cs或5500cs(w20)。
 void PPExceptOne(int wave, int time, float col = 9, std::vector<APlantType> stop_giga_plants = {}, int stop_giga_to_time = -1) {
     std::string scene = GetCurrentScene();
-    int VCFT = (scene == "RE" || scene == "ME" ? RCFT : CFT);
+    int VCFT = GetCFT();
     ForEnd(wave, time - VCFT, [=](){
         AConnect(ATime(wave, time - VCFT), [=](){
             int choice = -1;
@@ -261,74 +261,38 @@ void PPExceptOne(int wave, int time, float col = 9, std::vector<APlantType> stop
                 // 六行场地收尾
                 if (dist[1] == 1) {
                     choice = 1;
-                    if (dist[2] != 0 || dist[3] != 0) {
-                        P(ANowTime().wave, time, 3, col);
-                    }
-                    if (dist[4] != 0 || dist[5] != 0 || dist[6] != 0) {
-                        P(ANowTime().wave, time, 5, col);
-                    }
+                    if (dist[2] != 0 || dist[3] != 0) { P(ANowTime().wave, time, 3, col); }
+                    if (dist[4] != 0 || dist[5] != 0 || dist[6] != 0) { P(ANowTime().wave, time, 5, col); }
                 } else if (dist[6] == 1) {
                     choice = 6;
-                    if (dist[4] != 0 || dist[5] != 0) {
-                        P(ANowTime().wave, time, 4, col);
-                    }
-                    if (dist[1] != 0 || dist[2] != 0 || dist[3] != 0) {
-                        P(ANowTime().wave, time, 2, col);
-                    }
+                    if (dist[4] != 0 || dist[5] != 0) { P(ANowTime().wave, time, 4, col); }
+                    if (dist[1] != 0 || dist[2] != 0 || dist[3] != 0) { P(ANowTime().wave, time, 2, col); }
                 } else if (dist[1] == 0 && dist[2] == 1) {
                     choice = 2;
                     bool middle_done = false;
-                    if (dist[3] != 0) {
-                        P(ANowTime().wave, time, 4, col);
-                        middle_done = true;
-                    }
-                    if (dist[6] != 0) {
-                        P(ANowTime().wave, time, 5, col);
-                        middle_done = true;
-                    }
-                    if (!middle_done && (dist[4] != 0 || dist[5] != 0)) {
-                        P(ANowTime().wave, time, 4, col);
-                    }
+                    if (dist[3] != 0) { P(ANowTime().wave, time, 4, col); middle_done = true; }
+                    if (dist[6] != 0) { P(ANowTime().wave, time, 5, col); middle_done = true; }
+                    if (!middle_done && (dist[4] != 0 || dist[5] != 0)) { P(ANowTime().wave, time, 4, col); }
                 } else if (dist[5] == 0 && dist[6] == 1) {
                     choice = 5;
                     bool middle_done = false;
-                    if (dist[1] != 0) {
-                        P(ANowTime().wave, time, 2, col);
-                        middle_done = true;
-                    }
-                    if (dist[4] != 0) {
-                        P(ANowTime().wave, time, 3, col);
-                        middle_done = true;
-                    }
-                    if (!middle_done && (dist[2] != 0 || dist[3] != 0)) {
-                        P(ANowTime().wave, time, 2, col);
-                    }
+                    if (dist[1] != 0) { P(ANowTime().wave, time, 2, col); middle_done = true; }
+                    if (dist[4] != 0) { P(ANowTime().wave, time, 3, col); middle_done = true; }
+                    if (!middle_done && (dist[2] != 0 || dist[3] != 0)) { P(ANowTime().wave, time, 2, col); }
                 } else if (dist[1]) {
                     choice = 1;
-                    if (dist[2] != 0 || dist[3] != 0) {
-                        P(ANowTime().wave, time, 3, col);
-                    }
-                    if (dist[4] != 0 || dist[5] != 0 || dist[6] != 0) {
-                        P(ANowTime().wave, time, 5, col);
-                    }
+                    if (dist[2] != 0 || dist[3] != 0) { P(ANowTime().wave, time, 3, col); }
+                    if (dist[4] != 0 || dist[5] != 0 || dist[6] != 0) { P(ANowTime().wave, time, 5, col); }
                 } else if (dist[6]) {
                     choice = 6;
-                    if (dist[4] != 0 || dist[5] != 0) {
-                        P(ANowTime().wave, time, 4, col);
-                    }
-                    if (dist[1] != 0 || dist[2] != 0 || dist[3] != 0) {
-                        P(ANowTime().wave, time, 2, col);
-                    }
+                    if (dist[4] != 0 || dist[5] != 0) { P(ANowTime().wave, time, 4, col); }
+                    if (dist[1] != 0 || dist[2] != 0 || dist[3] != 0) { P(ANowTime().wave, time, 2, col); }
                 } else if (dist[2]) {
                     choice = 2;
-                    if (dist[3] != 0 || dist[4] != 0 || dist[5] != 0) {
-                        P(ANowTime().wave, time, 4, col);
-                    }
+                    if (dist[3] != 0 || dist[4] != 0 || dist[5] != 0) { P(ANowTime().wave, time, 4, col); }
                 } else if (dist[5]) {
                     choice = 5;
-                    if (dist[3] != 0 || dist[4] != 0) {
-                        P(ANowTime().wave, time, 3, col);
-                    }
+                    if (dist[3] != 0 || dist[4] != 0) { P(ANowTime().wave, time, 3, col); }
                 }
                 if (!stop_giga_plants.empty()) {
                     StopGiga(ANowTime().wave, ANowTime().time, stop_giga_plants, ANowTime().wave == 20 ? 5500 : 4300, choice);
@@ -338,90 +302,44 @@ void PPExceptOne(int wave, int time, float col = 9, std::vector<APlantType> stop
                 if (dist[1] == 1) {
                     choice = 1;
                     bool middled = false;
-                    if (dist[2]) {
-                        P(ANowTime().wave, time, 3, col);
-                        middled = true;
-                    }
-                    if (dist[5]) {
-                        P(ANowTime().wave, time, 4, col);
-                        middled = true;
-                    }
-                    if (!middled && (dist[3] || dist[4])) {
-                        P(ANowTime().wave, time, 3, col);
-                    }
+                    if (dist[2]) { P(ANowTime().wave, time, 3, col); middled = true; }
+                    if (dist[5]) { P(ANowTime().wave, time, 4, col); middled = true; }
+                    if (!middled && (dist[3] || dist[4])) { P(ANowTime().wave, time, 3, col); }
                 } else if (dist[3] == 1) {
                     choice = 3;
-                    if (dist[1] || dist[2]) {
-                        P(ANowTime().wave, time, 1, col);
-                    }
-                    if (dist[4] || dist[5]) {
-                        P(ANowTime().wave, time, 5, col);
-                    }
+                    if (dist[1] || dist[2]) { P(ANowTime().wave, time, 1, col); }
+                    if (dist[4] || dist[5]) { P(ANowTime().wave, time, 5, col); }
                 } else if (dist[5] == 1) {
                     choice = 5;
                     bool middled = false;
-                    if (dist[1]) {
-                        P(ANowTime().wave, time, 2, col);
-                        middled = true;
-                    }
-                    if (dist[4]) {
-                        P(ANowTime().wave, time, 3, col);
-                        middled = true;
-                    }
-                    if (!middled && (dist[2] || dist[3])) {
-                        P(ANowTime().wave, time, 2, col);
-                    }
+                    if (dist[1]) { P(ANowTime().wave, time, 2, col); middled = true; }
+                    if (dist[4]) { P(ANowTime().wave, time, 3, col); middled = true; }
+                    if (!middled && (dist[2] || dist[3])) { P(ANowTime().wave, time, 2, col); }
                 } else if (dist[1] == 0 && dist[2] == 1) {
                     choice = 2;
-                    if (dist[3] || dist[4] || dist[5]) {
-                        P(ANowTime().wave, time, 4, col);
-                    }
+                    if (dist[3] || dist[4] || dist[5]) { P(ANowTime().wave, time, 4, col); }
                 } else if (dist[5] == 0 && dist[4] == 1) {
                     choice = 4;
-                    if (dist[1] || dist[2] || dist[3]) {
-                        P(ANowTime().wave, time, 2, col);
-                    }
+                    if (dist[1] || dist[2] || dist[3]) { P(ANowTime().wave, time, 2, col); }
                 } else if (dist[1]) {
                     choice = 1;
                     bool middled = false;
-                    if (dist[2]) {
-                        P(ANowTime().wave, time, 3, col);
-                        middled = true;
-                    }
-                    if (dist[5]) {
-                        P(ANowTime().wave, time, 4, col);
-                        middled = true;
-                    }
-                    if (!middled && (dist[3] || dist[4])) {
-                        P(ANowTime().wave, time, 3, col);
-                    }
+                    if (dist[2]) { P(ANowTime().wave, time, 3, col); middled = true; }
+                    if (dist[5]) { P(ANowTime().wave, time, 4, col); middled = true; }
+                    if (!middled && (dist[3] || dist[4])) { P(ANowTime().wave, time, 3, col); }
                 } else if (dist[3]) {
                     choice = 3;
-                    if (dist[1] || dist[2]) {
-                        P(ANowTime().wave, time, 1, col);
-                    }
-                    if (dist[4] || dist[5]) {
-                        P(ANowTime().wave, time, 5, col);
-                    }
+                    if (dist[1] || dist[2]) { P(ANowTime().wave, time, 1, col); }
+                    if (dist[4] || dist[5]) { P(ANowTime().wave, time, 5, col); }
                 } else if (dist[5]) {
                     choice = 5;
                     bool middled = false;
-                    if (dist[1]) {
-                        P(ANowTime().wave, time, 2, col);
-                        middled = true;
-                    }
-                    if (dist[4]) {
-                        P(ANowTime().wave, time, 3, col);
-                        middled = true;
-                    }
-                    if (!middled && (dist[2] || dist[3])) {
-                        P(ANowTime().wave, time, 2, col);
-                    }
+                    if (dist[1]) { P(ANowTime().wave, time, 2, col); middled = true; }
+                    if (dist[4]) { P(ANowTime().wave, time, 3, col); middled = true; }
+                    if (!middled && (dist[2] || dist[3])) { P(ANowTime().wave, time, 2, col); }
                 } else if (dist[2]) {
                     choice = 2;
-                    if (dist[3] || dist[4] || dist[5]) {
-                        P(ANowTime().wave, time, 4, col);
-                    }
+                    if (dist[3] || dist[4] || dist[5]) { P(ANowTime().wave, time, 4, col); }
                 } else if (dist[4]) {
                     choice = 4;
                 }
