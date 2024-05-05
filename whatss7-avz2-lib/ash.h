@@ -413,7 +413,7 @@ void PreciseWhiteN(int wave, int time, int row, float col, int last_wave_length 
 
 
 // 种植毁灭菇，但进行车底炸。仅用于夜间场景。
-// 本路无冰车时，与N函数相同；而有冰车时，在生效时间点再放。
+// 本路无冰车时，与BlackN函数相同；而有冰车时，在生效时间点再放。
 void ZomboniN(int wave, int time, int row, float col) {
     const std::string scene = GetCurrentScene();
     if (scene != "ME") {
