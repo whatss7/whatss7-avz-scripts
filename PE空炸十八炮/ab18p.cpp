@@ -1,10 +1,7 @@
-#include "../whatss7-avz2-lib/walib.h"
+#include "../walib.h"
 
 void AScript() {
-    WAInit({ADOOM_SHROOM, ALILY_PAD, ACOFFEE_BEAN, AKERNEL_PULT, ACOB_CANNON}, "None", true);
-    waCheckIgnore = {{5, 1}, {6, 1}};
-    WACheck();
-    WAFixCobs();
+    Init({ACHERRY_BOMB});
     for (int w: WaveList(1, 20)) {
         PP(w);
         if (AGetZombieTypeList()[ABY_23] || AGetZombieTypeList()[AHY_32]) {
@@ -14,9 +11,9 @@ void AScript() {
         }
         if (w == 10) {
             if (AGetZombieTypeList()[AHY_32]) {
-                N(w, PCP, {{3, 9}, {4, 9}});
+                SmartA(w, PCP);
             } else {
-                N(w, 401, {{3, 9}, {4, 9}});
+                SmartA(w);
             }
         }
         if (w == 20) P(w, 225, 4, 7.5875);
