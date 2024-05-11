@@ -78,6 +78,14 @@
     <p>时间可接受格式如下，多个时机使用空格隔开</p>
     <p>(1) 316 表示本波 316 时机 (2) w:1050 表示本波 1050 时机 (3) w+1:316 表示下波 316 时机</p>
     <p>目前只接受本波用冰；投掷时间后可以添加一个星号，如 w+0:316* 表示植物激活（相对于炮激活）</p>
+    <p>WF: Walk Formula 行走分段用于在速度计算器中验证本工具的计算正确性 SAFE: 不会砸扁位于何处的植物</p>
+    <br/>
+    <p>附赠小工具：快捷分段计算，查看一个分段的最优方式</p>
+    <label for="splitter_input">单段长度：</label>
+    <input type="number" id="splitter_input" value="0">
+    <button onclick="runSplitter()">计算</button>
+    <p id="splitter_output"></p>
+    <p>FC: Fodder Count 使用垫材数量 WD: Walk Distance 巨人行进距离 SP: Split 分段行走时长</p>
 </body>
 
 </html>

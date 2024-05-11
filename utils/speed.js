@@ -461,7 +461,7 @@ var slow_speed_data = [
     0.017, 0.017, 0.017, 0.017, 0.017, 0.017, 0.017, 0.018, 0.017, 0.017,
     0.017, 0.017, 0.017, 0.017, 0.017, 0.017, 0.017, 0.017, 0.018, 0.017,
     0.017, 0.017, 0.017, 0.017, 0.017, 0.017, 0.017, 0.017, 0.017, 0.018,
-    0.017, 0.017, 0.017, 0.017, 0.017, 0.017, 0.192, 0.192, 0.192, 
+    0.017, 0.017, 0.017, 0.017, 0.017, 0.017, 0.192, 0.192, 0.192,
 ];
 
 var nextSegmentNo = 0;
@@ -630,16 +630,16 @@ function extractEvents(input_info, current_wave_no) {
     // 提取投掷信息
     var throw_time = current_info.throw_info;
     if (throw_time.valid) {
-        if (throw_time.special) waiting_events.push({wave: throw_time.wave, time: throw_time.time, type: "throw-ash"});
-        else waiting_events.push({wave: throw_time.wave, time: throw_time.time, type: "throw"});
+        if (throw_time.special) waiting_events.push({ wave: throw_time.wave, time: throw_time.time, type: "throw-ash" });
+        else waiting_events.push({ wave: throw_time.wave, time: throw_time.time, type: "throw" });
     }
     // 提取锤垫信息
     for (var t of current_info.fodder_info) {
-        waiting_events.push({wave: t.wave, time: t.time, type: "fodder"});
+        waiting_events.push({ wave: t.wave, time: t.time, type: "fodder" });
     }
     // 提取统计信息
     for (var t of current_info.analyze_info) {
-        waiting_events.push({wave: t.wave, time: t.time - (t.special ? 1 : 0), type: "analyze", info: `w+${t.wave}:${t.time}${t.special ? "*" : ""}`});
+        waiting_events.push({ wave: t.wave, time: t.time - (t.special ? 1 : 0), type: "analyze", info: `w+${t.wave}:${t.time}${t.special ? "*" : ""}` });
         max_analyze = Math.max(max_analyze, t.wave);
     }
     console.log(waiting_events);
@@ -649,16 +649,16 @@ function extractEvents(input_info, current_wave_no) {
         if (i >= infos.length) infos.push(infos[i % original_length]);
         var info = infos[i];
         // 冰冻事件
-        if (info.ice > 0) events.push({type: "ice", time: current_wave_start + info.ice});
+        if (info.ice > 0) events.push({ type: "ice", time: current_wave_start + info.ice });
         // 将之前的换算为时间点
         for (var ev of waiting_events) {
             if (ev.wave == i - current_wave_no) {
-                events.push({type: ev.type, time: current_wave_start + ev.time, info: ev.info});
+                events.push({ type: ev.type, time: current_wave_start + ev.time, info: ev.info });
             }
         }
         current_wave_start += ((info.cob < 401) ? 601 : (info.cob + 200));
     }
-    events.sort((a, b)=> a.time - b.time);
+    events.sort((a, b) => a.time - b.time);
     console.log(events);
     return events;
 }
@@ -715,7 +715,7 @@ function gigaStep(giga, slow) {
         }
     }
     // 非冰冻、非跳过状态下，进行移动
-    if (giga.freeze == 0){
+    if (giga.freeze == 0) {
         if (!(giga.slow && giga.slow_skip)) {
             if (giga.phase >= 0) {
                 if (slow) giga.pos -= slow_speed_data[giga.phase];
@@ -743,7 +743,7 @@ function gigaStep(giga, slow) {
         } else {
             giga.slow_skip = false;
         }
-    } 
+    }
     // 结算下一帧植物
     if (giga.phase >= 0 && giga.throw > 142) giga.throw -= 1;
     if (giga.phase >= 0 && giga.smash > 208) giga.smash -= 1;
@@ -756,7 +756,7 @@ function calculateOne(input_info, segment_id, segment_no) {
     var analyze_str = "";
     var result_str = "";
     var fast_giga = generateGiga(845);
-    var slow_giga =  generateGiga(854);
+    var slow_giga = generateGiga(854);
 
     // 为计算可以砸扁举锤坐标为多少的植物，对每个坐标维护一个计数器，只在冻结时不动作
     // 当冰冻事件与投掷+106cs(-36cs)事件同时发生时，进入ice3
@@ -794,7 +794,7 @@ function calculateOne(input_info, segment_id, segment_no) {
                         // 减速信息与投掷信息全场同步，无需考虑
                         if (fast_giga.throw == 36 && (!fast_giga.slow || fast_giga.slow_skip)) {
                             fast_giga.throw += 142;
-                        } 
+                        }
                         if (fast_giga.slow) {
                             fast_giga.freeze = 300;
                             slow_giga.freeze = 400;
@@ -843,4 +843,35 @@ function calculateAll() {
         calculateOne(input_info, segment.id, segment_no);
         segment_no += 1;
     });
+}
+
+function runSplitter() {
+    var total_time = Number(document.getElementById("splitter_input").value);
+    var walk_len = [{ walk: 0, split: [0] }];
+    for (var i = 1; i <= total_time; i++) {
+        walk_len.push({ walk: walk_len[i - 1].walk + fast_speed_data[i - 1], split: [i] });
+    }
+    var result = `(FC: 0, WD:${Math.round(walk_len[total_time].walk * 1000) / 1000}) `;
+    var last_split_len = walk_len, now_split_len = []
+    for (var fodder_count = 1; fodder_count * 208 < total_time; fodder_count++) {
+        for (var current_time = 0; current_time <= total_time - fodder_count * 208; current_time++) {
+            var min_val = 1000, min_val_i = -1;
+            for (var i = 0; i <= current_time; i++) {
+                var val = last_split_len[i].walk + walk_len[current_time - i].walk;
+                if (val < min_val) {
+                    min_val = val;
+                    min_val_i = i;
+                }
+            }
+            var item = { walk: min_val, split: last_split_len[min_val_i].split.slice() };
+            item.split.push(current_time - min_val_i);
+            now_split_len.push(item);
+        }
+        result += `(FC:${fodder_count}, `;
+        result += `WD:${Math.round(now_split_len[total_time - fodder_count * 208].walk * 1000) / 1000}, `
+        result += `SP:${now_split_len[total_time - fodder_count * 208].split}) `;
+        last_split_len = now_split_len;
+        now_split_len = [];
+    }
+    document.getElementById("splitter_output").textContent = result;
 }
