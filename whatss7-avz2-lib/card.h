@@ -314,6 +314,21 @@ void MultiTempC(int wave, int time, const std::vector<APlantType> &plants, std::
 
 // 在场上的最后一列有僵尸的位置种植一个坚果类。
 // 本函数已进行 `ForEnd()` 判定。
+void ActionToLast(int wave, int time, std::function<void(int)> action) {
+    ForEnd(wave, time, [=](){
+        AConnect(ATime(wave, time), [=](){
+            AZombie *zombie_to_stop = nullptr;
+            for (auto &&zombie: aAliveZombieFilter) {
+                zombie_to_stop = &zombie;
+                if (zombie.Type() != ABW_9) break;
+            }
+            if (zombie_to_stop) action(zombie_to_stop->Row() + 1);
+        });
+    });
+}
+
+// 在场上的最后一列有僵尸的位置种植一个坚果类。
+// 本函数已进行 `ForEnd()` 判定。
 void BlockLast(int wave, int time, int to_time = -1000) {
     ForEnd(wave, time, [=](){
         AConnect(ATime(wave, time), [=](){

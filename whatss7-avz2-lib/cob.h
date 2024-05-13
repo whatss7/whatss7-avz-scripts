@@ -273,7 +273,7 @@ void PPExceptOne(int wave, int time, float col = 9, std::vector<APlantType> stop
                     if (dist[3] != 0) { P(ANowTime().wave, time, 4, col); middle_done = true; }
                     if (dist[6] != 0) { P(ANowTime().wave, time, 5, col); middle_done = true; }
                     if (!middle_done && (dist[4] != 0 || dist[5] != 0)) { P(ANowTime().wave, time, 4, col); }
-                } else if (dist[5] == 0 && dist[6] == 1) {
+                } else if (dist[6] == 0 && dist[5] == 1) {
                     choice = 5;
                     bool middle_done = false;
                     if (dist[1] != 0) { P(ANowTime().wave, time, 2, col); middle_done = true; }

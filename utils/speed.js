@@ -479,13 +479,14 @@ function addSegment() {
             <label for="${segmentId}_cobTime">激活时机：</label>
             <input type="number" id="${segmentId}_cobTime" value="316" placeholder="316">
             <label for="${segmentId}_throwTime">投掷时机：</label>
-            <input type="text" id="${segmentId}_throwTime" value="w+1:316" placeholder="w+1:316">
+            <input type="text" id="${segmentId}_throwTime" value="w+1:~" placeholder="w+1:~">
             <label for="${segmentId}_fodderTime">垫材时机：</label>
             <input type="text" id="${segmentId}_fodderTime" value="" placeholder="">
             <label for="${segmentId}_fodderTime">计算时机：</label>
-            <input type="text" id="${segmentId}_analyzeTime" value="w+3:316" placeholder="w+3:316">
+            <input type="text" id="${segmentId}_analyzeTime" value="w+3:~" placeholder="w+3:~">
             <button onclick="removeSegment('${segmentId}')">删除</button>
             <br/>
+            <p id="${segmentId}_waveLenText">波长：</p>
             <p id="${segmentId}_resultText">目前没有计算结果</p>
         </div>`;
 
@@ -503,6 +504,7 @@ function removeSegment(segmentId) {
  * @property {number?} wave - 波次
  * @property {number?} time - 时间
  * @property {boolean} valid - 是否有效
+ * @property {string} type - 时间模式，为"auto"表示自动推导
  * @property {boolean?} special - 是否特殊（投掷时间的植物激活）
  */
 
@@ -536,33 +538,48 @@ function removeSegment(segmentId) {
  */
 function parseTime(str) {
     var special = false;
+    var type = "normal";
     if (str.endsWith("*")) {
         special = true;
         str = str.substring(0, str.length - 1);
     }
-
     if (str == "") return { valid: false };
 
     var [wave, time] = str.split(':');
     // 如果没有分号，可能是本波内的时机
     if (time === undefined) {
-        if (!isNaN(Number(str))) return { wave: 0, time: Number(str), valid: true, special: special };
-        else return { valid: false };
+        if (str == "~") {
+            return { wave: 0, time: 0, valid: true, type: "auto", special: special };
+        } else if (str[0] == "~" && (str[1] == "+" || str[1] == "-") && !isNaN(Number(str.substring(1)))) {
+            return { wave: 0, time: Number(str.substring(1)), valid: true, type: "auto", special: special };
+        } else if (!isNaN(Number(str))) {
+            return { wave: 0, time: Number(str), valid: true, type: "normal", special: special };
+        } else {
+            return { valid: false };
+        }
     }
     var wave_num = NaN, time_num = NaN;
 
     // wave 格式为 w or w+x
     if (wave.length < 1 || wave[0] != 'w') return { valid: false };
     else if (wave == "w") wave_num = 0;
-    else if (wave.length < 2 || wave[1] != '+') return { valid: false };
+    else if (wave.length < 2 || wave[1] != "+") return { valid: false };
     else wave_num = Number(wave.substring(2));
 
-    // time 是一个数字
-    time_num = Number(time);
+    // time 是一个数字或~
+    if (time == "~" || time == "-") {
+        type = "auto";
+        time_num = 0;
+    } else if (time[0] == "~" && (time[1] == "+" || time[1] == "-") && !isNaN(Number(time.substring(1)))) {
+        type = "auto";
+        time_num = Number(time.substring(1));
+    } else {
+        time_num = Number(time);
+    }
 
-    // 任一无效则返回 [-1, -1]
+    // 任一无效则返回 { valid: false }
     if (isNaN(wave_num) || isNaN(time_num)) return { valid: false };
-    else return { wave: wave_num, time: time_num, valid: true, special: special };
+    else return { wave: wave_num, time: time_num, valid: true, type: type, special: special };
 }
 
 /**
@@ -595,6 +612,8 @@ function collectInfo() {
             fodder_info: parseMultiTime(document.getElementById(`${segment.id}_fodderTime`).value),
             analyze_info: parseMultiTime(document.getElementById(`${segment.id}_analyzeTime`).value)
         };
+        // 顺便计算一下波长
+        document.getElementById(`${segment.id}_waveLenText`).textContent = `波长：${info.cob < 401 ? 601 : info.cob + 200}`
         // throw_info无效时，可能是被瞬杀，不视作失败
         if (isNaN(info.ice) || isNaN(info.cob)) {
             document.getElementById(`${segment.id}_resultText`).textContent = "本波数据存在问题"
@@ -624,26 +643,57 @@ function extractEvents(input_info, current_wave_no) {
     var original_length = infos.length;
     var events = [];
     var waiting_events = [];
-    var current_wave_start = 0;
     var current_info = infos[current_wave_no];
     var max_analyze = 0;
     // 提取投掷信息
     var throw_time = current_info.throw_info;
     if (throw_time.valid) {
-        if (throw_time.special) waiting_events.push({ wave: throw_time.wave, time: throw_time.time, type: "throw-ash" });
-        else waiting_events.push({ wave: throw_time.wave, time: throw_time.time, type: "throw" });
+        if (throw_time.special) {
+            waiting_events.push({
+                wave: throw_time.wave,
+                time: throw_time.time,
+                time_type: throw_time.type,
+                type: "throw-ash"
+            }); 
+        } else {
+            waiting_events.push({
+                wave: throw_time.wave,
+                time: throw_time.time,
+                time_type: throw_time.type,
+                type: "throw"
+            });
+        }
     }
     // 提取锤垫信息
     for (var t of current_info.fodder_info) {
-        waiting_events.push({ wave: t.wave, time: t.time, type: "fodder" });
+        waiting_events.push({
+            wave: t.wave,
+            time: t.time,
+            time_type: throw_time.type,
+            type: "fodder"
+        });
     }
     // 提取统计信息
     for (var t of current_info.analyze_info) {
-        waiting_events.push({ wave: t.wave, time: t.time - (t.special ? 1 : 0), type: "analyze", info: `w+${t.wave}:${t.time}${t.special ? "*" : ""}` });
+        // cob模式的时间后续会被覆盖，这里是什么无所谓
+        var info = `w+${t.wave}:${t.time}${t.special ? "*" : ""}`;
+        if (t.type == "auto") {
+            if (t.time == 0) info = `w+${t.wave}:~${t.special ? "*" : ""}`;
+            else if (t.time > 0) info = `w+${t.wave}:~+${t.time}${t.special ? "*" : ""}`;
+            else if (t.time < 0)info = `w+${t.wave}:~${t.time}${t.special ? "*" : ""}`;
+        }
+        waiting_events.push({
+            wave: t.wave,
+            time: t.time - (t.special ? 1 : 0),
+            time_type: t.type,
+            type: "analyze",
+            info: info
+        });
         max_analyze = Math.max(max_analyze, t.wave);
     }
     console.log(waiting_events);
     // 提取冰信息
+    var current_wave_start = 0;
     for (var i = current_wave_no; i <= current_wave_no + max_analyze; i++) {
         // 波次不足则补全
         if (i >= infos.length) infos.push(infos[i % original_length]);
@@ -651,9 +701,17 @@ function extractEvents(input_info, current_wave_no) {
         // 冰冻事件
         if (info.ice > 0) events.push({ type: "ice", time: current_wave_start + info.ice });
         // 将之前的换算为时间点
-        for (var ev of waiting_events) {
-            if (ev.wave == i - current_wave_no) {
-                events.push({ type: ev.type, time: current_wave_start + ev.time, info: ev.info });
+        for (var evt of waiting_events) {
+            if (evt.wave == i - current_wave_no) {
+                if (evt.type == "analyze" && evt.time_type == "auto") {
+                    evt.info = evt.info.replace("~", info.cob.toString());
+                }
+                var converted_evt =  {
+                    type: evt.type,
+                    time: current_wave_start + (evt.time_type == "auto" ? (evt.time + info.cob) : evt.time),
+                    info: evt.info
+                };
+                events.push(converted_evt);
             }
         }
         current_wave_start += ((info.cob < 401) ? 601 : (info.cob + 200));
@@ -707,15 +765,18 @@ function gigaStep(giga, slow) {
     // 两个减速tick减1
     if (giga.freeze > 0) giga.freeze -= 1;
     if (giga.slow > 0) giga.slow -= 1;
-    // 非冰冻状态下，进行索敌
     if (giga.freeze == 0) {
+        // 非冰冻状态下，进行索敌
         if (giga.phase >= 0) {
-            if (giga.throw == 142) giga.phase = -1;
-            else if (giga.smash == 208) giga.phase = -2;
+            if (giga.throw == 142) {
+                giga.phase = -1;
+                giga.slow_skip = false;
+            } else if (giga.smash == 208) {
+                giga.phase = -2;
+                giga.slow_skip = false;
+            }
         }
-    }
-    // 非冰冻、非跳过状态下，进行移动
-    if (giga.freeze == 0) {
+        // 非冰冻、非跳过状态下，进行移动
         if (!(giga.slow && giga.slow_skip)) {
             if (giga.phase >= 0) {
                 if (slow) giga.pos -= slow_speed_data[giga.phase];
@@ -740,11 +801,12 @@ function gigaStep(giga, slow) {
                 }
             }
             if (giga.slow) giga.slow_skip = true;
+            else giga.slow_skip = false;
         } else {
             giga.slow_skip = false;
         }
     }
-    // 结算下一帧植物
+    // 结算本帧炮弹和下一帧植物
     if (giga.phase >= 0 && giga.throw > 142) giga.throw -= 1;
     if (giga.phase >= 0 && giga.smash > 208) giga.smash -= 1;
 }
@@ -792,10 +854,10 @@ function calculateOne(input_info, segment_id, segment_no) {
                         break;
                     case "ice":
                         // 减速信息与投掷信息全场同步，无需考虑
-                        if (fast_giga.throw == 36 && (!fast_giga.slow || fast_giga.slow_skip)) {
+                        if (fast_giga.throw == 37 && (!fast_giga.slow || !fast_giga.slow_skip)) {
                             fast_giga.throw += 142;
                         }
-                        if (fast_giga.slow) {
+                        if (fast_giga.slow > 0) {
                             fast_giga.freeze = 300;
                             slow_giga.freeze = 400;
                         } else {
@@ -826,7 +888,7 @@ function calculateOne(input_info, segment_id, segment_no) {
                     }
                 }
             }
-            result_str += `(${analyze_str}: [${Math.round(fast_giga.pos * 1000) / 1000}, ${Math.round(slow_giga.pos * 1000) / 1000}] `;
+            result_str += `(${analyze_str}: [${Math.round(fast_giga.pos * 1000) / 1000},${Math.round(slow_giga.pos * 1000) / 1000}] `;
             result_str += `WF=[${fast_giga.walk_formula}] `;
             result_str += `SAFE=${Math.round(fast_safe * 1000) / 1000}) `;
         }
@@ -851,7 +913,8 @@ function runSplitter() {
     for (var i = 1; i <= total_time; i++) {
         walk_len.push({ walk: walk_len[i - 1].walk + fast_speed_data[i - 1], split: [i] });
     }
-    var result = `(FC: 0, WD:${Math.round(walk_len[total_time].walk * 1000) / 1000}) `;
+    var raw_wd = Math.round(walk_len[total_time].walk * 1000) / 1000;
+    var result = `(FC:0, WD:${raw_wd}) `;
     var last_split_len = walk_len, now_split_len = []
     for (var fodder_count = 1; fodder_count * 208 < total_time; fodder_count++) {
         for (var current_time = 0; current_time <= total_time - fodder_count * 208; current_time++) {
@@ -868,7 +931,8 @@ function runSplitter() {
             now_split_len.push(item);
         }
         result += `(FC:${fodder_count}, `;
-        result += `WD:${Math.round(now_split_len[total_time - fodder_count * 208].walk * 1000) / 1000}, `
+        var wd = Math.round(now_split_len[total_time - fodder_count * 208].walk * 1000) / 1000;
+        result += `WD:${wd}[${Math.round((wd - raw_wd) * 1000) / 1000}], `
         result += `SP:${now_split_len[total_time - fodder_count * 208].split}) `;
         last_split_len = now_split_len;
         now_split_len = [];

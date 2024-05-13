@@ -178,6 +178,47 @@ void ForEnd(int wave, int time, std::function<void()> action) {
     });
 }
 
+AZombie *GetLastZombie() {
+    AZombie *last_zombie = nullptr;
+    for (auto &&zombie: aAliveZombieFilter) {
+        if (zombie.Hp() < 0) continue;
+        last_zombie = &zombie;
+        if (zombie.Type() != ABW_9) break;
+    }
+    return last_zombie;
+}
+
+ATickRunner untilOneLeftRunner;
+// 在只剩零或一个僵尸时执行指定操作。可以用于收尾时处理多余的僵尸。
+void UntilOneLeft(int wave, int start_time, 
+                  std::function<void()> oneAtStartAction, 
+                  std::function<void()> multiAtStartAction,
+                  std::function<void()> oneLeftAction) {
+    AConnect(ATime(wave, start_time), [=](){
+        int cnt = 0;
+        for (auto &&zombie: aAliveZombieFilter) {
+            (void)zombie;
+            cnt++;
+        }
+        if (cnt <= 1) {
+            if(oneAtStartAction) oneAtStartAction();
+        } else {
+            if (multiAtStartAction) multiAtStartAction();
+            untilOneLeftRunner.Start([=](){
+                int cnt = 0;
+                for (auto &&zombie: aAliveZombieFilter) {
+                    (void)zombie;
+                    cnt++;
+                }
+                if (cnt <= 1) {
+                    if (oneLeftAction) oneLeftAction();
+                    untilOneLeftRunner.Stop();
+                }
+            });
+        }
+    });
+}
+
 #pragma endregion
 
 #endif // WALIB_INFO_H

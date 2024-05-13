@@ -59,6 +59,16 @@ void AScript() {
         PP(w, 409, 9, {2, 2, 5, 5});
         PPExceptOne(w, 815);
         BlockLast(w, 820, 4300);
+        UntilOneLeft(w, 820, nullptr,
+            [=](){
+                ACard(APUFF_SHROOM, GetLastZombie()->Row() + 1, 8);
+                AConnect(ANowDelayTime(751), [](){ ACard(APUFF_SHROOM, GetLastZombie()->Row() + 1, 7); });
+            },
+            [=](){
+                ARemovePlant(GetLastZombie()->Row() + 1, 8);
+                ARemovePlant(GetLastZombie()->Row() + 1, 7);
+            }
+        );
         PPLast(w, 4300);
     }
 }
