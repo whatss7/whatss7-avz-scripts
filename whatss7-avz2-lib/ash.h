@@ -173,8 +173,7 @@ void ManualI3(int wave, int time, int row, float col, int last_wave_length = -1,
 // 种植原版寒冰菇。由于咖啡豆的不确定性，有概率延迟1cs生效。
 // `protect` 为 2 时，用南瓜头保护。
 void BlueI(int wave, int time, std::vector<APosition> pos, int last_wave_length = -1, int protect = 0){
-    bool isDay = IsDayScene();
-    int VCBT = isDay ? CBT : 0;
+    int VCBT = IsDayScene() ? CBT : 0;
 
     // 计算种植时间
     int normal_wave = wave, normal_time = time - VCBT - ADT;
@@ -193,8 +192,7 @@ void BlueI(int wave, int time, int row, float col, int last_wave_length = -1, in
 // 种植原版寒冰菇。此函数使得寒冰菇精准生效。
 // `protect` 为 2 时，用南瓜头保护。
 void BlueI3(int wave, int time, std::vector<APosition> pos, int last_wave_length = -1, int protect = 0) {
-    bool isDay = IsDayScene();
-    int VCBT = isDay ? CBT : 0;
+    int VCBT = IsDayScene() ? CBT : 0;
 
     // 计算种植时间
     int normal_wave = wave, normal_time = time - VCBT - ADT;
@@ -217,11 +215,11 @@ void WhiteI(int wave, int time, std::vector<APosition> pos, int last_wave_length
     int VCBT = isDay ? CBT : 0;
 
     // 计算种植时间
-    int normal_wave = wave, normal_time = time - VCBT - ADT;
-    SetToValidTime(normal_wave, normal_time, last_wave_length);
+    int imitate_wave = wave, imitate_time = time - (MDT + (isDay ? 1 : 0)) - VCBT - ADT;
+    SetToValidTime(imitate_wave, imitate_time, last_wave_length);
 
     // 进行种植
-    PlantShroomImpl(normal_wave, normal_time, AM_ICE_SHROOM, pos, true, protect, false);
+    PlantShroomImpl(imitate_wave, imitate_time, AM_ICE_SHROOM, pos, true, protect, false);
 }
 
 // 种植模仿寒冰菇。由于咖啡豆和模仿者的不确定性，有概率延迟1cs生效。
@@ -237,11 +235,11 @@ void WhiteI3(int wave, int time, std::vector<APosition> pos, int last_wave_lengt
     int VCBT = isDay ? CBT : 0;
 
     // 计算种植时间
-    int normal_wave = wave, normal_time = time - VCBT - ADT;
-    SetToValidTime(normal_wave, normal_time, last_wave_length);
+    int imitate_wave = wave, imitate_time = time - (MDT + (isDay ? 1 : 0)) - VCBT - ADT;
+    SetToValidTime(imitate_wave, imitate_time, last_wave_length);
 
     // 进行种植
-    PlantShroomImpl(normal_wave, normal_time, AM_ICE_SHROOM, pos, true, protect, true);
+    PlantShroomImpl(imitate_wave, imitate_time, AM_ICE_SHROOM, pos, true, protect, false);
 }
 
 // 种植模仿寒冰菇。此函数使得寒冰菇精准生效。
