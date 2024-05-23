@@ -8,7 +8,7 @@
 #elif __AVZ_VERSION__ < 240113
 #warning "walib is designed for AvZ 2 version 240113. You're using an older version, which might cause issues."
 #elif __AVZ_VERSION__ > 240113
-#warning "walib is designed for AvZ 2 version 240113. You're using an newer version, which might cause issues."
+#warning "walib is designed for AvZ 2 version 240113. You're using a newer version, which might cause issues."
 #endif
 
 #include "whatss7-avz2-lib/ash.h"

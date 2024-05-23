@@ -20,7 +20,7 @@
 - [FE 神之四炮](./旧阵型/20240312/README.md#fe-神之四炮-邻c6u) [阵图](./考级阵图/L1/FE%20神之四炮.jpg) [【视频】](https://www.bilibili.com/video/BV1UZ421b79c)
 - [PE 冰雨十二炮·改](./旧阵型/20240312/README.md#pe-冰雨十二炮改-p6)* [阵图](./考级阵图/L1/PE%20冰雨十二炮·改.jpg) [【视频】](https://www.bilibili.com/video/BV1mJ4m1G7AA?t=212)
 
-## 2 级 9/14
+## 2 级 10/14
 
 - [DE 前置八炮](./README.md#de-前置八炮-ch5) [阵图](./考级阵图/L2/DE%20前置八炮.jpg)
 - [RE 神之七炮](./旧阵型/20240305/README.md#re-神之七炮-ch5u) [阵图](./考级阵图/L2/RE%20神之七炮.jpg) [【视频】](https://www.bilibili.com/video/BV1UF4m177J7)
