@@ -993,45 +993,26 @@ function runSplitter() {
     document.getElementById("splitter_output").innerHTML = result;
 }
 
-function runRanger() {
-	var explosive_row = Number(document.getElementById("ranger_input_row").value);
-	var explosive_col = Number(document.getElementById("ranger_input_col").value);
-	var explosive_type = document.getElementById("ranger_explosive_select").value;
-	var zombie_type = document.getElementById("ranger_type_select").value;
+function setRangerEnable() {
 	var scene = document.getElementById("ranger_scene_select").value;
-	var center_x = 0, center_y = 0, range = 0;
-	var upper_row_limit = 1, lower_row_limit = 6, scene_row_count = 6;
+	var explosive_type = document.getElementById("ranger_explosive_select").value;
+	if (scene == "RE/ME" && explosive_type == "Cob") {
+		document.getElementById("ranger_input_cobcol").hidden = false;
+		document.getElementById("ranger_input_cobcol_tag").hidden = false;
+	} else {
+		document.getElementById("ranger_input_cobcol").hidden = true;
+		document.getElementById("ranger_input_cobcol_tag").hidden = true;
+	}
+	if (explosive_type == "Cob") {
+		document.getElementById("ranger_input_col").step = 0.0125;
+	} else {
+		document.getElementById("ranger_input_col").step = 1;
+	}
+}
+
+function getZombieCollision(zombie_type) {
 	var zombie_x_offset = 0, zombie_x_width = 0;
 	var zombie_y_offset = 0, zombie_y_width = 0;
-	var zombie_y_data = [];
-	if (explosive_type == "Cob") {
-		center_x = Math.floor(explosive_col * 80 - 7);
-		range = 115;
-		lower_row_limit = explosive_row - 1;
-		upper_row_limit = explosive_row + 1;
-	} else if (explosive_type == "Cherry") {
-		center_x = Math.floor(explosive_col) * 80;
-		range = 115;
-		lower_row_limit = explosive_row - 1;
-		upper_row_limit = explosive_row + 1;
-	} else if (explosive_type == "Doom") {
-		center_x = Math.floor(explosive_col) * 80;
-		range = 250;
-		lower_row_limit = explosive_row - 3;
-		upper_row_limit = explosive_row + 3;
-	}
-
-	if (scene == "DE/NE") {
-		center_y = [120, 220, 320, 420, 520][explosive_row - 1];
-		zombie_y_data = [50, 150, 250, 350, 450];
-		scene_row_count = 5;
-	} else if (scene == "PE/FE") {
-		center_y = [120, 205, 290, 375, 460, 545][explosive_row - 1];
-		zombie_y_data = [50, 135, 220, 305, 290, 475];
-		scene_row_count = 6;
-	} else if (scene == "RE/ME") {
-		// RE/ME Not Implemented.
-	}
 
 	if (zombie_type == "Giga") {
 		zombie_x_offset = -17;
@@ -1048,11 +1029,36 @@ function runRanger() {
 		zombie_x_width = 28;
 		zombie_y_offset = 0;
 		zombie_y_width = 115;
+	} else if (zombie_type == "DiggerToRight") {
+		zombie_x_offset = 42;
+		zombie_x_width = 28;
+		zombie_y_offset = 0;
+		zombie_y_width = 115;
 	} else if (zombie_type == "Balloon") {
 		zombie_x_offset = 36;
 		zombie_x_width = 42;
 		zombie_y_offset = -30;
 		zombie_y_width = 115;
+	} else if (zombie_type == "Football") {
+		zombie_x_offset = 50;
+		zombie_x_width = 57;
+		zombie_y_offset = 0;
+		zombie_y_width = 115;
+	} else if (zombie_type == "Snorkel") {
+		zombie_x_offset = 12;
+		zombie_x_width = 62;
+		zombie_y_offset = 0;
+		zombie_y_width = 115;
+	} else if (zombie_type == "DolphinAfterJump") {
+		zombie_x_offset = 20;
+		zombie_x_width = 42;
+		zombie_y_offset = 0;
+		zombie_y_width = 115;
+	} else if (zombie_type == "Bungee") {
+		zombie_x_offset = -20;
+		zombie_x_width = 110;
+		zombie_y_offset = 22;
+		zombie_y_width = 94;
 	} else if (zombie_type == "Normal") {
 		zombie_x_offset = 36;
 		zombie_x_width = 42;
@@ -1060,6 +1066,219 @@ function runRanger() {
 		zombie_y_width = 115;
 	}
 
+	return [zombie_x_offset, zombie_x_width, zombie_y_offset, zombie_y_width];
+}
+
+function runRoofRanger() {
+	var explosive_row = Number(document.getElementById("ranger_input_row").value);
+	var explosive_col = Number(document.getElementById("ranger_input_col").value);
+	var cob_col = Number(document.getElementById("ranger_input_cobcol").value);
+	var explosive_type = document.getElementById("ranger_explosive_select").value;
+	var zombie_type = document.getElementById("ranger_type_select").value;
+
+	var center_x = 0, center_y = 0, range = 0;
+	var lower_row_limit = 1, upper_row_limit = 5, scene_row_count = 5;
+	var zombie_x_offset = 0, zombie_x_width = 0;
+	var zombie_y_offset = 0, zombie_y_width = 0;
+
+	var notation_ex = -1000;
+
+	if (explosive_type == "Cob") {
+		center_x = Math.floor(explosive_col * 80);
+		center_y = 209 + (explosive_row - 1) * 85;
+	
+		if (center_x >= 527) {
+			center_y -= 100;
+		} else if (center_x >= 207)  {
+			center_y -= Math.floor((center_x - 127) / 80) * 20;
+		}
+	
+		var left_edge, right_edge, step2_shift;
+		if (cob_col == 1) {
+			left_edge = 87;
+			right_edge = 524;
+			step2_shift = 0;
+		} else if (cob_col >= 7) {
+			left_edge = 510;
+			right_edge = 523;
+			step2_shift = 5;
+		} else {
+			left_edge = 80 * cob_col - 13;
+			right_edge = 524;
+			step2_shift = 5;
+		}
+	
+		var step2;
+		if (center_x <= left_edge) {
+			step2 = 0;
+		} else if (center_x >= right_edge) {
+			step2 = Math.floor((right_edge - left_edge + 3) / 4) - step2_shift;
+		} else {
+			step2 = Math.floor((center_x - left_edge + 3) / 4) - step2_shift;
+		}
+		center_y -= step2;
+	
+		if (center_x == left_edge && cob_col >= 2 && cob_col <= 6) {
+			if (cob_row >= 3 && cob_row <= 5) {
+				center_y += 5;
+			}
+			if (cob_row == 3 && cob_col == 6) {
+				center_y -= 5;
+			}
+		}
+	
+		center_y = Math.max(center_y, 0);
+		center_x -= center_x >= 7 ? 7 : 6;
+
+		range = 115;
+		lower_row_limit = explosive_row - 1;
+		upper_row_limit = explosive_row + 1;
+	} else if (explosive_type == "Cherry") {
+		center_x = Math.floor(explosive_col * 80);
+		center_y = 110 + (explosive_row - 1) * 85;
+		if (center_x < 480) center_y += (480 - center_x) / 4;
+		range = 115;
+		lower_row_limit = explosive_row - 1;
+		upper_row_limit = explosive_row + 1;
+	} else if (explosive_type == "Doom") {
+		center_x = Math.floor(explosive_col * 80);
+		center_y = 110 + (explosive_row - 1) * 85;
+		if (center_x < 480) center_y += (480 - center_x) / 4;
+		range = 250;
+		lower_row_limit = explosive_row - 3;
+		upper_row_limit = explosive_row + 3;
+	}
+
+	console.log(center_x, center_y);
+
+	const hit = function(zombie_x, zombie_y) {
+		if (zombie_x + zombie_x_offset > 800) return false;
+		var left = zombie_x + zombie_x_offset;
+		var right = left + zombie_x_width;
+		var up = zombie_y + zombie_y_offset;
+		var down = up + zombie_y_width;
+		if (center_x >= left && center_x <= right) {
+			return Math.abs(up - center_y) <= range || Math.abs(down - center_y) <= range;
+		} else if (center_y >= up && center_y <= down) {
+			return Math.abs(left - center_x) <= range || Math.abs(right - center_x) <= range;
+		} else {
+			var x_diff = Math.min(Math.abs(left - center_x), Math.abs(right - center_x));
+			var y_diff = Math.min(Math.abs(up - center_y), Math.abs(down - center_y));
+			return Math.sqrt(x_diff * x_diff + y_diff * y_diff) <= range;
+		}
+	};
+	
+	[zombie_x_offset, zombie_x_width, zombie_y_offset, zombie_y_width] = getZombieCollision(zombie_type);
+
+	var result = "";
+
+	for (var row = 1; row <= scene_row_count; row++) {
+		if (row < lower_row_limit || row > upper_row_limit) continue;
+		var segments = [], current_segment_start = -1000, current_segment_state = "NoHit";
+		for (var zombie_x = center_x - range - zombie_x_width - zombie_x_offset - 1; 
+			zombie_x <= center_x + range - zombie_x_offset + 1;
+			zombie_x++) {
+			// 对于396, 392, ..., x -= 1, 2, ...
+			// 但如果是396.5, 392.5, ..., x-=0, 1, ...
+			var zombie_y = 40 + (row - 1) * 85 + Math.floor(zombie_x < 400 ? (400 - (zombie_x + 0.5)) / 4 : 0);
+			var zombie_y_alt = 40 + (row - 1) * 85 + Math.floor(zombie_x < 400 ? (400 - zombie_x) / 4 : 0);
+			var norm_hit = hit(zombie_x, zombie_y_alt);
+			var edge_hit = hit(zombie_x, zombie_y);
+			var state = "";
+			if (norm_hit && edge_hit) {
+				state = "Hit";
+			} else if (!norm_hit && edge_hit) {
+				state = "ProbHit";
+			} else if (norm_hit && !edge_hit) {
+				state = "ProbNoHit";
+			} else {
+				state = "NoHit";
+			}
+			if (state != current_segment_state) {
+				if (current_segment_state != "NoHit") {
+					var seg = `[${current_segment_start},${zombie_x - 1}]`;
+					if (current_segment_state == "ProbHit") {
+						seg += "!";
+						notation_ex = current_segment_start;
+					} else if (current_segment_state == "ProbNoHit") {
+						seg += "?";
+						notation_ex = current_segment_start;
+					}
+					segments.push(seg);
+				}
+				current_segment_state = state;
+				current_segment_start = zombie_x;
+			}
+		}
+
+		if (segments.length == 0) {
+			result += `第${row}行：炸不到<br>`;
+		} else {
+			result += `第${row}行：`;
+			for (var i = 0; i < segments.length; i++) {
+				result += segments[i];
+				if (i != segments.length - 1) result += ", ";
+				else result += "<br>";
+			}
+		}
+	}
+
+	if (notation_ex != -1000) {
+		result += `! 表示当僵尸坐标取整数时（如${notation_ex}.000）炸不到，而不为整数时（如${notation_ex}.123）能炸到<br>`
+		result += `? 表示当僵尸坐标取整数时能炸到，而不为整数时炸不到<br>`
+	}
+
+	document.getElementById("ranger_output").innerHTML = result;
+}
+
+function runRanger() {
+	var scene = document.getElementById("ranger_scene_select").value;
+
+	if (scene == "RE/ME") {
+		runRoofRanger();
+		return;
+	}
+
+	var explosive_row = Number(document.getElementById("ranger_input_row").value);
+	var explosive_col = Number(document.getElementById("ranger_input_col").value);
+	var explosive_type = document.getElementById("ranger_explosive_select").value;
+	var zombie_type = document.getElementById("ranger_type_select").value;
+
+	var center_x = 0, center_y = 0, range = 0;
+	var lower_row_limit = 1, upper_row_limit = 6, scene_row_count = 6;
+	var zombie_x_offset = 0, zombie_x_width = 0;
+	var zombie_y_offset = 0, zombie_y_width = 0;
+	var zombie_y_data = [];
+
+	if (scene == "DE/NE") {
+		center_y = [120, 220, 320, 420, 520][explosive_row - 1];
+		zombie_y_data = [50, 150, 250, 350, 450];
+		scene_row_count = 5;
+	} else if (scene == "PE/FE") {
+		center_y = [120, 205, 290, 375, 460, 545][explosive_row - 1];
+		zombie_y_data = [50, 135, 220, 305, 290, 475];
+		scene_row_count = 6;
+	}
+
+	if (explosive_type == "Cob") {
+		center_x = Math.floor(explosive_col * 80);
+		center_x -= center_x >= 7 ? 7 : 6;
+		range = 115;
+		lower_row_limit = explosive_row - 1;
+		upper_row_limit = explosive_row + 1;
+	} else if (explosive_type == "Cherry") {
+		center_x = Math.floor(explosive_col) * 80;
+		range = 115;
+		lower_row_limit = explosive_row - 1;
+		upper_row_limit = explosive_row + 1;
+	} else if (explosive_type == "Doom") {
+		center_x = Math.floor(explosive_col) * 80;
+		range = 250;
+		lower_row_limit = explosive_row - 3;
+		upper_row_limit = explosive_row + 3;
+	}
+	
+	[zombie_x_offset, zombie_x_width, zombie_y_offset, zombie_y_width] = getZombieCollision(zombie_type);
 
 	var result = "";
 	for (var row = 1; row <= scene_row_count; row++) {
@@ -1084,4 +1303,40 @@ function runRanger() {
 	}
 
 	document.getElementById("ranger_output").innerHTML = result;
+}
+
+function runRangerPlusX() {
+	var explosive_type = document.getElementById("ranger_explosive_select").value;
+	var explosive_col = Number(document.getElementById("ranger_input_col").value);
+	if (explosive_type == "Cob") {
+		document.getElementById("ranger_input_col").value = Math.min(Math.floor(explosive_col * 80 + 1) / 80, 9.9875);
+	} else {
+		document.getElementById("ranger_input_col").value = Math.min(Math.floor(explosive_col + 1), 9);
+	}
+	runRanger();
+}
+
+function runRangerMinusX() {
+	var explosive_type = document.getElementById("ranger_explosive_select").value;
+	var explosive_col = Number(document.getElementById("ranger_input_col").value);
+	if (explosive_type == "Cob") {
+		document.getElementById("ranger_input_col").value = Math.max(Math.floor(explosive_col * 80 - 1) / 80, 0.0125);
+	} else {
+		document.getElementById("ranger_input_col").value = Math.max(Math.floor(explosive_col - 1), 1);
+	}
+	runRanger();
+}
+
+
+function runRangerPlusY() {
+	var scene = document.getElementById("ranger_scene_select").value;
+	var explosive_row = Number(document.getElementById("ranger_input_row").value);
+	document.getElementById("ranger_input_row").value = Math.min(Math.floor(explosive_row + 1), scene == "PE/FE" ? 6 : 5);
+	runRanger();
+}
+
+function runRangerMinusY() {
+	var explosive_row = Number(document.getElementById("ranger_input_row").value);
+	document.getElementById("ranger_input_row").value = Math.max(Math.floor(explosive_row - 1), 1);
+	runRanger();
 }
