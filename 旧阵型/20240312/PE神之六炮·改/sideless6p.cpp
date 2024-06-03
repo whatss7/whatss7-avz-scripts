@@ -1,13 +1,13 @@
 #include "../whatss7-avz2-lib/walib.h"
 
 void AScript() {
-    WAInit({ AUMBRELLA_LEAF, ATALL_NUT, AICE_SHROOM, AM_ICE_SHROOM, ACOFFEE_BEAN, ASQUASH });
+    WAInit({ AICE_SHROOM, AM_ICE_SHROOM, ACOFFEE_BEAN, AUMBRELLA_LEAF, ATALL_NUT, ASQUASH  });
     WAAutoManageCob();
     WAFixNuts();
-    const int i_len = 1800, a_len = 900;
+    const int i_len = 2000, a_len = 750;
     // I-PP
     for (int w: { 3, 6, 9, 10, 13, 16, 19, 20 }) {
-        ManualI(w, 1, 1, 4, a_len);
+        ManualI(w, 1, 1, w == 10 || w == 20 ? 1 : 4, a_len);
         PP(w, i_len - 200, 8.5);
         if (w == 9 || w == 19 || w == 20) {
             PP(w, i_len + a_len - 200);
