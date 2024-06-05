@@ -187,6 +187,25 @@ void MaidDance(int wave, int time, int to_time = -1000) {
     }
 }
 
+// 启用女仆秘籍前进模式。当到达to_wave波次的to_time时停止。
+void MaidMove(int wave, int time, int to_wave, int to_time) {
+    AConnect(ATime(wave, time), [](){ AMaidCheats::Move(); });
+    AConnect(ATime(to_wave, to_time), [](){ 
+        if (waMaidDefaultMode == 0) AMaidCheats::Stop();
+    });
+}
+
+// 启用女仆秘籍前进模式。当到达to_time时停止。
+// 若不设置to_time，则不会停止。
+void MaidMove(int wave, int time, int to_time = -1000) {
+    AConnect(ATime(wave, time), [](){ AMaidCheats::Move(); });
+    if (to_time > -1000) {
+        AConnect(ATime(wave, to_time), [](){
+            if (waMaidDefaultMode == 0) AMaidCheats::Stop();
+        });
+    }
+}
+
 #pragma endregion
 
 

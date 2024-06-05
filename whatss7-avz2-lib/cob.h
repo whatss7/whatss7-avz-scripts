@@ -108,20 +108,18 @@ void P(int wave, int time, int row, float col) {
     PP(wave, time, col, rows);
 }
 
-// 从 `aCobManager` 发射一对炮。仅可用于泳池和屋顶场景。
-// 若不设置位置，则泳池场景默认炸1-8和5-8，屋顶场景默认炸2-8和4-8。
+// 从 `aCobManager` 发射一对炮。
+// 若不设置位置，则前院场景默认炸1-8和4-8，则泳池场景默认炸1-8和5-8，屋顶场景默认炸2-8和4-8。
 // 请注意，本函数先填列数，再填行数。
 // 若不设置时间，则 426cs (`PCP + 110`) 时生效
 // 屋顶场景，1-2路的炮优先选择风炮；3-5路优先选择平炮。
 void DD(int wave, int time = -1, float col = 8, std::vector<int> rows = {}) {
     std::string scene = GetCurrentScene();
-    if (scene == "DE" || scene == "NE") {
-        waLogger.Error("DD() 不可用于前院。");
-        return;
-    }
     if (rows.empty()) {
         if (scene == "PE" || scene == "FE") {
             rows = {1, 5};
+        } else if (scene == "DE" || scene == "NE") {
+            rows = {1, 4};
         } else {
             rows = {2, 4};
         }
@@ -190,8 +188,6 @@ void ManualP(int wave, int time, int row, float col, ACobManager &mgr) {
     }
 }
 
-
-
 ATickRunner atEndRunner;
 void AtEnd(std::function<void()> action) {
     AConnect(ATime(20, 1), [=](){
@@ -220,7 +216,122 @@ void PForEnd(int wave, int time, int row, float col) {
     ForEnd(wave, time - VCFT, [=](){ P(wave, time, row, col); });
 }
 
-// 在泳池场景，对除了某列以外的所有红眼开炮。常用于拖收尾。
+// 此函数必须在 `AConnect` 中使用。
+// 对除了某列以外的所有红眼开炮。常用于拖收尾。
+// 传递的时间是计划生效炮的时间，返回计划留下的列。
+// 若场上没有红眼，且当前是w20，则改为对除了某列以外的所有僵尸开炮。
+// 注意，此函数是按照调用时的僵尸分布进行决定。
+int SchedulePPExceptOne(int wave, int time, float col) {
+    int choice = -1;
+    int dist[7] = { 0, 0, 0, 0, 0, 0, 0 };
+    int sum = 0;
+    std::string scene = GetCurrentScene();
+    for (auto &&zombie: aAliveZombieFilter) {
+        if (zombie.Type() != AHY_32) continue;
+        dist[zombie.Row() + 1]++;
+        sum++;
+    }
+    if (wave == 20 && sum == 0) {
+        #ifdef WALIB_DEBUG
+        waDebugLogger.Info("no red found");
+        #endif
+        for (auto &&zombie: aAliveZombieFilter) {
+            if (zombie.Type() == ABJ_20) continue;
+            #ifdef WALIB_DEBUG
+            waDebugLogger.Info("found zombie # at #", zombie.Type(), zombie.Row() + 1);
+            #endif
+            dist[zombie.Row() + 1]++;
+            sum++;
+        }
+    }
+    if (scene == "PE" || scene == "FE") {
+        // 六行场地收尾
+        if (dist[1] == 1) {
+            choice = 1;
+            if (dist[2] != 0 || dist[3] != 0) { P(wave, time, 3, col); }
+            if (dist[4] != 0 || dist[5] != 0 || dist[6] != 0) { P(wave, time, 5, col); }
+        } else if (dist[6] == 1) {
+            choice = 6;
+            if (dist[4] != 0 || dist[5] != 0) { P(wave, time, 4, col); }
+            if (dist[1] != 0 || dist[2] != 0 || dist[3] != 0) { P(wave, time, 2, col); }
+        } else if (dist[1] == 0 && dist[2] == 1) {
+            choice = 2;
+            bool middle_done = false;
+            if (dist[3] != 0) { P(wave, time, 4, col); middle_done = true; }
+            if (dist[6] != 0) { P(wave, time, 5, col); middle_done = true; }
+            if (!middle_done && (dist[4] != 0 || dist[5] != 0)) { P(wave, time, 4, col); }
+        } else if (dist[6] == 0 && dist[5] == 1) {
+            choice = 5;
+            bool middle_done = false;
+            if (dist[1] != 0) { P(wave, time, 2, col); middle_done = true; }
+            if (dist[4] != 0) { P(wave, time, 3, col); middle_done = true; }
+            if (!middle_done && (dist[2] != 0 || dist[3] != 0)) { P(wave, time, 2, col); }
+        } else if (dist[1]) {
+            choice = 1;
+            if (dist[2] != 0 || dist[3] != 0) { P(wave, time, 3, col); }
+            if (dist[4] != 0 || dist[5] != 0 || dist[6] != 0) { P(wave, time, 5, col); }
+        } else if (dist[6]) {
+            choice = 6;
+            if (dist[4] != 0 || dist[5] != 0) { P(wave, time, 4, col); }
+            if (dist[1] != 0 || dist[2] != 0 || dist[3] != 0) { P(wave, time, 2, col); }
+        } else if (dist[2]) {
+            choice = 2;
+            if (dist[3] != 0 || dist[4] != 0 || dist[5] != 0) { P(wave, time, 4, col); }
+        } else if (dist[5]) {
+            choice = 5;
+            if (dist[3] != 0 || dist[4] != 0) { P(wave, time, 3, col); }
+        }
+    } else {
+        // 五行场地收尾
+        if (dist[1] == 1) {
+            choice = 1;
+            bool middled = false;
+            if (dist[2]) { P(wave, time, 3, col); middled = true; }
+            if (dist[5]) { P(wave, time, 4, col); middled = true; }
+            if (!middled && (dist[3] || dist[4])) { P(wave, time, 3, col); }
+        } else if (dist[3] == 1) {
+            choice = 3;
+            if (dist[1] || dist[2]) { P(wave, time, 1, col); }
+            if (dist[4] || dist[5]) { P(wave, time, 5, col); }
+        } else if (dist[5] == 1) {
+            choice = 5;
+            bool middled = false;
+            if (dist[1]) { P(wave, time, 2, col); middled = true; }
+            if (dist[4]) { P(wave, time, 3, col); middled = true; }
+            if (!middled && (dist[2] || dist[3])) { P(wave, time, 2, col); }
+        } else if (dist[1] == 0 && dist[2] == 1) {
+            choice = 2;
+            if (dist[3] || dist[4] || dist[5]) { P(wave, time, 4, col); }
+        } else if (dist[5] == 0 && dist[4] == 1) {
+            choice = 4;
+            if (dist[1] || dist[2] || dist[3]) { P(wave, time, 2, col); }
+        } else if (dist[1]) {
+            choice = 1;
+            bool middled = false;
+            if (dist[2]) { P(wave, time, 3, col); middled = true; }
+            if (dist[5]) { P(wave, time, 4, col); middled = true; }
+            if (!middled && (dist[3] || dist[4])) { P(wave, time, 3, col); }
+        } else if (dist[3]) {
+            choice = 3;
+            if (dist[1] || dist[2]) { P(wave, time, 1, col); }
+            if (dist[4] || dist[5]) { P(wave, time, 5, col); }
+        } else if (dist[5]) {
+            choice = 5;
+            bool middled = false;
+            if (dist[1]) { P(wave, time, 2, col); middled = true; }
+            if (dist[4]) { P(wave, time, 3, col); middled = true; }
+            if (!middled && (dist[2] || dist[3])) { P(wave, time, 2, col); }
+        } else if (dist[2]) {
+            choice = 2;
+            if (dist[3] || dist[4] || dist[5]) { P(wave, time, 4, col); }
+        } else if (dist[4]) {
+            choice = 4;
+        }
+    }
+    return choice;
+}
+
+// 对除了某列以外的所有红眼开炮。常用于拖收尾。
 // 若场上没有红眼，且当前是w20，则改为对除了某列以外的所有僵尸开炮。
 // 为了收尾的正常运行，请确保场上的红眼都是本波红眼。
 // 本函数已进行 `ForEnd()` 判定。
@@ -229,129 +340,8 @@ void PPExceptOne(int wave, int time, float col = 9, std::vector<APlantType> stop
     std::string scene = GetCurrentScene();
     int VCFT = GetCFT();
     ForEnd(wave, time - VCFT, [=](){
-        AConnect(ATime(wave, time - VCFT), [=](){
-            int choice = -1;
-            int dist[7] = { 0, 0, 0, 0, 0, 0, 0 };
-            int sum = 0;
-            for (auto &&zombie: aAliveZombieFilter) {
-                if (zombie.Type() != AHY_32) continue;
-                dist[zombie.Row() + 1]++;
-                sum++;
-            }
-            if (wave == 20 && sum == 0) {
-                #ifdef WALIB_DEBUG
-                waDebugLogger.Info("no red found");
-                #endif
-                for (auto &&zombie: aAliveZombieFilter) {
-                    if (zombie.Type() == ABJ_20) continue;
-                    #ifdef WALIB_DEBUG
-                    waDebugLogger.Info("found zombie # at #", zombie.Type(), zombie.Row() + 1);
-                    #endif
-                    dist[zombie.Row() + 1]++;
-                    sum++;
-                }
-            }
-            #ifdef WALIB_DEBUG
-            for (int i = 1; i <= 6; i++) {
-                waDebugLogger.Info("distr of #: #", i, dist[i]);
-            }
-            #endif
-            std::string scene = GetCurrentScene();
-            if (scene == "PE" || scene == "FE") {
-                // 六行场地收尾
-                if (dist[1] == 1) {
-                    choice = 1;
-                    if (dist[2] != 0 || dist[3] != 0) { P(ANowTime().wave, time, 3, col); }
-                    if (dist[4] != 0 || dist[5] != 0 || dist[6] != 0) { P(ANowTime().wave, time, 5, col); }
-                } else if (dist[6] == 1) {
-                    choice = 6;
-                    if (dist[4] != 0 || dist[5] != 0) { P(ANowTime().wave, time, 4, col); }
-                    if (dist[1] != 0 || dist[2] != 0 || dist[3] != 0) { P(ANowTime().wave, time, 2, col); }
-                } else if (dist[1] == 0 && dist[2] == 1) {
-                    choice = 2;
-                    bool middle_done = false;
-                    if (dist[3] != 0) { P(ANowTime().wave, time, 4, col); middle_done = true; }
-                    if (dist[6] != 0) { P(ANowTime().wave, time, 5, col); middle_done = true; }
-                    if (!middle_done && (dist[4] != 0 || dist[5] != 0)) { P(ANowTime().wave, time, 4, col); }
-                } else if (dist[6] == 0 && dist[5] == 1) {
-                    choice = 5;
-                    bool middle_done = false;
-                    if (dist[1] != 0) { P(ANowTime().wave, time, 2, col); middle_done = true; }
-                    if (dist[4] != 0) { P(ANowTime().wave, time, 3, col); middle_done = true; }
-                    if (!middle_done && (dist[2] != 0 || dist[3] != 0)) { P(ANowTime().wave, time, 2, col); }
-                } else if (dist[1]) {
-                    choice = 1;
-                    if (dist[2] != 0 || dist[3] != 0) { P(ANowTime().wave, time, 3, col); }
-                    if (dist[4] != 0 || dist[5] != 0 || dist[6] != 0) { P(ANowTime().wave, time, 5, col); }
-                } else if (dist[6]) {
-                    choice = 6;
-                    if (dist[4] != 0 || dist[5] != 0) { P(ANowTime().wave, time, 4, col); }
-                    if (dist[1] != 0 || dist[2] != 0 || dist[3] != 0) { P(ANowTime().wave, time, 2, col); }
-                } else if (dist[2]) {
-                    choice = 2;
-                    if (dist[3] != 0 || dist[4] != 0 || dist[5] != 0) { P(ANowTime().wave, time, 4, col); }
-                } else if (dist[5]) {
-                    choice = 5;
-                    if (dist[3] != 0 || dist[4] != 0) { P(ANowTime().wave, time, 3, col); }
-                }
-                if (!stop_giga_plants.empty()) {
-                    StopGiga(ANowTime().wave, ANowTime().time, stop_giga_plants, ANowTime().wave == 20 ? 5500 : 4300, choice);
-                }
-            } else {
-                // 五行场地收尾
-                if (dist[1] == 1) {
-                    choice = 1;
-                    bool middled = false;
-                    if (dist[2]) { P(ANowTime().wave, time, 3, col); middled = true; }
-                    if (dist[5]) { P(ANowTime().wave, time, 4, col); middled = true; }
-                    if (!middled && (dist[3] || dist[4])) { P(ANowTime().wave, time, 3, col); }
-                } else if (dist[3] == 1) {
-                    choice = 3;
-                    if (dist[1] || dist[2]) { P(ANowTime().wave, time, 1, col); }
-                    if (dist[4] || dist[5]) { P(ANowTime().wave, time, 5, col); }
-                } else if (dist[5] == 1) {
-                    choice = 5;
-                    bool middled = false;
-                    if (dist[1]) { P(ANowTime().wave, time, 2, col); middled = true; }
-                    if (dist[4]) { P(ANowTime().wave, time, 3, col); middled = true; }
-                    if (!middled && (dist[2] || dist[3])) { P(ANowTime().wave, time, 2, col); }
-                } else if (dist[1] == 0 && dist[2] == 1) {
-                    choice = 2;
-                    if (dist[3] || dist[4] || dist[5]) { P(ANowTime().wave, time, 4, col); }
-                } else if (dist[5] == 0 && dist[4] == 1) {
-                    choice = 4;
-                    if (dist[1] || dist[2] || dist[3]) { P(ANowTime().wave, time, 2, col); }
-                } else if (dist[1]) {
-                    choice = 1;
-                    bool middled = false;
-                    if (dist[2]) { P(ANowTime().wave, time, 3, col); middled = true; }
-                    if (dist[5]) { P(ANowTime().wave, time, 4, col); middled = true; }
-                    if (!middled && (dist[3] || dist[4])) { P(ANowTime().wave, time, 3, col); }
-                } else if (dist[3]) {
-                    choice = 3;
-                    if (dist[1] || dist[2]) { P(ANowTime().wave, time, 1, col); }
-                    if (dist[4] || dist[5]) { P(ANowTime().wave, time, 5, col); }
-                } else if (dist[5]) {
-                    choice = 5;
-                    bool middled = false;
-                    if (dist[1]) { P(ANowTime().wave, time, 2, col); middled = true; }
-                    if (dist[4]) { P(ANowTime().wave, time, 3, col); middled = true; }
-                    if (!middled && (dist[2] || dist[3])) { P(ANowTime().wave, time, 2, col); }
-                } else if (dist[2]) {
-                    choice = 2;
-                    if (dist[3] || dist[4] || dist[5]) { P(ANowTime().wave, time, 4, col); }
-                } else if (dist[4]) {
-                    choice = 4;
-                }
-                if (!stop_giga_plants.empty()) {
-                    if (stop_giga_to_time < 0) {
-                        StopGiga(ANowTime().wave, ANowTime().time, stop_giga_plants, ANowTime().wave == 20 ? 5500 : 4300, choice);
-                    } else {
-                        StopGiga(ANowTime().wave, ANowTime().time, stop_giga_plants, stop_giga_to_time, choice);
-                    }
-                }
-            }
-        });
+        int choice = SchedulePPExceptOne(wave, time, col);
+        if (!stop_giga_plants.empty()) StopGiga(wave, time, stop_giga_plants, stop_giga_to_time, choice);
     });
 }
 
