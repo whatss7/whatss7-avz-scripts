@@ -1037,7 +1037,7 @@ function getZombieCollision(zombie_type) {
 	} else if (zombie_type == "Balloon") {
 		zombie_x_offset = 36;
 		zombie_x_width = 42;
-		zombie_y_offset = -30;
+		zombie_y_offset = -25;
 		zombie_y_width = 115;
 	} else if (zombie_type == "Football") {
 		zombie_x_offset = 50;
@@ -1059,6 +1059,16 @@ function getZombieCollision(zombie_type) {
 		zombie_x_width = 110;
 		zombie_y_offset = 22;
 		zombie_y_width = 94;
+	} else if (zombie_type == "PogoLow") {
+		zombie_x_offset = 36;
+		zombie_x_width = 42;
+		zombie_y_offset = -25;
+		zombie_y_width = 115;
+	} else if (zombie_type == "PogoHigh") {
+		zombie_x_offset = 36;
+		zombie_x_width = 42;
+		zombie_y_offset = -65;
+		zombie_y_width = 115;
 	} else if (zombie_type == "Normal") {
 		zombie_x_offset = 36;
 		zombie_x_width = 42;
@@ -1298,7 +1308,13 @@ function runRanger() {
 			var zombie_x_range = Math.floor(Math.sqrt(range * range - zombie_y_dist * zombie_y_dist));
 			var zombie_x_left_range = zombie_x_range + zombie_x_offset + zombie_x_width;
 			var zombie_x_right_range = zombie_x_range - zombie_x_offset;
-			result += `第${row}行：[${center_x - zombie_x_left_range},${Math.min(800 - zombie_x_offset, center_x + zombie_x_right_range)}]<br>`
+			var lbound = center_x - zombie_x_left_range;
+			var rbound = Math.min(800 - zombie_x_offset, center_x + zombie_x_right_range);
+			if (lbound < rbound) {
+				result += `第${row}行：[${lbound},${rbound}]<br>`;
+			} else {
+				result += `第${row}行：炸不到<br>`
+			}
 		}
 	}
 

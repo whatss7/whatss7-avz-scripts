@@ -18,7 +18,11 @@ void EnsureGiga(int wave) {
             if (zombie.Row() + 1 == 1) return;
             candidates.push_back(&zombie);
         }
-        auto &&zombie = *candidates[rand() % candidates.size()];
+        if (candidates.empty()) return;
+        sort(candidates.begin(), candidates.end(), [](AZombie *a, AZombie *b){
+            return a->Row() < b->Row();
+        });
+        auto &&zombie = *candidates[0];
         zombie.Row() = 1 - 1;
         zombie.Ordinate() = 40;
     });
@@ -33,20 +37,23 @@ void AScript() {
     StartReloadMode();
     const int i_len = 1800;
     for (int w: {1}) {
-        TempC(w, -599, AFLOWER_POT, 1, 1);
+        // Nd/BND，B为N不被碾创造条件
+        C(w, -599, AFLOWER_POT, 1, 1);
         C(w, -599 + 751, AFLOWER_POT, 3, 9);
         RoofP(w, 265, 4, 4, 9);
         N(w, 450, 3, 9);
-        RoofP(w, 450 + 110, 6, 4, 9);
-        RoofP(w, 450 + 215, 7, 2, 5);
+        RoofP(w, 450 + 110, 7, 4, 9);
+        RoofP(w, 450 + 215, 6, 2, 5);
+        // 模拟B意外刷新情况
+        // ASetWavelength({ATime(w, 601)});
     }
     for (int w: {2}) {
         // PPDDDA, 第二个D解决下波冰车
         // 可用的炮：?42414, ?=3/5
         DynamicP(w, 379, 2, 9);
         RoofP(w, 379, 4, 4, 9);
-        // PP之后，全部开始投掷，2列炮拦上半区，所以4列炮只用拦两行；为了樱桃能炸到冰车，515激活，下波21冰
-        // 这里第一D上半因为要拦两波，没办法再同时全伤三行巨人
+        // PP之后，全部开始投掷，2列炮拦123，所以4列炮只用拦两行；为了樱桃能炸到冰车，515激活，下波21冰
+        // 这里上半第一D因为要拦两波，没办法再同时全伤三行巨人
         RoofP(w, 379 + 119, 2, 2, 8.35);
         RoofP(w, 379 + 136, 4, 4, 8.45);
         RoofP(w, 379 + 119 + 137, 1, 2, 8.7);
@@ -65,17 +72,17 @@ void AScript() {
     }
     for (int w: {3, 11}) {
         // I-B-PP
-        I3(w, 21, 601);
+        I3(w, 22, 601);
         if (w == 11) {
             TempC(w, 950 - 751, AFLOWER_POT, 1, 9, 320);
             A(w, 315, 1, 9);
         }
         TempC(w, 950, AFLOWER_POT, 2, 9, 1150);
         C(w, 950 + 751, AFLOWER_POT, 1, 1);
-        // 晚10cs冰，所以早10cs分离
-        RoofP(w, 1130, 7, 4, 8.1);
+        // 晚11cs冰，所以早11cs分离
+        RoofP(w, 1100 - 11, 7, 4, 8.15);
         DynamicP(w, i_len - 200, 2, 9);
-        RoofP(w, i_len - 200, 6, 6, 9);
+        RoofP(w, i_len - 200, 6, 4, 9);
     }
     for (int w: {4, 12}) {
         // I3
@@ -89,7 +96,7 @@ void AScript() {
         // 垫一下小丑
         TempC(w, 950, AFLOWER_POT, 2, 9, 1150);
         // B
-        RoofP(w, 1140, 7, 4, 8.1);
+        RoofP(w, 1100, 7, 4, 8.15);
         // PP
         DynamicP(w, i_len - 200, 2, 9);
         RoofP(w, i_len - 200, 6, 4, 9);
@@ -105,12 +112,13 @@ void AScript() {
         // 垫一下小丑
         TempC(w, 950, AFLOWER_POT, 2, 9, 1150);
         // B
-        RoofP(w, 1140, 7, 4, 8.1);
+        RoofP(w, 1100, 7, 4, 8.15);
         // PP
         DynamicP(w, i_len - 200, 2, 9);
         RoofP(w, i_len - 200, 6, 4, 9);
     }
     for (int w: {9, 19}) {
+        // EnsureGiga(w);
         // I3
         I3(w, 11, i_len);
         RoofP(w, 410, 2, 2, 9);
@@ -125,13 +133,11 @@ void AScript() {
         N(w, 1085 + 220, 2, 8);
         DynamicP(w, 1085 + 220 + 215, 2, 8.95);
         RoofP(w, 1085 + 220 + 215, 6, 4, 8.95);
-        // }
         // 现在只剩一血红了
         // 需要原来的热过渡炮收尾，这一炮2085转好
         // 1085+220=1305激活
         // walk([453, 450])=671，原速下1179不会锤8炮，11冰下则是2379不会锤8炮
-        EnsureGiga(w);
-        RoofP(w, 2370, 2, 3, 8.5);
+        RoofP(w, 2370, 2, 3, 9);
         RoofP(w, 2370, 4, 4, 9);
         TempC(w, 2000, AFLOWER_POT, 1, 6, 4500 + 745 + 635 + 1);
         TempC(w, 2000, ASNOW_PEA, 1, 6, 4300 - SDT - 1);
@@ -146,17 +152,18 @@ void AScript() {
         RoofP(w, 401, 7, 4, 9);
         // 炸蹦极
         RoofP(w, 401, 4, 3, 4.5);
-        // PSD
+        // PSDD
         DynamicP(w, 1050, 2, 9);
         RoofP(w, 1050, 6, 4, 9);
         RoofP(w, 1050, 2, 2, 9);
         RoofP(w, 1050, 4, 4, 9);
         RoofP(w, 1270, 1, 2, 9);
         RoofP(w, 1270, 4, 4, 9);
-        RoofP(w, 1320, 7, 2, 9);
-        DynamicP(w, 1480, 4, 9);
+        RoofP(w, 1490, 7, 2, 9);
+        DynamicP(w, 1490, 4, 9);
+        // 大致估计普僵2228可全伤
         PPExceptOne(w, 2230);
-        BlockLast(w, 2235, 5700);
+        BlockLast(w, 2235);
         AConnect(ATime(w, 5500 - SDT), [](){
             for (auto &&plant: aAlivePlantFilter) {
                 if (plant.Type() == ATALL_NUT) {
@@ -165,6 +172,13 @@ void AScript() {
                     ACard(ASQUASH, r, c);
                 }
             }
+        });
+        AtEnd([](){
+            ARemovePlant(1, 9, AFLOWER_POT);
+            ARemovePlant(2, 9, AFLOWER_POT);
+            ARemovePlant(3, 9, AFLOWER_POT);
+            ARemovePlant(4, 9, AFLOWER_POT);
+            ARemovePlant(5, 9, AFLOWER_POT);
         });
     }
 }
