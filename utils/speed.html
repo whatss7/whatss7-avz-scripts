@@ -96,7 +96,7 @@
     <p id="splitter_output"></p>
     <p>FC: Fodder Count 使用垫材数量 WD: Walk Distance 巨人行进距离 SP: Split 分段行走时长</p>
 
-    <br/>
+    <br>
     
     <p>附赠小工具：爆炸范围计算，计算某处的炮能否炸到巨人</p>
     <p>注：跃前海豚、落地气球、无杆跳跳同普僵；<br>
@@ -140,6 +140,36 @@
     <button onclick="runRangerMinusY()">y-1</button>
     <button onclick="runRangerPlusY()">y+1</button>
     <p id="ranger_output"></p>
+    
+    <br>
+
+    <p>附赠小工具：攻击范围计算，计算某处的僵尸能否攻击到某植物</p>
+    <p>注：炮头和炮尾实质相同，只对应不同的输入列数的方式。<br>
+    小喷菇、阳光菇、海蘑菇横坐标偏移-5~+4.</p>
+    <label for="attacker_scene_select">场景：</label>
+    <select id="attacker_scene_select" name="attacker_scene_select">
+        <option value="DE/NE">DE/NE</option>
+        <option value="PE/FE">PE/FE</option>
+        <option value="RE/ME">RE/ME</option>
+    </select>
+    <label for="attacker_plant_select">植物：</label>
+    <select id="attacker_plant_select" name="attacker_plant_select">
+        <option value="CobHead">炮头</option>
+        <option value="CobTail">炮尾</option>
+        <option value="TallNut">高坚</option>
+        <option value="Pumpkin">南瓜</option>
+        <option value="Normal">普通</option>
+    </select>
+    <label for="attacker_input_row">植物行：</label>
+    <input type="number" id="attacker_input_row" value="2">
+    <label for="attacker_input_col">植物列：</label>
+    <input type="number" id="attacker_input_col" value="8">
+    <button onclick="runAttacker()">计算</button>
+    <button onclick="runAttackerMinusX()">x-1</button>
+    <button onclick="runAttackerPlusX()">x+1</button>
+    <button onclick="runAttackerMinusY()">y-1</button>
+    <button onclick="runAttackerPlusY()">y+1</button>
+    <p id="attacker_output"></p>
 </body>
 
 </html>

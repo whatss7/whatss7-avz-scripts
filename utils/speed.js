@@ -811,7 +811,7 @@ function gigaStep(giga, slow) {
     // 炮激活时，垫材在激活上一帧种植，先锤垫后投掷
     // 灰烬激活本帧：结算植物（灰烬激活）-结算僵尸（同时激活+索敌，选投掷）-结算炮弹（无）
     // 炮激活本帧，垫材tick为208，激活tick为143
-    // 灰烬激活本帧：结算植物（无）-结算僵尸（索敌，选锤垫）-结算炮弹（激活）
+    // 炮激活本帧：结算植物（无）-结算僵尸（索敌，选锤垫）-结算炮弹（激活）
     // 本帧植物没有什么好结算的
     // 结算僵尸
     // 两个减速tick减1
@@ -1079,6 +1079,20 @@ function getZombieCollision(zombie_type) {
 	return [zombie_x_offset, zombie_x_width, zombie_y_offset, zombie_y_width];
 }
 
+function explosionHit(
+	explosion_center_x, explosion_center_y, explosion_radius, 
+	collision_left, collision_right, collision_up, collision_down) {
+	if (explosion_center_x >= collision_left && explosion_center_x <= collision_right) {
+		return collision_up - explosion_center_y <= explosion_radius && explosion_center_y - collision_down <= explosion_radius;
+	} else if (explosion_center_y >= collision_up && explosion_center_y <= collision_down) {
+		return collision_left - explosion_center_x <= explosion_radius && explosion_center_x - collision_right <= explosion_radius;
+	} else {
+		var x_diff = Math.min(Math.abs(collision_left - explosion_center_x), Math.abs(collision_right - explosion_center_x));
+		var y_diff = Math.min(Math.abs(collision_up - explosion_center_y), Math.abs(collision_down - explosion_center_y));
+		return x_diff * x_diff + y_diff * y_diff <= explosion_radius * explosion_radius;
+	}
+}
+
 function runRoofRanger() {
 	var explosive_row = Number(document.getElementById("ranger_input_row").value);
 	var explosive_col = Number(document.getElementById("ranger_input_col").value);
@@ -1094,7 +1108,7 @@ function runRoofRanger() {
 	var notation_ex = -1000;
 
 	if (explosive_type == "Cob") {
-		center_x = Math.floor(explosive_col * 80);
+		center_x = Math.round(explosive_col * 80);
 		center_y = 209 + (explosive_row - 1) * 85;
 	
 		if (center_x >= 527) {
@@ -1159,28 +1173,18 @@ function runRoofRanger() {
 		upper_row_limit = explosive_row + 3;
 	}
 
-	console.log(center_x, center_y);
-
 	const hit = function(zombie_x, zombie_y) {
 		if (zombie_x + zombie_x_offset > 800) return false;
 		var left = zombie_x + zombie_x_offset;
 		var right = left + zombie_x_width;
 		var up = zombie_y + zombie_y_offset;
 		var down = up + zombie_y_width;
-		if (center_x >= left && center_x <= right) {
-			return Math.abs(up - center_y) <= range || Math.abs(down - center_y) <= range;
-		} else if (center_y >= up && center_y <= down) {
-			return Math.abs(left - center_x) <= range || Math.abs(right - center_x) <= range;
-		} else {
-			var x_diff = Math.min(Math.abs(left - center_x), Math.abs(right - center_x));
-			var y_diff = Math.min(Math.abs(up - center_y), Math.abs(down - center_y));
-			return Math.sqrt(x_diff * x_diff + y_diff * y_diff) <= range;
-		}
+		return explosionHit(center_x, center_y, range, left, right, up, down);
 	};
 	
 	[zombie_x_offset, zombie_x_width, zombie_y_offset, zombie_y_width] = getZombieCollision(zombie_type);
 
-	var result = "";
+	var result = `爆心：x=${center_x}, y=${center_y}<br>`;
 
 	for (var row = 1; row <= scene_row_count; row++) {
 		if (row < lower_row_limit || row > upper_row_limit) continue;
@@ -1189,7 +1193,7 @@ function runRoofRanger() {
 			zombie_x <= center_x + range - zombie_x_offset + 1;
 			zombie_x++) {
 			// 对于396, 392, ..., x -= 1, 2, ...
-			// 但如果是396.5, 392.5, ..., x-=0, 1, ...
+			// 但如果是396.5, 392.5, ..., x -= 0, 1, ...
 			var zombie_y = 40 + (row - 1) * 85 + Math.floor(zombie_x < 400 ? (400 - (zombie_x + 0.5)) / 4 : 0);
 			var zombie_y_alt = 40 + (row - 1) * 85 + Math.floor(zombie_x < 400 ? (400 - zombie_x) / 4 : 0);
 			var norm_hit = hit(zombie_x, zombie_y_alt);
@@ -1266,7 +1270,7 @@ function runRanger() {
 		scene_row_count = 5;
 	} else if (scene == "PE/FE") {
 		center_y = [120, 205, 290, 375, 460, 545][explosive_row - 1];
-		zombie_y_data = [50, 135, 220, 305, 290, 475];
+		zombie_y_data = [50, 135, 220, 305, 390, 475];
 		scene_row_count = 6;
 	}
 
@@ -1290,7 +1294,7 @@ function runRanger() {
 	
 	[zombie_x_offset, zombie_x_width, zombie_y_offset, zombie_y_width] = getZombieCollision(zombie_type);
 
-	var result = "";
+	var result = `爆心：x=${center_x}, y=${center_y}<br>`;
 	for (var row = 1; row <= scene_row_count; row++) {
 		if (row < lower_row_limit || row > upper_row_limit) continue;
 		var zombie_y = zombie_y_data[row - 1];
@@ -1343,7 +1347,6 @@ function runRangerMinusX() {
 	runRanger();
 }
 
-
 function runRangerPlusY() {
 	var scene = document.getElementById("ranger_scene_select").value;
 	var explosive_row = Number(document.getElementById("ranger_input_row").value);
@@ -1355,4 +1358,204 @@ function runRangerMinusY() {
 	var explosive_row = Number(document.getElementById("ranger_input_row").value);
 	document.getElementById("ranger_input_row").value = Math.max(Math.floor(explosive_row - 1), 1);
 	runRanger();
+}
+
+function getPlantEatRange(plant_type) {
+	var offset = 0, width = 0;
+	if (plant_type == "CobTail") {
+		offset = 20;
+		width = 100;
+	} else if (plant_type == "TallNut") {
+		offset = 30;
+		width = 40;
+	} else if (plant_type == "Pumpkin") {
+		offset = 20;
+		width = 60;
+	} else if (plant_type == "Normal") {
+		offset = 30;
+		width = 20;
+	}
+	return [offset, width];
+}
+
+function runAttacker() {
+	var scene = document.getElementById("attacker_scene_select").value;
+	var plant_row = Number(document.getElementById("attacker_input_row").value);
+	var plant_col = Number(document.getElementById("attacker_input_col").value);
+	var plant_type = document.getElementById("attacker_plant_select").value;
+
+	if (plant_type == "CobHead") {
+		plant_type = "CobTail";
+		plant_col -= 1;
+	}
+	
+	var [plant_offset, plant_width] = getPlantEatRange(plant_type);
+	var plant_pos = -40 + 80 * plant_col;
+	var plant_left_eat_pos = plant_pos + plant_offset;
+	var plant_right_eat_pos = plant_left_eat_pos + plant_width;
+
+	var all_zombies = [
+		{
+			name: "撑杆（跃后）/橄榄/舞王/矿工/小鬼",
+			offset: 50,
+			width: 20
+		},
+		{
+			name: "撑杆（跃前）/海豚（跃前）",
+			offset: -29,
+			width: 70
+		},
+		{
+			name: "海豚（跃后）",
+			offset: 30,
+			width: 30
+		},
+		{
+			name: "普僵/小丑",
+			offset: 20,
+			width: 50
+		},
+		{
+			name: "冰车/篮球",
+			offset: 10,
+			width: 133
+		},
+		{
+			name: "巨人",
+			offset: -30,
+			width: 89
+		},
+		{
+			name: "潜水",
+			offset: -5,
+			width: 55
+		},
+		{
+			name: "跳跳",
+			offset: 10,
+			width: 30
+		},
+		{
+			name: "梯子",
+			offset: 10,
+			width: 50
+		},
+	];
+
+	var result = "";
+
+	for (var zombie_info of all_zombies) {
+		var zombie_left_range = plant_left_eat_pos - zombie_info.width - zombie_info.offset;
+		var zombie_right_range = plant_right_eat_pos - zombie_info.offset;
+		result += `${zombie_info.name}：[${zombie_left_range}, ${zombie_right_range}]<br>`;
+	}
+
+	var plant_left_explode_pos = plant_left_eat_pos - 20;
+	var plant_right_explode_pos = plant_right_eat_pos + 20;
+
+	var plant_y = 0;
+	
+	var scene_row_count = 5;
+	if (scene == "DE/NE") {
+		plant_y = 80 + (plant_row - 1) * 100;
+	} else if (scene == "PE/FE") {
+		plant_y = 80 + (plant_row - 1) * 85;
+		scene_row_count = 6;
+	} else if (scene == "RE/ME") {
+		plant_y = 70 + (plant_row - 1) * 85;
+		if (plant_col < 6) plant_y += (6 - plant_col) * 20;
+	}
+
+	var plant_up_explode_pos = plant_y;
+	var plant_down_explode_pos = plant_y + 80;
+	var notation_ex = -1000;
+
+	for (var row = 1; row <= scene_row_count; row++) {
+		var segments = [], current_segment_start = -1000, current_segment_state = "NoHit";
+		for (var zombie_x = plant_left_explode_pos - 90 - 60 - 1; zombie_x <= plant_right_explode_pos + 90 - 60 + 1; zombie_x++) {
+			// 对于396, 392, ..., x -= 1, 2, ...
+			// 但如果是396.5, 392.5, ..., x -= 0, 1, ...
+			var zombie_y = 0, zombie_y_alt = 0;
+			if (scene == "DE/NE") {
+				zombie_y = zombie_y_alt = 50 + (row - 1) * 100;
+			} else if (scene == "PE/FE") {
+				zombie_y = zombie_y_alt = 50 + (row - 1) * 85;
+			} else if (scene == "RE/ME") {
+				zombie_y = 40 + (row - 1) * 85 + Math.floor(zombie_x < 400 ? (400 - (zombie_x + 0.5)) / 4 : 0);
+				zombie_y_alt = 40 + (row - 1) * 85 + Math.floor(zombie_x < 400 ? (400 - zombie_x) / 4 : 0);
+			}
+			var norm_hit = explosionHit(
+				zombie_x + 60, zombie_y_alt + 60, 90, 
+				plant_left_explode_pos, plant_right_explode_pos, plant_up_explode_pos, plant_down_explode_pos);
+			var edge_hit = explosionHit(
+				zombie_x + 60, zombie_y + 60, 90, 
+				plant_left_explode_pos, plant_right_explode_pos, plant_up_explode_pos, plant_down_explode_pos);
+
+			var state = "";
+			if (norm_hit && edge_hit) {
+				state = "Hit";
+			} else if (!norm_hit && edge_hit) {
+				state = "ProbHit";
+			} else if (norm_hit && !edge_hit) {
+				state = "ProbNoHit";
+			} else {
+				state = "NoHit";
+			}
+			if (state != current_segment_state) {
+				if (current_segment_state != "NoHit") {
+					var seg = `[${current_segment_start},${zombie_x - 1}]`;
+					if (current_segment_state == "ProbHit") {
+						seg += "!";
+						notation_ex = current_segment_start;
+					} else if (current_segment_state == "ProbNoHit") {
+						seg += "?";
+						notation_ex = current_segment_start;
+					}
+					segments.push(seg);
+				}
+				current_segment_state = state;
+				current_segment_start = zombie_x;
+			}
+		}
+		if (segments.length != 0) {
+			result += `第${row}行小丑爆炸：`;
+			for (var i = 0; i < segments.length; i++) {
+				result += segments[i];
+				if (i != segments.length - 1) result += ", ";
+				else result += "<br>";
+			}
+		}
+	}
+
+	if (notation_ex != -1000) {
+		result += `! 表示当僵尸坐标取整数时（如${notation_ex}.000）炸不到，而不为整数时（如${notation_ex}.123）能炸到<br>`
+		result += `? 表示当僵尸坐标取整数时能炸到，而不为整数时炸不到<br>`
+	}
+
+	document.getElementById("attacker_output").innerHTML = result;
+}
+
+function runAttackerPlusX() {
+	var col = Number(document.getElementById("attacker_input_col").value);
+	document.getElementById("attacker_input_col").value = Math.max(Math.floor(col + 1), 1);
+	runAttacker();
+}
+
+function runAttackerMinusX() {
+	var col = Number(document.getElementById("attacker_input_col").value);
+	document.getElementById("attacker_input_col").value = Math.max(Math.floor(col - 1), 1);
+	runAttacker();
+}
+
+function runAttackerPlusY() {
+	var scene = document.getElementById("attacker_scene_select").value;
+	var row = Number(document.getElementById("attacker_input_row").value);
+	document.getElementById("attacker_input_row").value = Math.min(Math.floor(row + 1), scene == "PE/FE" ? 6 : 5);
+	runAttacker();
+}
+
+function runAttackerMinusY() {
+	var row = Number(document.getElementById("attacker_input_row").value);
+	document.getElementById("attacker_input_row").value = Math.max(Math.floor(row - 1), 1);
+	runAttacker();
 }
