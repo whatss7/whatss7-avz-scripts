@@ -1010,73 +1010,93 @@ function setRangerEnable() {
 	}
 }
 
-function getZombieCollision(zombie_type) {
-	var zombie_x_offset = 0, zombie_x_width = 0;
-	var zombie_y_offset = 0, zombie_y_width = 0;
-
-	if (zombie_type == "Giga") {
-		zombie_x_offset = -17;
-		zombie_x_width = 125;
-		zombie_y_offset = -38;
-		zombie_y_width = 154;
-	} else if (zombie_type == "Zomboni") {
-		zombie_x_offset = 0;
-		zombie_x_width = 153;
-		zombie_y_offset = -13;
-		zombie_y_width = 140;
-	} else if (zombie_type == "Digger") {
-		zombie_x_offset = 50;
-		zombie_x_width = 28;
-		zombie_y_offset = 0;
-		zombie_y_width = 115;
-	} else if (zombie_type == "DiggerToRight") {
-		zombie_x_offset = 42;
-		zombie_x_width = 28;
-		zombie_y_offset = 0;
-		zombie_y_width = 115;
-	} else if (zombie_type == "Balloon") {
-		zombie_x_offset = 36;
-		zombie_x_width = 42;
-		zombie_y_offset = -25;
-		zombie_y_width = 115;
-	} else if (zombie_type == "Football") {
-		zombie_x_offset = 50;
-		zombie_x_width = 57;
-		zombie_y_offset = 0;
-		zombie_y_width = 115;
-	} else if (zombie_type == "Snorkel") {
-		zombie_x_offset = 12;
-		zombie_x_width = 62;
-		zombie_y_offset = 0;
-		zombie_y_width = 115;
-	} else if (zombie_type == "DolphinAfterJump") {
-		zombie_x_offset = 20;
-		zombie_x_width = 42;
-		zombie_y_offset = 0;
-		zombie_y_width = 115;
-	} else if (zombie_type == "Bungee") {
-		zombie_x_offset = -20;
-		zombie_x_width = 110;
-		zombie_y_offset = 22;
-		zombie_y_width = 94;
-	} else if (zombie_type == "PogoLow") {
-		zombie_x_offset = 36;
-		zombie_x_width = 42;
-		zombie_y_offset = -25;
-		zombie_y_width = 115;
-	} else if (zombie_type == "PogoHigh") {
-		zombie_x_offset = 36;
-		zombie_x_width = 42;
-		zombie_y_offset = -65;
-		zombie_y_width = 115;
-	} else if (zombie_type == "Normal") {
-		zombie_x_offset = 36;
-		zombie_x_width = 42;
-		zombie_y_offset = 0;
-		zombie_y_width = 115;
-	}
-
-	return [zombie_x_offset, zombie_x_width, zombie_y_offset, zombie_y_width];
+function getZombieCollisionArray() {
+	return [
+		{
+			name: "巨人",
+			x_offset: -17,
+			x_width: 125,
+			y_offset: -38,
+			y_width: 154
+		}, 
+		{
+			name: "冰车/篮球",
+			x_offset: 0,
+			x_width: 153,
+			y_offset: -13,
+			y_width: 140
+		},
+		{
+			name: "普僵/扶梯/小丑/撑杆/舞王/小鬼",
+			x_offset: 36,
+			x_width: 42,
+			y_offset: 0,
+			y_width: 115,
+		},
+		{
+			name: "矿工（地下）",
+			x_offset: 50,
+			x_width: 28,
+			y_offset: 0,
+			y_width: 115,
+		},
+		{
+			name: "矿工（右行）",
+			x_offset: 42,
+			x_width: 28,
+			y_offset: 0,
+			y_width: 115,
+		},
+		{
+			name: "气球（空中）",
+			x_offset: 36,
+			x_width: 42,
+			y_offset: -25,
+			y_width: 115,
+		},
+		{
+			name: "橄榄",
+			x_offset: 50,
+			x_width: 57,
+			y_offset: 0,
+			y_width: 115,
+		},
+		{
+			name: "潜水",
+			x_offset: 12,
+			x_width: 62,
+			y_offset: 0,
+			y_width: 115,
+		},
+		{
+			name: "海豚（跃后）",
+			x_offset: 20,
+			x_width: 42,
+			y_offset: 0,
+			y_width: 115,
+		},
+		{
+			name: "蹦极",
+			x_offset: -20,
+			x_width: 110,
+			y_offset: 22,
+			y_width: 94,
+		},
+		{
+			name: "跳跳（最低）",
+			x_offset: 36,
+			x_width: 42,
+			y_offset: -25,
+			y_width: 115,
+		},
+		{
+			name: "跳跳（最高）",
+			x_offset: 36,
+			x_width: 42,
+			y_offset: -65,
+			y_width: 115,
+		}
+	];
 }
 
 function explosionHit(
@@ -1098,7 +1118,6 @@ function runRoofRanger() {
 	var explosive_col = Number(document.getElementById("ranger_input_col").value);
 	var cob_col = Number(document.getElementById("ranger_input_cobcol").value);
 	var explosive_type = document.getElementById("ranger_explosive_select").value;
-	var zombie_type = document.getElementById("ranger_type_select").value;
 
 	var center_x = 0, center_y = 0, range = 0;
 	var lower_row_limit = 1, upper_row_limit = 5, scene_row_count = 5;
@@ -1172,70 +1191,89 @@ function runRoofRanger() {
 		lower_row_limit = explosive_row - 3;
 		upper_row_limit = explosive_row + 3;
 	}
+		
+	var result = `爆心：x=${center_x}, y=${center_y}<br>
+	<style scoped>table,th,td{border: 1px solid black;border-collapse: collapse;}</style>
+	<table><tr><th>僵尸类型</th>`;
 
-	const hit = function(zombie_x, zombie_y) {
-		if (zombie_x + zombie_x_offset > 800) return false;
-		var left = zombie_x + zombie_x_offset;
-		var right = left + zombie_x_width;
-		var up = zombie_y + zombie_y_offset;
-		var down = up + zombie_y_width;
-		return explosionHit(center_x, center_y, range, left, right, up, down);
-	};
-	
-	[zombie_x_offset, zombie_x_width, zombie_y_offset, zombie_y_width] = getZombieCollision(zombie_type);
-
-	var result = `爆心：x=${center_x}, y=${center_y}<br>`;
-
-	for (var row = 1; row <= scene_row_count; row++) {
+	for (var row = 1; row <= 5; row++) {
 		if (row < lower_row_limit || row > upper_row_limit) continue;
-		var segments = [], current_segment_start = -1000, current_segment_state = "NoHit";
-		for (var zombie_x = center_x - range - zombie_x_width - zombie_x_offset - 1; 
-			zombie_x <= center_x + range - zombie_x_offset + 1;
-			zombie_x++) {
-			// 对于396, 392, ..., x -= 1, 2, ...
-			// 但如果是396.5, 392.5, ..., x -= 0, 1, ...
-			var zombie_y = 40 + (row - 1) * 85 + Math.floor(zombie_x < 400 ? (400 - (zombie_x + 0.5)) / 4 : 0);
-			var zombie_y_alt = 40 + (row - 1) * 85 + Math.floor(zombie_x < 400 ? (400 - zombie_x) / 4 : 0);
-			var norm_hit = hit(zombie_x, zombie_y_alt);
-			var edge_hit = hit(zombie_x, zombie_y);
-			var state = "";
-			if (norm_hit && edge_hit) {
-				state = "Hit";
-			} else if (!norm_hit && edge_hit) {
-				state = "ProbHit";
-			} else if (norm_hit && !edge_hit) {
-				state = "ProbNoHit";
-			} else {
-				state = "NoHit";
-			}
-			if (state != current_segment_state) {
-				if (current_segment_state != "NoHit") {
-					var seg = `[${current_segment_start},${zombie_x - 1}]`;
-					if (current_segment_state == "ProbHit") {
-						seg += "!";
-						notation_ex = current_segment_start;
-					} else if (current_segment_state == "ProbNoHit") {
-						seg += "?";
-						notation_ex = current_segment_start;
-					}
-					segments.push(seg);
-				}
-				current_segment_state = state;
-				current_segment_start = zombie_x;
-			}
-		}
-
-		if (segments.length == 0) {
-			result += `第${row}行：炸不到<br>`;
-		} else {
-			result += `第${row}行：`;
-			for (var i = 0; i < segments.length; i++) {
-				result += segments[i];
-				if (i != segments.length - 1) result += ", ";
-				else result += "<br>";
-			}
-		}
+		result += `<th>第${row}行</th>`
 	}
+
+	result += "</tr>";
+
+	for (var zombie_info of getZombieCollisionArray()) {
+		var zombie_name = zombie_info.name;
+		var zombie_x_offset = zombie_info.x_offset;
+		var zombie_x_width = zombie_info.x_width;
+		var zombie_y_offset = zombie_info.y_offset;
+		var zombie_y_width = zombie_info.y_width;
+
+		result += `<tr><td>${zombie_name}</td>`
+
+		const hit = function(zombie_x, zombie_y) {
+			if (zombie_x + zombie_x_offset > 800) return false;
+			var left = zombie_x + zombie_x_offset;
+			var right = left + zombie_x_width;
+			var up = zombie_y + zombie_y_offset;
+			var down = up + zombie_y_width;
+			return explosionHit(center_x, center_y, range, left, right, up, down);
+		};
+	
+		for (var row = 1; row <= scene_row_count; row++) {
+			if (row < lower_row_limit || row > upper_row_limit) continue;
+			var segments = [], current_segment_start = -1000, current_segment_state = "NoHit";
+			for (var zombie_x = center_x - range - zombie_x_width - zombie_x_offset - 1; 
+				zombie_x <= center_x + range - zombie_x_offset + 1;
+				zombie_x++) {
+				// 对于396, 392, ..., x -= 1, 2, ...
+				// 但如果是396.5, 392.5, ..., x -= 0, 1, ...
+				var zombie_y = 40 + (row - 1) * 85 + Math.floor(zombie_x < 400 ? (400 - (zombie_x + 0.5)) / 4 : 0);
+				var zombie_y_alt = 40 + (row - 1) * 85 + Math.floor(zombie_x < 400 ? (400 - zombie_x) / 4 : 0);
+				var norm_hit = hit(zombie_x, zombie_y_alt);
+				var edge_hit = hit(zombie_x, zombie_y);
+				var state = "";
+				if (norm_hit && edge_hit) {
+					state = "Hit";
+				} else if (!norm_hit && edge_hit) {
+					state = "ProbHit";
+				} else if (norm_hit && !edge_hit) {
+					state = "ProbNoHit";
+				} else {
+					state = "NoHit";
+				}
+				if (state != current_segment_state) {
+					if (current_segment_state != "NoHit") {
+						var seg = `[${current_segment_start},${zombie_x - 1}]`;
+						if (current_segment_state == "ProbHit") {
+							seg += "!";
+							notation_ex = current_segment_start;
+						} else if (current_segment_state == "ProbNoHit") {
+							seg += "?";
+							notation_ex = current_segment_start;
+						}
+						segments.push(seg);
+					}
+					current_segment_state = state;
+					current_segment_start = zombie_x;
+				}
+			}
+	
+			if (segments.length == 0) {
+				result += `<td>炸不到</td>`;
+			} else {
+				result += `<td>`;
+				for (var i = 0; i < segments.length; i++) {
+					result += segments[i];
+					if (i != segments.length - 1) result += ", ";
+					else result += "</td>";
+				}
+			}
+		}
+		result += "</tr>"
+	}
+	result += "</table>"
 
 	if (notation_ex != -1000) {
 		result += `! 表示当僵尸坐标取整数时（如${notation_ex}.000）炸不到，而不为整数时（如${notation_ex}.123）能炸到<br>`
@@ -1256,7 +1294,6 @@ function runRanger() {
 	var explosive_row = Number(document.getElementById("ranger_input_row").value);
 	var explosive_col = Number(document.getElementById("ranger_input_col").value);
 	var explosive_type = document.getElementById("ranger_explosive_select").value;
-	var zombie_type = document.getElementById("ranger_type_select").value;
 
 	var center_x = 0, center_y = 0, range = 0;
 	var lower_row_limit = 1, upper_row_limit = 6, scene_row_count = 6;
@@ -1265,11 +1302,11 @@ function runRanger() {
 	var zombie_y_data = [];
 
 	if (scene == "DE/NE") {
-		center_y = [120, 220, 320, 420, 520][explosive_row - 1];
+		center_y = 120 + 100 * (explosive_row - 1);
 		zombie_y_data = [50, 150, 250, 350, 450];
 		scene_row_count = 5;
 	} else if (scene == "PE/FE") {
-		center_y = [120, 205, 290, 375, 460, 545][explosive_row - 1];
+		center_y = 120 + 85 * (explosive_row - 1);
 		zombie_y_data = [50, 135, 220, 305, 390, 475];
 		scene_row_count = 6;
 	}
@@ -1291,36 +1328,56 @@ function runRanger() {
 		lower_row_limit = explosive_row - 3;
 		upper_row_limit = explosive_row + 3;
 	}
-	
-	[zombie_x_offset, zombie_x_width, zombie_y_offset, zombie_y_width] = getZombieCollision(zombie_type);
 
-	var result = `爆心：x=${center_x}, y=${center_y}<br>`;
+	var result = `爆心：x=${center_x}, y=${center_y}<br>
+	<style scoped>table,th,td{border: 1px solid black;border-collapse: collapse;}</style>
+	<table><tr><th>僵尸类型</th>`;
+
 	for (var row = 1; row <= scene_row_count; row++) {
 		if (row < lower_row_limit || row > upper_row_limit) continue;
-		var zombie_y = zombie_y_data[row - 1];
-		var zombie_y_lower = zombie_y + zombie_y_offset;
-		var zombie_y_upper = zombie_y_lower + zombie_y_width;
-		var zombie_y_dist = 0;
-		if (center_y < zombie_y_lower) {
-			zombie_y_dist = zombie_y_lower - center_y;
-		} else if (center_y > zombie_y_upper) {
-			zombie_y_dist = center_y - zombie_y_upper;
-		}
-		if (zombie_y_dist > range) {
-			result += `第${row}行：炸不到<br>`
-		} else {
-			var zombie_x_range = Math.floor(Math.sqrt(range * range - zombie_y_dist * zombie_y_dist));
-			var zombie_x_left_range = zombie_x_range + zombie_x_offset + zombie_x_width;
-			var zombie_x_right_range = zombie_x_range - zombie_x_offset;
-			var lbound = center_x - zombie_x_left_range;
-			var rbound = Math.min(800 - zombie_x_offset, center_x + zombie_x_right_range);
-			if (lbound < rbound) {
-				result += `第${row}行：[${lbound},${rbound}]<br>`;
+		result += `<th>第${row}行</th>`
+	}
+
+	result += "</tr>";
+	
+	for (var zombie_info of getZombieCollisionArray()) {
+		var zombie_name = zombie_info.name;
+		var zombie_x_offset = zombie_info.x_offset;
+		var zombie_x_width = zombie_info.x_width;
+		var zombie_y_offset = zombie_info.y_offset;
+		var zombie_y_width = zombie_info.y_width;
+
+		result += `<tr><td>${zombie_name}</td>`
+
+		for (var row = 1; row <= scene_row_count; row++) {
+			if (row < lower_row_limit || row > upper_row_limit) continue;
+			var zombie_y = zombie_y_data[row - 1];
+			var zombie_y_lower = zombie_y + zombie_y_offset;
+			var zombie_y_upper = zombie_y_lower + zombie_y_width;
+			var zombie_y_dist = 0;
+			if (center_y < zombie_y_lower) {
+				zombie_y_dist = zombie_y_lower - center_y;
+			} else if (center_y > zombie_y_upper) {
+				zombie_y_dist = center_y - zombie_y_upper;
+			}
+			if (zombie_y_dist > range) {
+				result += `<td>炸不到</td>`
 			} else {
-				result += `第${row}行：炸不到<br>`
+				var zombie_x_range = Math.floor(Math.sqrt(range * range - zombie_y_dist * zombie_y_dist));
+				var zombie_x_left_range = zombie_x_range + zombie_x_offset + zombie_x_width;
+				var zombie_x_right_range = zombie_x_range - zombie_x_offset;
+				var lbound = center_x - zombie_x_left_range;
+				var rbound = Math.min(800 - zombie_x_offset, center_x + zombie_x_right_range);
+				if (lbound < rbound) {
+					result += `<td>[${lbound},${rbound}]</td>`;
+				} else {
+					result += `<td>炸不到</td>`
+				}
 			}
 		}
+		result += "</tr>"
 	}
+	result += "</table>"
 
 	document.getElementById("ranger_output").innerHTML = result;
 }
@@ -1442,12 +1499,14 @@ function runAttacker() {
 		},
 	];
 
-	var result = "";
+	var result = `<table>
+	<style scoped>table,th,td{border: 1px solid black;border-collapse: collapse;}</style>
+	<tr><th>僵尸类型</th><th>僵尸坐标</th></tr>`;
 
 	for (var zombie_info of all_zombies) {
 		var zombie_left_range = plant_left_eat_pos - zombie_info.width - zombie_info.offset;
 		var zombie_right_range = plant_right_eat_pos - zombie_info.offset;
-		result += `${zombie_info.name}：[${zombie_left_range}, ${zombie_right_range}]<br>`;
+		result += `<tr><td>${zombie_info.name}</td><td>[${zombie_left_range},${zombie_right_range}]</td></tr>`;
 	}
 
 	var plant_left_explode_pos = plant_left_eat_pos - 20;
@@ -1518,14 +1577,16 @@ function runAttacker() {
 			}
 		}
 		if (segments.length != 0) {
-			result += `第${row}行小丑爆炸：`;
+			result += `<tr><td>第${row}行小丑爆炸</td><td>`;
 			for (var i = 0; i < segments.length; i++) {
 				result += segments[i];
 				if (i != segments.length - 1) result += ", ";
-				else result += "<br>";
+				else result += "</td></tr>";
 			}
 		}
 	}
+
+	result += "</table>"
 
 	if (notation_ex != -1000) {
 		result += `! 表示当僵尸坐标取整数时（如${notation_ex}.000）炸不到，而不为整数时（如${notation_ex}.123）能炸到<br>`
