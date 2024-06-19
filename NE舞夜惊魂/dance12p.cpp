@@ -39,27 +39,27 @@ void AScript() {
     FixMaid();
     for (int w: WaveList(1, 20)) {
         Puff(w, 160, 600);
-        P(w, 316, 2, 9);
+        P(w, PCP, 2, 9);
         P(w, 359, 4, 9);
         if (w == 9 || w == 19) {
-            PForEnd(w, 601 + 316, 2, 9);
+            PForEnd(w, 601 + PCP, 2, 9);
             PForEnd(w, 601 + 359, 4, 9);
             Puff(w, 160 + 601, 600 + 601);
-            PForEnd(w, 601 * 2 + 316, 2, 9);
+            PForEnd(w, 601 * 2 + PCP, 2, 9);
             PForEnd(w, 601 * 2 + 359, 4, 9);
             Puff(w, 160 + 601 * 2, 600 + 601 * 2);
-            PForEnd(w, 601 * 3 + 316, 2, 9);
+            PForEnd(w, 601 * 3 + PCP, 2, 9);
             PForEnd(w, 601 * 3 + 359, 4, 9);
         }
         if (w == 20) {
             PP(w, 350, 8);
-            PForEnd(w, 601 + 316, 2, 9);
+            PForEnd(w, 601 + PCP, 2, 9);
             PForEnd(w, 601 + 359, 4, 9);
             Puff(w, 160 + 601, 600 + 601);
-            PForEnd(w, 601 * 2 + 316, 2, 9);
+            PForEnd(w, 601 * 2 + PCP, 2, 9);
             PForEnd(w, 601 * 2 + 359, 4, 9);
             Puff(w, 160 + 601 * 2, 600 + 601 * 2);
-            PForEnd(w, 601 * 3 + 316, 2, 9);
+            PForEnd(w, 601 * 3 + PCP, 2, 9);
             PForEnd(w, 601 * 3 + 359, 4, 9);
             AConnect(ATime(w, 3000), [](){
                 AMaidCheats::Move();

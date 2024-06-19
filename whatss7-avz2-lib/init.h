@@ -31,6 +31,9 @@ void SelectZombiesForScene(std::string scene = "Auto", bool natural = false) {
     if (scene == "RANDOM") {
         ASetZombies(ACreateRandomTypeList(), natural ? ASetZombieMode::INTERNAL : ASetZombieMode::AVERAGE);
     } else if (scene == "PE" || scene == "FE") {
+        // 相比跳跳来说，气球相对好处理，用跳跳替换PE-OLD中的气球
+        zombies = { APJ_0, ACG_3, AWW_8, ABC_12, AHT_14, AXC_15, AKG_17, ATT_18, ABJ_20, AFT_21, ABY_23, AHY_32 };
+    } else if (scene == "PE-OLD" || scene == "FE-OLD") {
         zombies = { APJ_0, ACG_3, AWW_8, ABC_12, AHT_14, AXC_15, AQQ_16, AKG_17, ABJ_20, AFT_21, ABY_23, AHY_32 };
     } else if (scene == "DE") {
         // DE没有水路僵尸

@@ -42,7 +42,7 @@ void AutoManageCob() {
 // 从 `aCobManager` 发射一对炮。
 // 若不设置位置，则泳池场景默认炸2-9和5-9，其他场景默认炸2-9和4-9。
 // 请注意，本函数先填列数，再填行数。
-// 若不设置时间，则 316cs (`PCP`) 时生效
+// 若不设置时间，则 318cs (`PCP`) 时生效。
 // 屋顶场景，1-2路的炮优先选择风炮；3-5路优先选择平炮。
 void PP(int wave, int time = -1, float col = 9, std::vector<int> rows = {}) {
     if (rows.empty()) {
@@ -101,17 +101,16 @@ void PP(int wave, int time = -1, float col = 9, std::vector<int> rows = {}) {
     }
 }
 
-// 从 `aCobManager` 发射一炮。
-void P(int wave, int time, int row, float col) {
-    std::vector<int> rows;
-    rows.push_back(row);
+// 从 `aCobManager` 发射一对炮。
+// 本函数与 `PP()` 完全相同，但除所炸行数外没有默认值。可用作更好的语义解释。
+void BB(int wave, int time, float col, std::vector<int> rows = {}) {
     PP(wave, time, col, rows);
 }
 
 // 从 `aCobManager` 发射一对炮。
 // 若不设置位置，则前院场景默认炸1-8和4-8，则泳池场景默认炸1-8和5-8，屋顶场景默认炸2-8和4-8。
 // 请注意，本函数先填列数，再填行数。
-// 若不设置时间，则 426cs (`PCP + 110`) 时生效
+// 若不设置时间，则 428cs (`PCP + 110`) 时生效。
 // 屋顶场景，1-2路的炮优先选择风炮；3-5路优先选择平炮。
 void DD(int wave, int time = -1, float col = 8, std::vector<int> rows = {}) {
     std::string scene = GetCurrentScene();
@@ -126,6 +125,66 @@ void DD(int wave, int time = -1, float col = 8, std::vector<int> rows = {}) {
     }
     if (time < 0) time = PCP + 110;
     PP(wave, time, col, rows);
+}
+
+// 从 `aCobManager` 发射一对炮。
+// 若不设置位置，则前院场景默认炸2-4和4-4，则泳池场景默认炸1-4和5-4，屋顶场景默认炸2-5和4-5。
+// 请注意，本函数先填列数，再填行数。
+// 若不设置时间，则前院场景 579cs (`PCP + 261`) 时生效，后院场景 548cs (`PCP + 230`) 时生效，屋顶场景 538cs (`PCP + 220`) 时生效。
+// 屋顶场景，1-2路的炮优先选择风炮；3-5路优先选择平炮。
+void dd(int wave, int time = -1, float col = -1, std::vector<int> rows = {}) {
+    std::string scene = GetCurrentScene();
+    if (col < 0) {
+        if (scene == "RE" || scene == "ME") {
+            col = 5;
+        } else {
+            col = 4;
+        }
+    }
+    if (rows.empty()) {
+        if (scene == "PE" || scene == "FE") {
+            rows = {1, 5};
+        } else if (scene == "DE" || scene == "NE") {
+            rows = {1, 4};
+        } else {
+            rows = {2, 4};
+        }
+    }
+    if (time < 0) {
+        if (scene == "DE" || scene == "NE"){
+            time = PCP + 261;
+        } else if (scene == "PE" || scene == "FE")  {
+            time = PCP + 230;
+        } else {
+            time = PCP + 220;
+        }
+    }
+    PP(wave, time, col, rows);
+}
+
+// 从 `aCobManager` 发射一炮。
+void P(int wave, int time, int row, float col) {
+    std::vector<int> rows;
+    rows.push_back(row);
+    PP(wave, time, col, rows);
+}
+
+// 从 `aCobManager` 发射一炮。
+// 本函数与 `P()` 完全相同，可用作更好的语义解释。
+void B(int wave, int time, int row, float col) {
+    P(wave, time, row, col);
+}
+
+// 从 `aCobManager` 发射一炮。
+// 本函数与 `P()` 完全相同，可用作更好的语义解释。
+void D(int wave, int time, int row, float col) {
+    P(wave, time, row, col);
+}
+
+// 从 `aCobManager` 发射一炮。
+// 本函数与 `P()` 完全相同，可用作更好的语义解释。
+void d(int wave, int time, int row, float col) {
+    P(wave, time, row, col);
 }
 
 // 在屋顶场景使用炮尾在指定列的炮发射一炮。
@@ -178,11 +237,11 @@ void ManualP(int wave, int time, int row, float col, ACobManager &mgr) {
             mgr.RoofFire(row, col);
         });
     } else if ((scene == "PE" || scene == "FE") && (row == 3 || row == 4)) {
-        AConnect(ATime(wave, time - 378), [row, col](){
+        AConnect(ATime(wave, time - PCFT), [row, col](){
             aCobManager.Fire(row, col);
         });
     } else {
-        AConnect(ATime(wave, time - 373), [&mgr, row, col](){
+        AConnect(ATime(wave, time - CFT), [&mgr, row, col](){
             mgr.Fire(row, col);
         });
     }
@@ -244,86 +303,97 @@ int SchedulePPExceptOne(int wave, int time, float col) {
             sum++;
         }
     }
+    // 初始化发炮函数，使得在天台优先使用平炮
+    std::function<void(int, int, int, int)> AutoP = nullptr;
+    if (scene == "RE" || scene == "ME") {
+        AutoP = [](int wave, int time, int row, float col) {
+            RoofP(wave, time, {8, 7, 6, 5, 4, 3, 2, 1}, row, col);
+        };
+    } else {
+        AutoP = [](int wave, int time, int row, float col) {
+            P(wave, time, row, col);
+        };
+    }
     if (scene == "PE" || scene == "FE") {
         // 六行场地收尾
         if (dist[1] == 1) {
             choice = 1;
-            if (dist[2] != 0 || dist[3] != 0) { P(wave, time, 3, col); }
-            if (dist[4] != 0 || dist[5] != 0 || dist[6] != 0) { P(wave, time, 5, col); }
+            if (dist[2] != 0 || dist[3] != 0) { AutoP(wave, time, 3, col); }
+            if (dist[4] != 0 || dist[5] != 0 || dist[6] != 0) { AutoP(wave, time, 5, col); }
         } else if (dist[6] == 1) {
             choice = 6;
-            if (dist[4] != 0 || dist[5] != 0) { P(wave, time, 4, col); }
-            if (dist[1] != 0 || dist[2] != 0 || dist[3] != 0) { P(wave, time, 2, col); }
+            if (dist[4] != 0 || dist[5] != 0) { AutoP(wave, time, 4, col); }
+            if (dist[1] != 0 || dist[2] != 0 || dist[3] != 0) { AutoP(wave, time, 2, col); }
         } else if (dist[1] == 0 && dist[2] == 1) {
             choice = 2;
             bool middle_done = false;
-            if (dist[3] != 0) { P(wave, time, 4, col); middle_done = true; }
-            if (dist[6] != 0) { P(wave, time, 5, col); middle_done = true; }
-            if (!middle_done && (dist[4] != 0 || dist[5] != 0)) { P(wave, time, 4, col); }
+            if (dist[3] != 0) { AutoP(wave, time, 4, col); middle_done = true; }
+            if (dist[6] != 0) { AutoP(wave, time, 5, col); middle_done = true; }
+            if (!middle_done && (dist[4] != 0 || dist[5] != 0)) { AutoP(wave, time, 4, col); }
         } else if (dist[6] == 0 && dist[5] == 1) {
             choice = 5;
             bool middle_done = false;
-            if (dist[1] != 0) { P(wave, time, 2, col); middle_done = true; }
-            if (dist[4] != 0) { P(wave, time, 3, col); middle_done = true; }
-            if (!middle_done && (dist[2] != 0 || dist[3] != 0)) { P(wave, time, 2, col); }
+            if (dist[1] != 0) { AutoP(wave, time, 2, col); middle_done = true; }
+            if (dist[4] != 0) { AutoP(wave, time, 3, col); middle_done = true; }
+            if (!middle_done && (dist[2] != 0 || dist[3] != 0)) { AutoP(wave, time, 2, col); }
         } else if (dist[1]) {
             choice = 1;
-            if (dist[2] != 0 || dist[3] != 0) { P(wave, time, 3, col); }
-            if (dist[4] != 0 || dist[5] != 0 || dist[6] != 0) { P(wave, time, 5, col); }
+            if (dist[2] != 0 || dist[3] != 0) { AutoP(wave, time, 3, col); }
+            if (dist[4] != 0 || dist[5] != 0 || dist[6] != 0) { AutoP(wave, time, 5, col); }
         } else if (dist[6]) {
             choice = 6;
-            if (dist[4] != 0 || dist[5] != 0) { P(wave, time, 4, col); }
-            if (dist[1] != 0 || dist[2] != 0 || dist[3] != 0) { P(wave, time, 2, col); }
+            if (dist[4] != 0 || dist[5] != 0) { AutoP(wave, time, 4, col); }
+            if (dist[1] != 0 || dist[2] != 0 || dist[3] != 0) { AutoP(wave, time, 2, col); }
         } else if (dist[2]) {
             choice = 2;
-            if (dist[3] != 0 || dist[4] != 0 || dist[5] != 0) { P(wave, time, 4, col); }
+            if (dist[3] != 0 || dist[4] != 0 || dist[5] != 0) { AutoP(wave, time, 4, col); }
         } else if (dist[5]) {
             choice = 5;
-            if (dist[3] != 0 || dist[4] != 0) { P(wave, time, 3, col); }
+            if (dist[3] != 0 || dist[4] != 0) { AutoP(wave, time, 3, col); }
         }
     } else {
         // 五行场地收尾
         if (dist[1] == 1) {
             choice = 1;
             bool middled = false;
-            if (dist[2]) { P(wave, time, 3, col); middled = true; }
-            if (dist[5]) { P(wave, time, 4, col); middled = true; }
-            if (!middled && (dist[3] || dist[4])) { P(wave, time, 3, col); }
+            if (dist[2]) { AutoP(wave, time, 3, col); middled = true; }
+            if (dist[5]) { AutoP(wave, time, 4, col); middled = true; }
+            if (!middled && (dist[3] || dist[4])) { AutoP(wave, time, 3, col); }
         } else if (dist[3] == 1) {
             choice = 3;
-            if (dist[1] || dist[2]) { P(wave, time, 1, col); }
-            if (dist[4] || dist[5]) { P(wave, time, 5, col); }
+            if (dist[1] || dist[2]) { AutoP(wave, time, 1, col); }
+            if (dist[4] || dist[5]) { AutoP(wave, time, 5, col); }
         } else if (dist[5] == 1) {
             choice = 5;
             bool middled = false;
-            if (dist[1]) { P(wave, time, 2, col); middled = true; }
-            if (dist[4]) { P(wave, time, 3, col); middled = true; }
-            if (!middled && (dist[2] || dist[3])) { P(wave, time, 2, col); }
+            if (dist[1]) { AutoP(wave, time, 2, col); middled = true; }
+            if (dist[4]) { AutoP(wave, time, 3, col); middled = true; }
+            if (!middled && (dist[2] || dist[3])) { AutoP(wave, time, 2, col); }
         } else if (dist[1] == 0 && dist[2] == 1) {
             choice = 2;
-            if (dist[3] || dist[4] || dist[5]) { P(wave, time, 4, col); }
+            if (dist[3] || dist[4] || dist[5]) { AutoP(wave, time, 4, col); }
         } else if (dist[5] == 0 && dist[4] == 1) {
             choice = 4;
-            if (dist[1] || dist[2] || dist[3]) { P(wave, time, 2, col); }
+            if (dist[1] || dist[2] || dist[3]) { AutoP(wave, time, 2, col); }
         } else if (dist[1]) {
             choice = 1;
             bool middled = false;
-            if (dist[2]) { P(wave, time, 3, col); middled = true; }
-            if (dist[5]) { P(wave, time, 4, col); middled = true; }
-            if (!middled && (dist[3] || dist[4])) { P(wave, time, 3, col); }
+            if (dist[2]) { AutoP(wave, time, 3, col); middled = true; }
+            if (dist[5]) { AutoP(wave, time, 4, col); middled = true; }
+            if (!middled && (dist[3] || dist[4])) { AutoP(wave, time, 3, col); }
         } else if (dist[3]) {
             choice = 3;
-            if (dist[1] || dist[2]) { P(wave, time, 1, col); }
-            if (dist[4] || dist[5]) { P(wave, time, 5, col); }
+            if (dist[1] || dist[2]) { AutoP(wave, time, 1, col); }
+            if (dist[4] || dist[5]) { AutoP(wave, time, 5, col); }
         } else if (dist[5]) {
             choice = 5;
             bool middled = false;
-            if (dist[1]) { P(wave, time, 2, col); middled = true; }
-            if (dist[4]) { P(wave, time, 3, col); middled = true; }
-            if (!middled && (dist[2] || dist[3])) { P(wave, time, 2, col); }
+            if (dist[1]) { AutoP(wave, time, 2, col); middled = true; }
+            if (dist[4]) { AutoP(wave, time, 3, col); middled = true; }
+            if (!middled && (dist[2] || dist[3])) { AutoP(wave, time, 2, col); }
         } else if (dist[2]) {
             choice = 2;
-            if (dist[3] || dist[4] || dist[5]) { P(wave, time, 4, col); }
+            if (dist[3] || dist[4] || dist[5]) { AutoP(wave, time, 4, col); }
         } else if (dist[4]) {
             choice = 4;
         }

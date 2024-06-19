@@ -77,14 +77,15 @@
     <p>参考无法举锤坐标 9普通650 8普通570 7普通490 6普通410</p>
     <p>时间可接受格式如下，多个时机使用空格隔开，时间参数不接受表达式只接受数值</p>
     <p>
-        (1) 316 表示本波 316 时机
+        (1) 318 表示本波 318 时机
         (2) w:1050 表示本波 1050 时机
-        (3) w+1:316 表示下波 316 时机
+        (3) w+1:318 表示下波 318 时机
         (4) w+2:~ 表示下下波激活时机
         (5) w:~+107 表示本波激活时机+107
     </p>
-    <p>目前只接受本波用冰，例如1750波不能设置1761冰，否则无法正确计算；每波最多一个冰</p>
-    <p>投掷时间后可以添加一个星号，如 w+0:316* 表示植物激活（相对于炮激活）</p>
+    <p>目前只接受本波时机，每波最多一个冰<br>
+    例如1750波不能设置1761冰（下波巨人不会计算这个冰），也不能使用时机w:1761（不会计算下波的冰等事件）</p>
+    <p>投掷时间后可以添加一个星号，如 w+0:318* 表示植物激活（相对于炮激活）</p>
     <p>WF: Walk Formula 行走分段用于在速度计算器中验证本工具的计算正确性 SAFE: 不会砸扁位于何处的植物</p>
 
     <br/>
@@ -100,6 +101,7 @@
     
     <p>附赠小工具：爆炸范围计算，计算某处的炮能否炸到巨人</p>
     <p>注：跃前海豚、落地气球、无杆跳跳同普僵；<br>
+    仅考虑爆炸范围是否与僵尸碰撞箱相交，部分僵尸可能存在特殊判定，如土豆炸不到气球；<br>
     右范围以可伤截断；左范围因不同僵尸进家线不同，不作截断。</p>
     <label for="ranger_scene_select">场景：</label>
     <select id="ranger_scene_select" name="ranger_scene_select" onchange="setRangerEnable()">
@@ -112,18 +114,19 @@
         <option value="Cob">炮</option>
         <option value="Doom">核</option>
         <option value="Cherry">樱桃</option>
+        <option value="Potato">土豆</option>
     </select>
     <label for="ranger_input_row">炮弹行：</label>
-    <input type="number" id="ranger_input_row" value="2">
+    <input type="number" id="ranger_input_row" value="2" min="1" max="6">
     <label for="ranger_input_col">炮弹列：</label>
     <input type="number" id="ranger_input_col" value="9" step="0.0125">
     <label for="ranger_input_row" id="ranger_input_cobcol_tag" hidden>屋顶炮尾列：</label>
     <input type="number" id="ranger_input_cobcol" value="1" hidden>
     <button onclick="runRanger()">计算</button>
-    <button onclick="runRangerMinusX()">x-1</button>
-    <button onclick="runRangerPlusX()">x+1</button>
-    <button onclick="runRangerMinusY()">y-1</button>
-    <button onclick="runRangerPlusY()">y+1</button>
+    <button onclick="runRangerMinusY()">行-1</button>
+    <button onclick="runRangerPlusY()">行+1</button>
+    <button onclick="runRangerMinusX()">列-1</button>
+    <button onclick="runRangerPlusX()">列+1</button>
     <p id="ranger_output"></p>
     
     <br>
@@ -138,7 +141,7 @@
         <option value="RE/ME">RE/ME</option>
     </select>
     <label for="attacker_plant_select">植物：</label>
-    <select id="attacker_plant_select" name="attacker_plant_select">
+    <select id="attacker_plant_select" name="attacker_plant_select" onchange="setAttackerEnable()">
         <option value="CobHead">炮头</option>
         <option value="CobTail">炮尾</option>
         <option value="TallNut">高坚</option>
@@ -146,14 +149,14 @@
         <option value="Normal">普通</option>
     </select>
     <label for="attacker_input_row">植物行：</label>
-    <input type="number" id="attacker_input_row" value="2">
+    <input type="number" id="attacker_input_row" value="2" min="1" max="6">
     <label for="attacker_input_col">植物列：</label>
-    <input type="number" id="attacker_input_col" value="8">
+    <input type="number" id="attacker_input_col" value="8" min="2" max="9">
     <button onclick="runAttacker()">计算</button>
-    <button onclick="runAttackerMinusX()">x-1</button>
-    <button onclick="runAttackerPlusX()">x+1</button>
-    <button onclick="runAttackerMinusY()">y-1</button>
-    <button onclick="runAttackerPlusY()">y+1</button>
+    <button onclick="runAttackerMinusY()">行-1</button>
+    <button onclick="runAttackerPlusY()">行+1</button>
+    <button onclick="runAttackerMinusX()">列-1</button>
+    <button onclick="runAttackerPlusX()">列+1</button>
     <p id="attacker_output"></p>
 </body>
 

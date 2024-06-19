@@ -519,7 +519,7 @@ function addSegment() {
             <label for="${segmentId}_iceTime">用冰时机：</label>
             <input type="number" id="${segmentId}_iceTime" value="0" placeholder="0">
             <label for="${segmentId}_cobTime">激活时机：</label>
-            <input type="number" id="${segmentId}_cobTime" value="316" placeholder="316">
+            <input type="number" id="${segmentId}_cobTime" value="318" placeholder="318">
             <label for="${segmentId}_throwTime">投掷时机：</label>
             <input type="text" id="${segmentId}_throwTime" value="w+1:~" placeholder="w+1:~">
             <label for="${segmentId}_fodderTime">垫材时机：</label>
@@ -584,7 +584,7 @@ function to_str(num) {
 }
 
 /**
- * 将形如 "w+1:316" 形式的字符串转为 WaveTime 结构。
+ * 将形如 "w+1:318" 形式的字符串转为 WaveTime 结构。
  * @param {string} str - 输入字符串
  * @returns {WaveTime} - 转换结果
  */
@@ -635,7 +635,7 @@ function parseTime(str) {
 }
 
 /**
- * 将形如 "w+1:316 w+3:316" 形式的字符串转为 WaveTime 结构的列表。
+ * 将形如 "w+1:318 w+3:318" 形式的字符串转为 WaveTime 结构的列表。
  * @param {string} str - 输入字符串
  * @returns {[WaveTime]} 转换结果
  */
@@ -1013,28 +1013,28 @@ function setRangerEnable() {
 function getZombieCollisionArray() {
 	return [
 		{
-			name: "巨人",
+			name: "<span style=\"color:#4CAF50;\">巨人</span>",
 			x_offset: -17,
 			x_width: 125,
 			y_offset: -38,
 			y_width: 154
 		}, 
 		{
-			name: "冰车/篮球",
+			name: "<span style=\"color:#4CAF50;\">冰车</span>/篮球",
 			x_offset: 0,
 			x_width: 153,
 			y_offset: -13,
 			y_width: 140
 		},
 		{
-			name: "普僵/扶梯/小丑/撑杆/舞王/小鬼",
+			name: "普僵/<span style=\"color:#4CAF50;\">扶梯</span>/小丑/撑杆/舞王/小鬼",
 			x_offset: 36,
 			x_width: 42,
 			y_offset: 0,
 			y_width: 115,
 		},
 		{
-			name: "矿工（地下）",
+			name: "<span style=\"color:#4CAF50;\">矿工（地下）</span>",
 			x_offset: 50,
 			x_width: 28,
 			y_offset: 0,
@@ -1055,6 +1055,13 @@ function getZombieCollisionArray() {
 			y_width: 115,
 		},
 		{
+			name: "海豚（跃后）",
+			x_offset: 20,
+			x_width: 42,
+			y_offset: 0,
+			y_width: 115,
+		},
+		{
 			name: "橄榄",
 			x_offset: 50,
 			x_width: 57,
@@ -1065,13 +1072,6 @@ function getZombieCollisionArray() {
 			name: "潜水",
 			x_offset: 12,
 			x_width: 62,
-			y_offset: 0,
-			y_width: 115,
-		},
-		{
-			name: "海豚（跃后）",
-			x_offset: 20,
-			x_width: 42,
 			y_offset: 0,
 			y_width: 115,
 		},
@@ -1190,10 +1190,18 @@ function runRoofRanger() {
 		range = 250;
 		lower_row_limit = explosive_row - 3;
 		upper_row_limit = explosive_row + 3;
+	} else if (explosive_type == "Potato") {
+		center_x = Math.floor(explosive_col) * 80 - 20;
+		center_y = 110 + (explosive_row - 1) * 85;
+		if (center_x < 480) center_y += (480 - center_x) / 4;
+		range = 60;
+		lower_row_limit = explosive_row;
+		upper_row_limit = explosive_row;
 	}
 		
-	var result = `爆心：x=${center_x}, y=${center_y}<br>
-	<style scoped>table,th,td{border: 1px solid black;border-collapse: collapse;}</style>
+	var result = `爆心：x=${center_x}`;
+	if (explosive_type != "Potato") result += `, y=${center_y}<br>`;
+	result += `<style scoped>table,th,td{border: 1px solid black;border-collapse: collapse;}</style>
 	<table><tr><th>僵尸类型</th>`;
 
 	for (var row = 1; row <= 5; row++) {
@@ -1327,10 +1335,16 @@ function runRanger() {
 		range = 250;
 		lower_row_limit = explosive_row - 3;
 		upper_row_limit = explosive_row + 3;
+	} else if (explosive_type == "Potato") {
+		center_x = Math.floor(explosive_col) * 80 - 20;
+		range = 60;
+		lower_row_limit = explosive_row;
+		upper_row_limit = explosive_row;
 	}
 
-	var result = `爆心：x=${center_x}, y=${center_y}<br>
-	<style scoped>table,th,td{border: 1px solid black;border-collapse: collapse;}</style>
+	var result = `爆心：x=${center_x}`;
+	if (explosive_type != "Potato") result += `, y=${center_y}<br>`;
+	result += `<style scoped>table,th,td{border: 1px solid black;border-collapse: collapse;}</style>
 	<table><tr><th>僵尸类型</th>`;
 
 	for (var row = 1; row <= scene_row_count; row++) {
@@ -1453,7 +1467,22 @@ function runAttacker() {
 
 	var all_zombies = [
 		{
-			name: "撑杆（跃后）/橄榄/舞王/矿工/小鬼",
+			name: "<span style=\"color:#4CAF50;\">巨人</span>",
+			offset: -30,
+			width: 89
+		},
+		{
+			name: "<span style=\"color:#4CAF50;\">冰车</span>/篮球",
+			offset: 10,
+			width: 133
+		},
+		{
+			name: "<span style=\"color:#4CAF50;\">扶梯</span>",
+			offset: 10,
+			width: 50
+		},
+		{
+			name: "撑杆（跃后）/橄榄/舞王/<span style=\"color:#4CAF50;\">矿工</span>/小鬼",
 			offset: 50,
 			width: 20
 		},
@@ -1473,16 +1502,6 @@ function runAttacker() {
 			width: 50
 		},
 		{
-			name: "冰车/篮球",
-			offset: 10,
-			width: 133
-		},
-		{
-			name: "巨人",
-			offset: -30,
-			width: 89
-		},
-		{
 			name: "潜水",
 			offset: -5,
 			width: 55
@@ -1491,11 +1510,6 @@ function runAttacker() {
 			name: "跳跳",
 			offset: 10,
 			width: 30
-		},
-		{
-			name: "梯子",
-			offset: 10,
-			width: 50
 		},
 	];
 
@@ -1577,7 +1591,7 @@ function runAttacker() {
 			}
 		}
 		if (segments.length != 0) {
-			result += `<tr><td>第${row}行小丑爆炸</td><td>`;
+			result += `<tr><td>第${row}行<span style=\"color:#4CAF50;\">小丑</span>爆炸</td><td>`;
 			for (var i = 0; i < segments.length; i++) {
 				result += segments[i];
 				if (i != segments.length - 1) result += ", ";
@@ -1596,15 +1610,29 @@ function runAttacker() {
 	document.getElementById("attacker_output").innerHTML = result;
 }
 
+function setAttackerEnable() {
+	var plant_type = document.getElementById("attacker_plant_select").value;
+	if (plant_type == "CobHead") {
+		document.getElementById("attacker_input_col").min = 2;
+		document.getElementById("attacker_input_col").max = 9;
+	} else if (plant_type == "CobTail") {
+		document.getElementById("attacker_input_col").min = 1;
+		document.getElementById("attacker_input_col").max = 8;
+	} else {
+		document.getElementById("attacker_input_col").min = 1;
+		document.getElementById("attacker_input_col").max = 9;
+	}
+}
+
 function runAttackerPlusX() {
 	var col = Number(document.getElementById("attacker_input_col").value);
-	document.getElementById("attacker_input_col").value = Math.max(Math.floor(col + 1), 1);
+	document.getElementById("attacker_input_col").value = Math.min(Math.floor(col + 1), document.getElementById("attacker_input_col").max);
 	runAttacker();
 }
 
 function runAttackerMinusX() {
 	var col = Number(document.getElementById("attacker_input_col").value);
-	document.getElementById("attacker_input_col").value = Math.max(Math.floor(col - 1), 1);
+	document.getElementById("attacker_input_col").value = Math.max(Math.floor(col - 1), document.getElementById("attacker_input_col").min);
 	runAttacker();
 }
 

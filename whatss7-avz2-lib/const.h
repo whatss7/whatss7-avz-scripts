@@ -2,7 +2,7 @@
 #define WALIB_CONST_H
 
 // 常见预判炸时间点（有8列炮情况下最晚舞王不召唤时间点）
-const int PRE_COB_POINT = 316;
+const int PRE_COB_POINT = 318;
 // 玉米加农炮发射到生效用时
 const int COB_FLYING_TIME = 373;
 // 泳池修正玉米加农炮发射到生效用时
