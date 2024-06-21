@@ -528,6 +528,9 @@ function addSegment() {
             <input type="text" id="${segmentId}_analyzeTime" value="w+3:~" placeholder="w+3:~">
             <button onclick="removeSegment('${segmentId}')">删除</button>
             <br/>
+            <label for="${segmentId}_allCobTime">用炮时机：</label>
+            <input type="text" id="${segmentId}_allCobTime" style="width: 280px;" value="~ ~">
+            <br/>
             <p id="${segmentId}_waveLenText">波长：</p>
             <p id="${segmentId}_resultText">目前没有计算结果</p>
         </div>`;
@@ -555,6 +558,7 @@ function removeSegment(segmentId) {
  * @typedef {Object} WaveInfo
  * @property {number} ice - 用冰时间
  * @property {number} cob - 本波激活时间
+ * @property {[number]} all_cob - 本波用炮时间
  * @property {WaveTime} throw_info - 本波红眼投掷时间
  * @property {[WaveTime]} fodder_info - 本波红眼需要计算的时间
  * @property {[WaveTime]} analyze_info - 本波红眼需要计算的时间
@@ -598,7 +602,7 @@ function parseTime(str) {
     if (str == "") return { valid: false };
 
     var [wave, time] = str.split(':');
-    // 如果没有分号，可能是本波内的时机
+    // 如果没有冒号，可能是本波内的时机
     if (time === undefined) {
         if (str == "~") {
             return { wave: 0, time: 0, valid: true, type: "auto", special: special };
@@ -660,17 +664,32 @@ function collectInfo() {
         var info = {
             ice: Number(document.getElementById(`${segment.id}_iceTime`).value),
             cob: Number(document.getElementById(`${segment.id}_cobTime`).value),
+			all_cob: parseMultiTime(document.getElementById(`${segment.id}_allCobTime`).value),
             throw_info: parseTime(document.getElementById(`${segment.id}_throwTime`).value),
             fodder_info: parseMultiTime(document.getElementById(`${segment.id}_fodderTime`).value),
             analyze_info: parseMultiTime(document.getElementById(`${segment.id}_analyzeTime`).value)
         };
         // 顺便计算一下波长
         document.getElementById(`${segment.id}_waveLenText`).textContent = `波长：${info.cob < 401 ? 601 : info.cob + 200}`
+		var all_cob_time_number = [];
+		// 将all_cob列表转换为Number
+		for (var i of info.all_cob) {
+			if (i.wave != 0) {
+				document.getElementById(`${segment.id}_resultText`).textContent = "用炮时机只能是本波时机"
+				fail = true;
+				break;
+			} else if (!i.special) {
+				if (i.type == "auto") all_cob_time_number.push(info.cob + i.time);
+				else all_cob_time_number.push(i.time);
+			}
+		}
+		info.all_cob = all_cob_time_number;
         // throw_info无效时，可能是被瞬杀，不视作失败
-        if (isNaN(info.ice) || isNaN(info.cob)) {
+        if ((isNaN(info.ice) || isNaN(info.cob))) {
             document.getElementById(`${segment.id}_resultText`).textContent = "本波数据存在问题"
             fail = true;
-        } else {
+        } 
+		if (!fail) {
             document.getElementById(`${segment.id}_resultText`).textContent = ""
             infos.push(info);
         }
@@ -727,7 +746,6 @@ function extractEvents(input_info, current_wave_no) {
     }
     // 提取统计信息
     for (var t of current_info.analyze_info) {
-        // cob模式的时间后续会被覆盖，这里是什么无所谓
         var info = `w+${t.wave}:${t.time}${t.special ? "*" : ""}`;
         if (t.type == "auto") {
             if (t.time == 0) info = `w+${t.wave}:~${t.special ? "*" : ""}`;
@@ -949,15 +967,120 @@ function calculateOne(input_info, segment_id, segment_no) {
     document.getElementById(`${segment_id}_resultText`).innerHTML = result_str;
 }
 
+/**
+ * 计算需要多少炮运行节奏，并显示计算结果。
+ * @param {[number]} cob_uses 
+ * @param {number} cycle_length
+ */
+function calculateCobCount(cob_uses, cycle_length) {
+	var extended_uses = cob_uses.slice(), extended_length = cycle_length;
+	while (extended_length < 3475) {
+		for (var i of cob_uses) {
+			extended_uses.push(extended_length + i);
+		}
+		extended_length += cycle_length;
+	}
+	extended_uses.sort((a, b) => a - b);
+	console.log(extended_length, extended_uses);
+	// 计算炮数至少需要多少成立
+	var min_ok_count = 0;
+	for (var i = 1; i < extended_uses.length; i++) {
+		var fail = false;
+		for (var j = 0; j < extended_uses.length; j++) {
+			var current_time = extended_uses[j];
+			var next_index = j + extended_uses.length - i;
+			var next_time = extended_uses[next_index % extended_uses.length];
+			if (next_index >= extended_uses.length) {
+				next_time += extended_length;
+			}
+			if (next_time - current_time < 3475) {
+				fail = true;
+				break;
+			}
+		}
+		if (fail) {
+			min_ok_count = extended_uses.length - i + 1;
+			break;
+		}
+	}
+    document.getElementById("reuse_output").innerHTML = `共需要${min_ok_count}炮`;
+	// 绘制图像
+    document.getElementById(`cooldown`).innerHTML = "";
+	var start_time = extended_uses[0] - extended_length;
+	var end_time = extended_uses[extended_uses.length - 1] + extended_length + 3475;
+	var cobs = [];
+	var cob_bars = [];
+	for (var i = 0; i < min_ok_count; i++) {
+		cobs.push(start_time - 3475);
+		var bar = document.createElement('div');
+		bar.style = "width: 500px; height: 20px; border: 1px solid #000; position: relative;";
+		cob_bars.push(bar);
+	}
+	function createDiv(color, use, end, info = "") {
+		var cooldown = document.createElement('div');
+		cooldown.style.height = "20px";
+		cooldown.style.backgroundColor = color;
+		cooldown.style.borderLeft = "1px solid #000"
+		cooldown.style.borderRight = "1px solid #000"
+		cooldown.style.position = "absolute";
+		cooldown.style.left = `${(use - start_time) / (end_time - start_time) * 100}%`;
+		cooldown.style.width = `${(end - use)  / (end_time - start_time) * 100}%`;
+		if (info == "") {
+			cooldown.title = `发炮: ${use} cs, 可用: ${use + 3475} cs`;
+		} else {
+			cooldown.title = info;
+		}
+		return cooldown;
+	}
+	for (var iter = 0; iter < 3; iter++) {
+		for (var i = 0; i < extended_uses.length; i++) {
+			var use_time = extended_uses[i] + (iter - 1) * extended_length;
+			var optimal_cob = -1;
+			for (var j = 0; j < cobs.length; j++) {
+				if (use_time - cobs[j] >= 3475) {
+					if (optimal_cob < 0 || cobs[j] > cobs[optimal_cob]) {
+						optimal_cob = j;
+					}
+				}
+			}
+			if (cobs[optimal_cob] < use_time - 3475 - 3475 && cobs[optimal_cob] >= start_time) {
+				var long_margin = createDiv("blue", cobs[optimal_cob] + 3475, use_time, `区间长 ${use_time - cobs[optimal_cob] - 3475} cs > 3475 cs`);
+				cob_bars[optimal_cob].appendChild(long_margin);
+			}
+			cobs[optimal_cob] = use_time;
+			var cooldown = createDiv(iter == 1 ? "green" : "yellow", use_time, use_time + 3475);
+			cob_bars[optimal_cob].appendChild(cooldown);
+		}
+	}
+	for (var i = 0; i < cob_bars.length; i++) {
+		var row = document.createElement("div");
+		row.style = "display: flex; align-items: center;"
+		var name = document.createElement("div");
+		name.textContent = `炮${i+1}：`;
+		name.style = "width: 60px";
+		row.appendChild(name);
+		row.appendChild(cob_bars[i]);
+		document.getElementById(`cooldown`).appendChild(row);
+	}
+}
+
 function calculateAll() {
     const input_info = collectInfo();
     if (!input_info.success) return;
     const segments = document.querySelectorAll('.segment');
     var segment_no = 0;
+	var all_cycle_length = 0;
+	var all_cob_uses = [];
     segments.forEach(segment => {
         calculateOne(input_info, segment.id, segment_no);
+		var activate = input_info.infos[segment_no].cob;
+		for (var i of input_info.infos[segment_no].all_cob) {
+			all_cob_uses.push(all_cycle_length + i);
+		}
+		all_cycle_length += activate < 401 ? 601 : activate + 200;
         segment_no += 1;
     });
+	calculateCobCount(all_cob_uses, all_cycle_length);
 }
 
 function runSplitter() {
@@ -1199,8 +1322,7 @@ function runRoofRanger() {
 		upper_row_limit = explosive_row;
 	}
 		
-	var result = `爆心：x=${center_x}`;
-	if (explosive_type != "Potato") result += `, y=${center_y}<br>`;
+	var result = `爆心：x=${center_x}, y=${center_y}<br>`;
 	result += `<style scoped>table,th,td{border: 1px solid black;border-collapse: collapse;}</style>
 	<table><tr><th>僵尸类型</th>`;
 
@@ -1342,8 +1464,7 @@ function runRanger() {
 		upper_row_limit = explosive_row;
 	}
 
-	var result = `爆心：x=${center_x}`;
-	if (explosive_type != "Potato") result += `, y=${center_y}<br>`;
+	var result = `爆心：x=${center_x}, y=${center_y}<br>`;
 	result += `<style scoped>table,th,td{border: 1px solid black;border-collapse: collapse;}</style>
 	<table><tr><th>僵尸类型</th>`;
 
