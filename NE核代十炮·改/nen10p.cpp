@@ -1,4 +1,4 @@
-#include "../whatss7-avz2-lib/walib.h"
+#include "../walib.h"
 
 void SlowGiga() {
     std::vector<std::pair<int, int>> fast;
@@ -28,9 +28,32 @@ void SlowGiga() {
     }
 }
 
+ATickRunner enterHomeTickRunner;
+
 void AScript() {
-    WAInit({ ADOOM_SHROOM, AICE_SHROOM, AGRAVE_BUSTER, ACHERRY_BOMB, APUFF_SHROOM, AM_PUFF_SHROOM });
-    WAAutoManageCob();
+    Init({ADOOM_SHROOM, AICE_SHROOM, AGRAVE_BUSTER, ACHERRY_BOMB, APUFF_SHROOM, AM_PUFF_SHROOM, ABLOVER});
+
+    // 测试跳跳是否进家
+    #if 0
+    StartReloadMode(10);
+    SelectCardsAndFill({ ADOOM_SHROOM, AICE_SHROOM, AGRAVE_BUSTER, ACHERRY_BOMB, APUFF_SHROOM, AM_PUFF_SHROOM, ABLOVER }, true);
+    AutoManageCob();
+    ASetZombies(ACreateRandomTypeList({ATT_18}), ASetZombieMode::AVERAGE);
+    AConnect(ATime(1, -599), [](){
+        ASkipTick([](){
+            for (auto &&zombie: aAliveZombieFilter) {
+                if (zombie.Abscissa() < -80) {
+                    waLogger.Info("进家可能");
+                    ASetGameSpeed(1);
+                    return false;
+                }
+            }
+            return true;
+        });
+    });
+    #endif
+
+    AutoBlover(1, 8);
     waForEndIgnore = { AXG_24, ATT_18 };
 
     // P6: PP|PP|PP|PP|PP|N
@@ -42,12 +65,12 @@ void AScript() {
         PP(w);
         if (w == 10) SmartA();
         if (w == 9 || w == 19 || w == 20) {
-            PPForEnd(w, 601 + PCP, 9);
+            PPForEnd(w, 601 + PCP, 8.85);
             ForEnd(w, 601 + PCP, SlowGiga);
             ForEnd(w, 601 + PCP + 751, SlowGiga);
             ForEnd(w, 601 + PCP + 751 * 2, SlowGiga);
-            PPForEnd(w, 601 * 3 + PCP, 9);
-            PPForEnd(w, 601 * 4 + PCP, 8.5);
+            PPForEnd(w, 601 * 3 + PCP, 8.85);
+            PPForEnd(w, 601 * 4 + PCP, 8.85);
         }
         if (w == 10 && AGetZombieTypeList()[ABJ_20]) ManualI(w, 401, {{1, 7}, {2, 7}, {3, 7}, {4, 7}, {5, 7}});
         if (w == 20) ManualI(w, 401, {{1, 7}, {2, 7}, {3, 7}, {4, 7}, {5, 7}});
@@ -55,25 +78,20 @@ void AScript() {
     for (int w: {5, 15}) {
         N(w, PCP, {{3, 9}, {3, 8}, {2, 9}, {2, 8}});
     }
-    // 上轮墓碑吞噬者被意外干掉的情况
-    // WARemoveGraves(10, -700);
     // 解决本轮墓碑
     AConnect(ATime(20, 200), [](){
-        bool success = false;
-        for (int i = 1; i <= 5; i++) {
-            for (int j = 7; j <= 9; j++) {
-                if (ACard(AGRAVE_BUSTER, i, j)) {
-                    std::vector<APosition> possibles;
-                    possibles.push_back({i, float(j - 1)});
-                    if (j != 9) possibles.push_back({i, float(j + 1)});
-                    if (i != 1) possibles.push_back({i - 1, float(j)});
-                    if (i != 5) possibles.push_back({i + 1, float(j)});
-                    C(20, 350 - ADT, ACHERRY_BOMB, possibles);
-                    success = true;
-                    break;
-                }
+        for (auto &&item: aAlivePlaceItemFilter) {
+            if (item.Type() == 1) {
+                int row = item.Row() + 1, col = item.Col() + 1;
+                std::vector<APosition> possibles;
+                possibles.push_back({row, float(col - 1)});
+                if (col != 9) possibles.push_back({row, float(col + 1)});
+                if (row != 1) possibles.push_back({row - 1, float(col)});
+                if (row != 5) possibles.push_back({row + 1, float(col)});
+                C(20, 350 - ADT, ACHERRY_BOMB, possibles);
+                C(20, 401, AGRAVE_BUSTER, row, col);
+                break;
             }
-            if (success) break;
         }
     });
 }
