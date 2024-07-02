@@ -968,28 +968,37 @@ function calculateOne(input_info, segment_id, segment_no) {
 }
 
 /**
+ * 这是一个表示发炮时机的结构。
+ * @typedef {Object} CobTime
+ * @property {string} text - 标签
+ * @property {number?} time - 时间
+ */
+
+/**
  * 计算需要多少炮运行节奏，并显示计算结果。
- * @param {[number]} cob_uses 
+ * @param {[CobTime]} cob_uses
  * @param {number} cycle_length
  */
 function calculateCobCount(cob_uses, cycle_length) {
+	// 延长循环到大于3475
 	var extended_uses = cob_uses.slice(), extended_length = cycle_length;
 	while (extended_length < 3475) {
 		for (var i of cob_uses) {
-			extended_uses.push(extended_length + i);
+			var new_t = { time: i.time + extended_length, text: i.text };
+			extended_uses.push(new_t);
 		}
 		extended_length += cycle_length;
 	}
-	extended_uses.sort((a, b) => a - b);
+	extended_uses.sort((a, b) => a.time - b.time);
 	console.log(extended_length, extended_uses);
 	// 计算炮数至少需要多少成立
 	var min_ok_count = 0;
 	for (var i = 1; i < extended_uses.length; i++) {
 		var fail = false;
 		for (var j = 0; j < extended_uses.length; j++) {
-			var current_time = extended_uses[j];
+			var current_time = extended_uses[j].time;
 			var next_index = j + extended_uses.length - i;
-			var next_time = extended_uses[next_index % extended_uses.length];
+			var next_time = extended_uses[next_index % extended_uses.length].time;
 			if (next_index >= extended_uses.length) {
 				next_time += extended_length;
 			}
@@ -1004,19 +1013,64 @@ function calculateCobCount(cob_uses, cycle_length) {
 		}
 	}
     document.getElementById("reuse_output").innerHTML = `共需要${min_ok_count}炮`;
-	// 绘制图像
-    document.getElementById(`cooldown`).innerHTML = "";
-	var start_time = extended_uses[0] - extended_length;
-	var end_time = extended_uses[extended_uses.length - 1] + extended_length + 3475;
-	var cobs = [];
-	var cob_bars = [];
+	// 贪心算法初步排表
+	var start_time = extended_uses[0].time - extended_length;
+	var end_time = extended_uses[extended_uses.length - 1].time + extended_length + 3475;
+	var cobs = [], intervals = [];
 	for (var i = 0; i < min_ok_count; i++) {
 		cobs.push(start_time - 3475);
+	}
+	for (var iter = 0; iter < 3; iter++) {
+		// 显示上轮循环、本轮循环和下轮循环的用炮情况
+		for (var i = 0; i < extended_uses.length; i++) {
+			var use_time = extended_uses[i].time + (iter - 1) * extended_length;
+			var optimal_cob = -1;
+			for (var j = 0; j < cobs.length; j++) {
+				if (use_time - cobs[j] >= 3475) {
+					// 找最短间隔
+					if (optimal_cob < 0 || cobs[j] > cobs[optimal_cob]) {
+						optimal_cob = j;
+					}
+				}
+			}
+			if (cobs[optimal_cob] <= use_time - 3475 * 2 && cobs[optimal_cob] >= start_time) {
+				// 将这些可以额外开炮的时机塞进去
+				intervals.push({
+					start: cobs[optimal_cob] + 3475,
+					end: use_time,
+					color: "lightblue",
+					text: use_time - (cobs[optimal_cob] + 3475),
+					info: `额外可用时机：${cobs[optimal_cob] + 3475} ~ ${use_time - 3475}`,
+					type: "filler"
+				});
+			}
+			intervals.push({
+				start: use_time,
+				end: use_time + 3475,
+				color: iter == 1 ? "green" : "yellow",
+				text: extended_uses[i].text,
+				info: `生效: ${use_time} cs, 可用：${use_time + 3475} cs`,
+				type: "cob"
+			});
+			cobs[optimal_cob] = use_time;
+		}
+	}
+	intervals.sort((a, b) => a.start - b.start);
+	console.log(intervals);
+	// 贪心算法能找出能塞的炮，但是图很不好看，所以清除在上一步的结果，重新绘图
+	cobs = [];
+	for (var i = 0; i < min_ok_count; i++) {
+		cobs.push(start_time - 3475);
+	}
+	// 绘制图像
+    document.getElementById(`cooldown`).innerHTML = "";
+	var cob_bars = [];
+	for (var i = 0; i < min_ok_count; i++) {
 		var bar = document.createElement('div');
 		bar.style = "width: 500px; height: 20px; border: 1px solid #000; position: relative;";
 		cob_bars.push(bar);
 	}
-	function createDiv(color, use, end, info = "") {
+	function createDiv(color, use, end, text, info) {
 		var cooldown = document.createElement('div');
 		cooldown.style.height = "20px";
 		cooldown.style.backgroundColor = color;
@@ -1025,32 +1079,24 @@ function calculateCobCount(cob_uses, cycle_length) {
 		cooldown.style.position = "absolute";
 		cooldown.style.left = `${(use - start_time) / (end_time - start_time) * 100}%`;
 		cooldown.style.width = `${(end - use)  / (end_time - start_time) * 100}%`;
-		if (info == "") {
-			cooldown.title = `发炮: ${use} cs, 可用: ${use + 3475} cs`;
-		} else {
-			cooldown.title = info;
-		}
+		cooldown.textContent = text;
+		cooldown.title = info;
 		return cooldown;
 	}
-	for (var iter = 0; iter < 3; iter++) {
-		for (var i = 0; i < extended_uses.length; i++) {
-			var use_time = extended_uses[i] + (iter - 1) * extended_length;
-			var optimal_cob = -1;
-			for (var j = 0; j < cobs.length; j++) {
-				if (use_time - cobs[j] >= 3475) {
-					if (optimal_cob < 0 || cobs[j] > cobs[optimal_cob]) {
-						optimal_cob = j;
-					}
+	for (var i = 0; i < intervals.length; i++) {
+		var use_time = intervals[i].start;
+		var cd_finish_time = intervals[i].end;
+		var optimal_cob = -1;
+		for (var j = 0; j < cobs.length; j++) {
+			if (use_time >= cobs[j]) {
+				if (optimal_cob < 0 || cobs[j] < cobs[optimal_cob]) {
+					optimal_cob = j;
 				}
 			}
-			if (cobs[optimal_cob] < use_time - 3475 - 3475 && cobs[optimal_cob] >= start_time) {
-				var long_margin = createDiv("blue", cobs[optimal_cob] + 3475, use_time, `区间长 ${use_time - cobs[optimal_cob] - 3475} cs > 3475 cs`);
-				cob_bars[optimal_cob].appendChild(long_margin);
-			}
-			cobs[optimal_cob] = use_time;
-			var cooldown = createDiv(iter == 1 ? "green" : "yellow", use_time, use_time + 3475);
-			cob_bars[optimal_cob].appendChild(cooldown);
 		}
+		cobs[optimal_cob] = cd_finish_time;
+		var cooldown = createDiv(intervals[i].color, use_time, cd_finish_time, intervals[i].text, intervals[i].info);
+		cob_bars[optimal_cob].appendChild(cooldown);
 	}
 	for (var i = 0; i < cob_bars.length; i++) {
 		var row = document.createElement("div");
@@ -1075,7 +1121,7 @@ function calculateAll() {
         calculateOne(input_info, segment.id, segment_no);
 		var activate = input_info.infos[segment_no].cob;
 		for (var i of input_info.infos[segment_no].all_cob) {
-			all_cob_uses.push(all_cycle_length + i);
+			all_cob_uses.push({time: all_cycle_length + i, text: `w${segment_no + 1}:${i}`});
 		}
 		all_cycle_length += activate < 401 ? 601 : activate + 200;
         segment_no += 1;
