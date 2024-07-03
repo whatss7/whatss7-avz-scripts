@@ -61,6 +61,26 @@ int WaveOperations(int wave) {
 
 //////////////////////////////////////////////////
 
+// 设置一波的波长，并在波长-200处干掉所有僵尸。
+// 设置不超过2500的波长时，使用AvZ原生函数；设置超过2500的波长时，使用暂停刷新的方式。
+void SetWavelength(int wave, int time) {
+    if (time <= 2500) {
+        ASetWavelength({ATime(wave, time)});
+        AConnect(ATime(wave, time - 200), [](){
+            StopZombieSpawn(ModState::OFF);
+            InstantKill();
+        });
+    } else {
+        AConnect(ATime(wave, 601), [](){
+            StopZombieSpawn(ModState::SCOPED_ON);
+        });
+        AConnect(ATime(wave, time), [](){
+            StopZombieSpawn(ModState::OFF);
+            InstantKill();
+        });
+    }
+}
+
 int success_count = 0, fail_count = 0;
 ALogger<AFile> logger("D:\\log.txt");
 
@@ -70,7 +90,7 @@ void AScript() {
     int len = 0;
     for (int w: WaveList(1, 20)) {
         len = WaveOperations(w);
-        if (w != 9 && w != 19 && w != 20) ASetWavelength({ATime(w, len)});
+        if (w != 9 && w != 19 && w != 20) SetWavelength(w, len);
         AConnect(ATime(w, len - 200), [](){
             InstantKill();
             int check_count = 0;
