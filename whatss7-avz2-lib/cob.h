@@ -44,7 +44,7 @@ void AutoManageCob() {
 // 请注意，本函数先填列数，再填行数。
 // 若不设置时间，则 318cs (`PCP`) 时生效。
 // 屋顶场景，1-2路的炮优先选择风炮；3-5路优先选择平炮。
-void PP(int wave, int time = -1, float col = 9, std::vector<int> rows = {}) {
+void PP(int wave, int time = -1000, float col = 9, std::vector<int> rows = {}) {
     if (rows.empty()) {
         std::string scene = GetCurrentScene();
         if (scene == "PE" || scene == "FE") {
@@ -53,7 +53,7 @@ void PP(int wave, int time = -1, float col = 9, std::vector<int> rows = {}) {
             rows = {2, 4};
         }
     }
-    if (time < 0) time = PCP;
+    if (time < -999) time = PCP;
     std::string scene = GetCurrentScene();
     if (scene == "RE" || scene == "ME") {
         #ifdef WALIB_DEBUG

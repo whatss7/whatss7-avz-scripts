@@ -59,7 +59,7 @@ struct FodderAllInfo {
     int r56_atwave, r56_fastest;
 };
 
-float GetFodderRow(int pos) {
+int GetFodderRow(int pos) {
     // 对2列，确保能垫到的是[96, 195] （考虑小喷偏移和巨人走的1cs）
     // 96垫2列，95垫1列
     return float(std::clamp((pos + 64) / 80, 1, 9));
@@ -84,7 +84,7 @@ void FixPuff() {
                 front = std::min(front, zombie.Abscissa());
             }
         }
-        ACard(AFUME_SHROOM, 1, GetFodderRow(front));
+        if (front < 999) TempCNow(AFUME_SHROOM, 1, GetFodderRow(front), 100);
     }
 }
 
@@ -118,6 +118,16 @@ void FodderAll(int wave, int time, const FodderAllInfo &info) {
         int r1b_front = GetZombieFront(1, info.r1_back_atwave);
         int r5_front = GetZombieFront(5, info.r56_atwave);
         int r6_front = GetZombieFront(6, info.r56_atwave);
+        int available = 0;
+        bool garlic_available = false, puff_available = false;
+        if (AGetCardPtr(AFUME_SHROOM) && AGetCardPtr(AFUME_SHROOM)->IsUsable()) {
+            puff_available = true;
+            available++;
+        }
+        if (AGetCardPtr(AGARLIC) && AGetCardPtr(AGARLIC)->IsUsable()) {
+            garlic_available = true;
+            available++;
+        }
         // 检测最靠前的巨人与理论最快的位置差
         // first 1=r1f 2=r1b 3=r5 4=r6
         std::vector<std::pair<int, int>> fronts;
@@ -143,19 +153,16 @@ void FodderAll(int wave, int time, const FodderAllInfo &info) {
         // 若需要补种，安全距离较短；否则，安全距离较长
         int safe_offset = (garlic_count == 3 && puff_count == 3) ? plant_offset : fix_offset;
         // 查看前两个位置是否在安全距离以内
-        int spare_fodder = 0;
         std::vector<APosition> fodder_pos;
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < available; i++) {
             int fodder_type = fronts[i].first, fodder_offset = fronts[i].second;
             if (fodder_offset < safe_offset) {
                 switch (fodder_type) {
-                case 1: fodder_pos.push_back({1, GetFodderRow(r1f_front)}); break;
-                case 2: fodder_pos.push_back({1, GetFodderRow(r1b_front)}); break;
-                case 3: fodder_pos.push_back({5, GetFodderRow(r5_front)}); break;
-                case 4: fodder_pos.push_back({6, GetFodderRow(r6_front)}); break;
+                case 1: fodder_pos.push_back({1, float(GetFodderRow(r1f_front))}); break;
+                case 2: fodder_pos.push_back({1, float(GetFodderRow(r1b_front))}); break;
+                case 3: fodder_pos.push_back({5, float(GetFodderRow(r5_front))}); break;
+                case 4: fodder_pos.push_back({6, float(GetFodderRow(r6_front))}); break;
                 }
-            } else {
-                spare_fodder++;
             }
         }
         logger.Info("r1f-w#:#, r1b-w#: #, r5-w#: #, r6-w#: #",
@@ -171,13 +178,24 @@ void FodderAll(int wave, int time, const FodderAllInfo &info) {
         for (int i = 0; i < int(fodder_pos.size()); i++) {
             logger.Info("#-#", fodder_pos[i].row, fodder_pos[i].col);
         }
+        int spare_fodder = std::max(available - int(fodder_pos.size()), 0);
         // 对结果进行总结
-        if (spare_fodder == 2) {
+        if (!puff_available && (spare_fodder == 1 || (fodder_pos[0].row == 1 && fodder_pos[0].col <= 2))) {
+            // 若小喷挪作他用
+            // 全场安全或要种在不能种大蒜的1-2，则修复2路大蒜
+            FixGarlic();
+        } else if (!puff_available && spare_fodder == 0) {
+            // 若小喷挪作他用
+            // 大蒜作为垫材
+            TempCNow(AGARLIC, {fodder_pos[0]}, 100);
+        } else if (spare_fodder == 2) {
+            // 全场安全，则修复2路
             FixPuff();
             FixGarlic();
         } else if (spare_fodder == 1) {
             if (garlic_count == 3 && puff_count == 3) {
-                if (min_garlic_hp < min_puff_hp) {
+                // 一处需要垫材，2路植物完整，修补血量较少的一种植物，除非要垫不能用大蒜的1-2
+                if (min_garlic_hp < min_puff_hp || (fodder_pos[0].row == 1 && fodder_pos[0].col <= 2)) {
                     FixGarlic();
                     TempCNow(AFUME_SHROOM, {fodder_pos[0]}, 100);
                 } else {
@@ -185,7 +203,8 @@ void FodderAll(int wave, int time, const FodderAllInfo &info) {
                     TempCNow(AGARLIC, {fodder_pos[0]}, 100);
                 }
             } else {
-                if (garlic_count - puff_count < 2) {
+                // 一处需要垫材，2路植物不完整，或要垫不能用大蒜的1-2，优先补大蒜
+                if (garlic_count - puff_count < 2 || (fodder_pos[0].row == 1 && fodder_pos[0].col <= 2)) {
                     FixGarlic();
                     TempCNow(AFUME_SHROOM, {fodder_pos[0]}, 100);
                 } else {
@@ -194,15 +213,23 @@ void FodderAll(int wave, int time, const FodderAllInfo &info) {
                 }
             }
         } else {
-            TempCNow(AFUME_SHROOM, {fodder_pos[0]}, 100);
-            TempCNow(AGARLIC, {fodder_pos[1]}, 100);
+            // 两处需要垫材，1-2不用大蒜
+            if (fodder_pos[0].row == 1 && fodder_pos[0].col <= 2) {
+                TempCNow(AFUME_SHROOM, {fodder_pos[0]}, 100);
+                TempCNow(AGARLIC, {fodder_pos[1]}, 100);
+            } else {
+                TempCNow(AGARLIC, {fodder_pos[0]}, 100);
+                TempCNow(AFUME_SHROOM, {fodder_pos[1]}, 100);
+            }
         }
     });
 }
 
 int SubtractWave(int currentWave, int subtractWave, bool ending = false) {
     int originalWave = currentWave - subtractWave;
-    if (ending || (originalWave < 10 && currentWave >= 10) || (originalWave < 20 && currentWave >= 20)) {
+    if (originalWave <= 0) {
+        return 20;
+    } else if (ending || (originalWave < 10 && currentWave >= 10) || (originalWave < 20 && currentWave >= 20)) {
         return originalWave + 1;
     } else {
         return originalWave;
@@ -272,9 +299,11 @@ void AutoSquash() {
     if (AGetSeedPtr(ASQUASH) && AGetSeedPtr(ASQUASH)->IsUsable()) {
         for (AZombie &zombie: aAliveZombieFilter) {
             if (zombie.Type() == AHY_32 &&  zombie.Row() + 1 == 1 && zombie.Abscissa() < 145) {
+                if (ExistPlant(1, 2)) continue;
                 ACard(ASQUASH, 1, 2);
                 break;
             } else if (zombie.Type() == AHY_32 && zombie.Row() + 1 == 2 && zombie.Abscissa() < 385) {
+                if (ExistPlant(2, 4) || ExistPlant(2, 5)) continue;
                 ACard(ASQUASH, {{2, 4}, {2, 5}});
                 break;
             } else if (zombie.Type() == ABC_12 && zombie.Row() + 1 == 2 && zombie.Abscissa() < 550) {
@@ -307,25 +336,27 @@ void IBNd(int w, bool end = false) {
                     ACard(ASQUASH, 1, std::clamp((int(front) + 127) / 80, 1, 5));
                 }
                 if (squash_runner.IsStopped()) squash_runner.Start(AutoSquash);
+                logger.Info("Squash runner started");
             });
         }
         if (end) {
             B(w, offset + 1100, 2, 8.575);
-            Fodder2(w, offset + 1606);
+            d(w, offset + 2598, 5, 3.0875);
         } else if (doom_index == 3) {
             B(w, offset + 1300, 4, 8.575);
-            TempC(w, offset + 1606, AFUME_SHROOM, 5, 2, offset + 2301);
+            // 如果是4-7核波，需要一些垫材防止下半场小鬼进家；因为3-6核波很容易漏巨人，尾炸炸点左移收漏炸巨人投出的小鬼
+            TempC(w, offset + 1605, AFUME_SHROOM, 5, 3, offset + 2498);
+            TempC(w, offset + 2356, AFUME_SHROOM, 5, 2, offset + 2598);
+            d(w, offset + 2598, 5, 2.75);
         } else {
             B(w, offset + 1100, 3, 8.575);
-            Fodder2(w, offset + 1606);
+            d(w, offset + 2598, 5, 3.0875);
         }
         N(w, offset + i_len - 200, {doom_pos[doom_index]});
         doom_index = (doom_index + 1) % 4;
     });
-    d(w, offset + 2598, 5, 3.0875);
-    // 如果是4-7核波，需要一些垫材防止下半场小鬼进家，因此Fodder2看情况使用
     Fodder1(w, offset + 844);
-    // Fodder2(w, offset + 1606);
+    Fodder2(w, offset + 1606);
     Fodder3(w, offset + 2391);
 }
 
@@ -333,11 +364,14 @@ void IBPAA(int w, bool end = false) {
     int offset = end ? 2501 : 0;
     // I-B-PAA'
     ManualI(w, offset + 98, 4, 3, i_len);
-        if (doom_index == 1) {
+    AConnect(ATime(w, offset), [=](){
+        if (doom_index == 2) {
             AConnect(ATime(w, offset + 1900), [](){
+                logger.Info("Squash runner stopped");
                 squash_runner.Stop();
             });
         }
+    });
     if (end) B(w, offset + 1100, 2, 8.575);
     else B(w, offset + 1100, 3, 8.575);
     P(w, offset + i_len - 200, 5, 7.6375);
@@ -351,6 +385,8 @@ void IBPAA(int w, bool end = false) {
 
 int mode = 1;
 
+// #define RELOAD
+
 void AScript() {
     UnlimitedSun(ModState::SCOPED_ON);
 
@@ -358,13 +394,17 @@ void AScript() {
 
     AConnect(ATime(1, -599), [](){
         tallnut_fixer.Start(ATALL_NUT, {{1, 1}}, 0);
-        squash_runner.Start(AutoSquash);
+        if (doom_index != 2) squash_runner.Start(AutoSquash);
     });
+    
+#ifdef RELOAD
+    StartReloadMode();
+    P(1, -200, 5, 5);
+#endif
 
     C(1, -599, ALILY_PAD, 4, 3);
-    C(1, -599, AGARLIC, 2, 2);
-    C(1, -599, AFUME_SHROOM, 2, 5);
     C(10, 820, ALILY_PAD, 4, 3);
+    C(20, 820, ALILY_PAD, 4, 3);
 
     // 2598扶梯完全进入5-3的311樱桃范围
     for (int w: WaveList(1, 20)) {
@@ -376,6 +416,7 @@ void AScript() {
             else IBPAA(w, true);
             mode = 3 - mode;
         }
+        if (w == 1) Fodder1(w, 1);
         if (w == 20) Fodder3(w, 5643);
     }
 }

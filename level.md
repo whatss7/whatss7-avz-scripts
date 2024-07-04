@@ -11,7 +11,7 @@
 - [PE 经典八炮](./旧阵型/20240305/README.md#pe-经典八炮) [阵图](./考级阵图/L1/PE%20经典八炮.jpg) 挂机
 - [RE 天台十炮](./旧阵型/20240305/README.md#re-天台十炮-p5-挂机) [阵图](./考级阵图/L1/RE%20天台十炮.jpg) 挂机
 - [PE 经典十二炮](./旧阵型/20240305/README.md#pe-经典十二炮-p6-挂机) [阵图](./考级阵图/L1/PE%20经典十二炮.jpg) 挂机 [【视频】](https://www.bilibili.com/video/BV1mJ4m1G7AA)
-- [NE 核代十炮·改](./旧阵型/20240312/README.md#ne-核代十炮改-p6-挂机) [阵图](./考级阵图/L1/NE%20核代十炮·改.jpg)
+- [NE 核代十炮·改](./旧阵型/20240312/README.md#ne-核代十炮改-p6-挂机) [阵图](./考级阵图/L1/NE%20核代十炮·改.jpg) [【视频】](https://www.bilibili.com/video/BV1bT421a7aM)
 - [PE 经典四炮](./旧阵型/20240305/README.md#pe-经典四炮) [阵图](./考级阵图/L1/PE%20经典四炮.jpg)
 - [DE 双冰六炮](./README.md#de-双冰六炮-ch5) [阵图](./考级阵图/L1/DE%20双冰六炮.jpg) [【视频】](https://www.bilibili.com/video/BV1LJ4m1E7ci)
 - [PE 玉米八炮](./README.md#pe-玉米八炮-对ch6) [阵图](./考级阵图/L1/PE%20玉米八炮.jpg) [【视频】](https://www.bilibili.com/video/BV15t42137S3)
@@ -37,7 +37,7 @@
 - [FE 新磁铁四炮](./README.md#fe-新磁铁四炮-对c6u-不稳定)* [阵图](./考级阵图/L2/FE%20新磁铁四炮.jpg)
 - ~~ME 核聚变六炮*~~ [阵图](./考级阵图/L2/ME%20核聚变六炮.jpg)
 
-## 3 级 4/12
+## 3 级 5/12
 
 - [NE 舞夜惊魂](./README.md#ne-舞夜惊魂-p6) [阵图](./考级阵图/L3/NE%20舞夜惊魂.jpg)
 - ~~PE C2八炮~~ [阵图](./考级阵图/L3/PE%20C2八炮.jpg)
@@ -47,8 +47,8 @@
 - [RE 椭盘十四炮](./README.md#re-椭盘十四炮-ch4) [阵图](./考级阵图/L3/RE%20椭盘十四炮.jpg) [【视频】](https://www.bilibili.com/video/BV1YM4m1U71a/)
 - ~~DE 守城十二炮~~ [阵图](./考级阵图/L3/DE%20守城十二炮.jpg)
 - ~~PE ②炮~~ [阵图](./考级阵图/L3/PE%20②炮.jpg)
-- [FE 弦十四炮](./README.md#fe-弦十四炮-p4) [阵图](./考级阵图/L3/FE%20弦十四炮.jpg) [【视频】](https://www.bilibili.com/video/BV1Js421P7MC)
-- ~~FE 纯三炮 !!!~~ [阵图](./考级阵图/L3/FE%20纯三炮.jpg)
+- [FE 弦十四炮](./README.md#fe-弦十四炮) [阵图](./考级阵图/L3/FE%20弦十四炮.jpg) [【视频】](https://www.bilibili.com/video/BV1Js421P7MC)
+- [FE 纯三炮](./README.md#fe-纯三炮-c4u-不稳定) !!! [阵图](./考级阵图/L3/FE%20纯三炮.jpg) [【视频】](https://www.bilibili.com/video/BV1mb421n7dx/)
 - ~~PE 半场十二炮*~~ [阵图](./考级阵图/L3/PE%20半场十二炮.jpg)
 - ~~PE 纯二十炮*~~ [阵图](./考级阵图/L3/PE%20纯二十炮.jpg) 
 

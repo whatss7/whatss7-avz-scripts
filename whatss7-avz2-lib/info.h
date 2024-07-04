@@ -106,6 +106,17 @@ bool ExistZombie(AZombieType type, std::vector<int> rows = {1, 2, 3, 4, 5, 6}) {
 }
 
 // 判断指定位置是否有指定的植物。
+bool ExistPlant(int row, int col) {
+    for (auto &&plant: aAlivePlantFilter) {
+        if (plant.Col() + 1 == col && plant.Row() + 1 == row) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+// 判断指定位置是否有指定的植物。
 bool ExistPlant(APlantType type, int row, int col) {
     for (auto &&plant: aAlivePlantFilter) {
         if (plant.Type() == type && plant.Col() + 1 == col && plant.Row() + 1 == row) {
@@ -116,9 +127,12 @@ bool ExistPlant(APlantType type, int row, int col) {
 }
 
 // 判断指定位置是否有指定的植物。
-bool ExistPlant(std::vector<APlantType> types, int row, int col) {
-    for (auto type: types) {
-        if (ExistPlant(type, row, col)) return true;
+bool ExistPlant(const std::vector<APlantType> &types, int row, int col) {
+    for (auto &&plant: aAlivePlantFilter) {
+        if (std::find(types.begin(), types.end(), APlantType(plant.Type())) != types.end() &&
+            plant.Col() + 1 == col && plant.Row() + 1 == row) {
+            return true;
+        }
     }
     return false;
 }
