@@ -263,13 +263,13 @@ void TempC(int wave, int time, APlantType card, std::vector<APosition> pos, int 
                 if (to_time >= time) {
                     if (should_remove){
                         AConnect(ATime(wave, to_time), [p, to_remove](){
-                            ARemovePlant(p.row, p.col, std::vector<int>{to_remove});
+                            ARemovePlant(p.row, p.col, std::vector<int>{to_remove, AIMITATOR});
                             ARemovePlant(p.row, p.col, std::vector<int>{AFLOWER_POT});
                             ARemovePlant(p.row, p.col, std::vector<int>{ALILY_PAD});
                         });
                     } else {
                         AConnect(ATime(wave, to_time), [p, to_remove](){
-                            ARemovePlant(p.row, p.col, std::vector<int>{to_remove});
+                            ARemovePlant(p.row, p.col, std::vector<int>{to_remove, AIMITATOR});
                         });
                     }
                 }

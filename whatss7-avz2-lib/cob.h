@@ -318,38 +318,38 @@ int SchedulePPExceptOne(int wave, int time, float col) {
         // 六行场地收尾
         if (dist[1] == 1) {
             choice = 1;
-            if (dist[2] != 0 || dist[3] != 0) { AutoP(wave, time, 3, col); }
-            if (dist[4] != 0 || dist[5] != 0 || dist[6] != 0) { AutoP(wave, time, 5, col); }
+            if (dist[2] || dist[3]) { AutoP(wave, time, 3, col); }
+            if (dist[4] || dist[5] || dist[6]) { AutoP(wave, time, 5, col); }
         } else if (dist[6] == 1) {
             choice = 6;
-            if (dist[4] != 0 || dist[5] != 0) { AutoP(wave, time, 4, col); }
-            if (dist[1] != 0 || dist[2] != 0 || dist[3] != 0) { AutoP(wave, time, 2, col); }
+            if (dist[4] || dist[5]) { AutoP(wave, time, 4, col); }
+            if (dist[1] || dist[2] || dist[3]) { AutoP(wave, time, 2, col); }
         } else if (dist[1] == 0 && dist[2] == 1) {
             choice = 2;
             bool middle_done = false;
-            if (dist[3] != 0) { AutoP(wave, time, 4, col); middle_done = true; }
-            if (dist[6] != 0) { AutoP(wave, time, 5, col); middle_done = true; }
-            if (!middle_done && (dist[4] != 0 || dist[5] != 0)) { AutoP(wave, time, 4, col); }
+            if (dist[3]) { AutoP(wave, time, 4, col); middle_done = true; }
+            if (dist[6]) { AutoP(wave, time, 5, col); middle_done = true; }
+            if (!middle_done && (dist[4] || dist[5])) { AutoP(wave, time, 4, col); }
         } else if (dist[6] == 0 && dist[5] == 1) {
             choice = 5;
             bool middle_done = false;
-            if (dist[1] != 0) { AutoP(wave, time, 2, col); middle_done = true; }
-            if (dist[4] != 0) { AutoP(wave, time, 3, col); middle_done = true; }
-            if (!middle_done && (dist[2] != 0 || dist[3] != 0)) { AutoP(wave, time, 2, col); }
+            if (dist[1]) { AutoP(wave, time, 2, col); middle_done = true; }
+            if (dist[4]) { AutoP(wave, time, 3, col); middle_done = true; }
+            if (!middle_done && (dist[2] || dist[3])) { AutoP(wave, time, 2, col); }
         } else if (dist[1]) {
             choice = 1;
-            if (dist[2] != 0 || dist[3] != 0) { AutoP(wave, time, 3, col); }
-            if (dist[4] != 0 || dist[5] != 0 || dist[6] != 0) { AutoP(wave, time, 5, col); }
+            if (dist[2] || dist[3]) { AutoP(wave, time, 3, col); }
+            if (dist[4] || dist[5] || dist[6]) { AutoP(wave, time, 5, col); }
         } else if (dist[6]) {
             choice = 6;
-            if (dist[4] != 0 || dist[5] != 0) { AutoP(wave, time, 4, col); }
-            if (dist[1] != 0 || dist[2] != 0 || dist[3] != 0) { AutoP(wave, time, 2, col); }
+            if (dist[4] || dist[5]) { AutoP(wave, time, 4, col); }
+            if (dist[1] || dist[2] || dist[3]) { AutoP(wave, time, 2, col); }
         } else if (dist[2]) {
             choice = 2;
-            if (dist[3] != 0 || dist[4] != 0 || dist[5] != 0) { AutoP(wave, time, 4, col); }
+            if (dist[3] || dist[4] || dist[5]) { AutoP(wave, time, 4, col); }
         } else if (dist[5]) {
             choice = 5;
-            if (dist[3] != 0 || dist[4] != 0) { AutoP(wave, time, 3, col); }
+            if (dist[3] || dist[4]) { AutoP(wave, time, 3, col); }
         }
     } else {
         // 五行场地收尾
