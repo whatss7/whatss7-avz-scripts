@@ -43,10 +43,11 @@ struct FrontInfo {
     FrontInfo(int r1f = 0, int r1b = 0, int r5 = 0, int r6 = 0): r1f(r1f), r1b(r1b), r5(r5), r6(r6) {}
 };
 
-int GetZombieFront(int row, int atwave) {
+int GetZombieFront(int row, int hp) {
     float front = 1000;
     for (auto &zombie: aAliveZombieFilter) {
-        if (zombie.Type() == AHY_32 && zombie.Row() + 1 == row && zombie.AtWave() + 1 == atwave) {
+        if (zombie.Type() == AHY_32 && zombie.Row() + 1 == row && 
+            zombie.Hp() > (hp - 1) * 1800 && zombie.Hp() <= hp * 1800) {
             front = std::min(front, zombie.Abscissa());
         }
     }
@@ -54,9 +55,9 @@ int GetZombieFront(int row, int atwave) {
 }
 
 struct FodderAllInfo {
-    int r1_front_atwave, r1_front_atwave_alt, r1_front_fastest;
-    int r1_back_atwave, r1_back_fastest;
-    int r56_atwave, r56_fastest;
+    int r1_front_hp, r1_front_fastest;
+    int r1_back_hp, r1_back_fastest;
+    int r56_hp, r56_fastest;
 };
 
 int GetFodderRow(int pos) {
@@ -114,10 +115,10 @@ void FixGarlic() {
 
 void FodderAll(int wave, int time, const FodderAllInfo &info) {
     AConnect(ATime(wave, time), [=](){
-        int r1f_front = std::min(GetZombieFront(1, info.r1_front_atwave), GetZombieFront(1, info.r1_front_atwave_alt));
-        int r1b_front = GetZombieFront(1, info.r1_back_atwave);
-        int r5_front = GetZombieFront(5, info.r56_atwave);
-        int r6_front = GetZombieFront(6, info.r56_atwave);
+        int r1f_front = GetZombieFront(1, info.r1_front_hp);
+        int r1b_front = GetZombieFront(1, info.r1_back_hp);
+        int r5_front = GetZombieFront(5, info.r56_hp);
+        int r6_front = GetZombieFront(6, info.r56_hp);
         int available = 0;
         bool garlic_available = false, puff_available = false;
         if (AGetCardPtr(AFUME_SHROOM) && AGetCardPtr(AFUME_SHROOM)->IsUsable()) {
@@ -165,11 +166,7 @@ void FodderAll(int wave, int time, const FodderAllInfo &info) {
                 }
             }
         }
-        logger.Info("r1f-w#:#, r1b-w#: #, r5-w#: #, r6-w#: #",
-            info.r1_front_atwave, r1f_front, 
-            info.r1_back_atwave, r1b_front, 
-            info.r56_atwave, r5_front, 
-            info.r56_atwave, r6_front);
+        logger.Info("r1f: #, r1b: #, r5: #, r6: #", r1f_front, r1b_front, r5_front, r6_front);
         logger.Info("Dists:");
         for (int i = 0; i < 4; i++) {
             logger.Info("(#, #)", fronts[i].first, fronts[i].second);
@@ -225,29 +222,17 @@ void FodderAll(int wave, int time, const FodderAllInfo &info) {
     });
 }
 
-int SubtractWave(int currentWave, int subtractWave, bool ending = false) {
-    int originalWave = currentWave - subtractWave;
-    if (originalWave <= 0) {
-        return 20;
-    } else if (ending || (originalWave < 10 && currentWave >= 10) || (originalWave < 20 && currentWave >= 20)) {
-        return originalWave + 1;
-    } else {
-        return originalWave;
-    }
-}
-
 // 844cs 时的垫材函数。
 // 若用于5/6路，垫在5-2/6-2；若用在1路前场，垫在1-5；若用在1路后场，垫在1-3.
 void Fodder1(int wave, int time) {
     // 1-5处理论最快374，范围335-435；1-3处理论最快219，范围175-275
     // 5-2/6-2处理论最快152，范围95-195
     FodderAllInfo info;
-    info.r1_back_atwave = SubtractWave(wave, 2, time >= 2501);
+    info.r1_back_hp = 2;
     info.r1_back_fastest = 374;
-    info.r1_front_atwave = SubtractWave(wave, 3, time >= 2501);
-    info.r1_front_atwave_alt = SubtractWave(wave, 4, time >= 2501);
+    info.r1_front_hp = 1;
     info.r1_front_fastest = 219;
-    info.r56_atwave = SubtractWave(wave, 3, time >= 2501);
+    info.r56_hp = 1;
     info.r56_fastest = 152;
     FodderAll(wave, time, info);
 }
@@ -258,12 +243,11 @@ void Fodder2(int wave, int time) {
     // 1-4处理论最快328，范围255-355；1-2处理论最快173，范围95-195
     // 5-3/6-3处理论最快279，范围175-275
     FodderAllInfo info;
-    info.r1_back_atwave = SubtractWave(wave, 2, time >= 2501);
+    info.r1_back_hp = 2;
     info.r1_back_fastest = 328;
-    info.r1_front_atwave = SubtractWave(wave, 3, time >= 2501);
-    info.r1_front_atwave_alt = SubtractWave(wave, 4, time >= 2501);
+    info.r1_front_hp = 1;
     info.r1_front_fastest = 173;
-    info.r56_atwave = SubtractWave(wave, 2, time >= 2501);
+    info.r56_hp = 2;
     info.r56_fastest = 279;
     FodderAll(wave, time, info);
 }
@@ -274,12 +258,11 @@ void Fodder3(int wave, int time) {
     // 1-5处理论最快406，范围335-435；1-3处理论最快264，范围255-355
     // 5-3/6-3处理论最快25，范围15-115
     FodderAllInfo info;
-    info.r1_back_atwave = SubtractWave(wave, 1, time >= 2501);
+    info.r1_back_hp = 2;
     info.r1_back_fastest = 406;
-    info.r1_front_atwave = SubtractWave(wave, 2, time >= 2501);
-    info.r1_front_atwave_alt = SubtractWave(wave, 2, time >= 2501);
+    info.r1_front_hp = 1;
     info.r1_front_fastest = 264;
-    info.r56_atwave = SubtractWave(wave, 3, time >= 2501);
+    info.r56_hp = 1;
     info.r56_fastest = 25;
     FodderAll(wave, time, info);
 }
@@ -325,13 +308,8 @@ void IBNd(int w, bool end = false) {
     ManualI(w, offset + 98, 4, 3, i_len);
     AConnect(ATime(w, offset + 1), [=](){
         if (doom_index == 2) {
-            AConnect(ATime(w, offset + 2400), [w](){
-                float front = 1000;
-                for (AZombie &zombie: aAliveZombieFilter) {
-                    if (zombie.Type() == AHY_32 && zombie.AtWave() == SubtractWave(w, 1)) {
-                        front = std::min(front, zombie.Abscissa());
-                    }
-                }
+            AConnect(ATime(w, offset + 2400), [](){
+                float front = GetZombieFront(1, 2);
                 if (front < 999) {
                     ACard(ASQUASH, 1, std::clamp((int(front) + 127) / 80, 1, 5));
                 }
@@ -377,7 +355,7 @@ void IBPAA(int w, bool end = false) {
     P(w, offset + i_len - 200, 5, 7.6375);
     // 同帧先植物后僵尸，用A的话要延迟一帧
     A(w, offset + 2599, 5, 3);
-    J(w, offset + i_len - 200, 1, 2);
+    J(w, offset + i_len - 200, 1, 3);
     Fodder1(w, offset + 844);
     Fodder2(w, offset + 1606);
     Fodder3(w, offset + 2391);
@@ -390,17 +368,20 @@ int mode = 1;
 void AScript() {
     UnlimitedSun(ModState::SCOPED_ON);
 
-    Init({ AICE_SHROOM, AM_ICE_SHROOM, ADOOM_SHROOM, ACHERRY_BOMB, AJALAPENO, ALILY_PAD, ATALL_NUT, ASQUASH, AGARLIC, AFUME_SHROOM });
+    Init({
+        AICE_SHROOM, AM_ICE_SHROOM, ADOOM_SHROOM, ACHERRY_BOMB, AJALAPENO,
+        ALILY_PAD, ATALL_NUT, ASQUASH, AGARLIC, AFUME_SHROOM 
+    }, "Auto", true);
 
     AConnect(ATime(1, -599), [](){
-        tallnut_fixer.Start(ATALL_NUT, {{1, 1}}, 0);
+        tallnut_fixer.Start(ATALL_NUT, {{1, 1}});
         if (doom_index != 2) squash_runner.Start(AutoSquash);
     });
-    
-#ifdef RELOAD
-    StartReloadMode();
+
+    #ifdef RELOAD
+    StartReloadMode(10);
     P(1, -200, 5, 5);
-#endif
+    #endif
 
     C(1, -599, ALILY_PAD, 4, 3);
     C(10, 820, ALILY_PAD, 4, 3);
