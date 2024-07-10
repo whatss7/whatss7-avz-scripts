@@ -1,7 +1,10 @@
 #include "../walib.h"
 
 void AScript() {
-    Init({APUFF_SHROOM, AM_PUFF_SHROOM, ASCAREDY_SHROOM, AFLOWER_POT, AWALL_NUT});
+    Init({
+        APUFF_SHROOM, AM_PUFF_SHROOM, ASCAREDY_SHROOM, AFLOWER_POT, AWALL_NUT,
+        APUMPKIN, AGATLING_PEA, ATWIN_SUNFLOWER, AGLOOM_SHROOM, ACATTAIL
+    });
     const int short_len = 657, long_len = 752;
     for (int w: {1, 2, 3, 5, 7, 8, 10, 11, 13, 15, 16, 18}) {
         PP(w, short_len - 200, 8.4625);

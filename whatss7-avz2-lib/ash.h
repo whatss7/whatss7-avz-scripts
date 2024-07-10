@@ -419,7 +419,7 @@ void ZomboniN(int wave, int time, int row, float col) {
         PreciseBlackN(wave, time, row, col);
     } else {
         AConnect(ATime(wave, 1), [wave, time, row, col](){
-            if (ExistZombie(ABC_12, {row})) TempC(wave, time, ADOOM_SHROOM, row, col);
+            if (ExistZombie(ABC_12, {row})) TempC(wave, time - 1, ADOOM_SHROOM, row, col);
             else PreciseBlackN(wave, time, row, col);
         });
     }
@@ -434,7 +434,7 @@ void A(int wave, int time, int row, float col) {
 // 本路无冰车时，与A函数相同；而有冰车时，在生效时间点再放。
 void ZomboniA(int wave, int time, int row, float col) {
     AConnect(ATime(wave, 1), [wave, time, row, col](){
-        if (ExistZombie(ABC_12, {row})) TempC(wave, time, ACHERRY_BOMB, row, col);
+        if (ExistZombie(ABC_12, {row})) TempC(wave, time - 1, ACHERRY_BOMB, row, col);
         else A(wave, time, row, col);
     });
 }
@@ -448,13 +448,13 @@ void J(int wave, int time, int row, float col) {
 // 本路无冰车时，与J函数相同；而有冰车时，在生效时间点再放。
 void ZomboniJ(int wave, int time, int row, float col) {
     AConnect(ATime(wave, 1), [wave, time, row, col](){
-        if (ExistZombie(ABC_12, {row})) TempC(wave, time, AJALAPENO, row, col);
+        if (ExistZombie(ABC_12, {row})) TempC(wave, time - 1, AJALAPENO, row, col);
         else J(wave, time, row, col);
     });
 }
 
 // 使用智能樱桃消延迟。此函数不会使用模仿樱桃炸弹。
-// 默认有巨人时400cs生效，没有巨人时550cs生效。
+// 默认有红眼时400cs生效，没有红眼时550cs生效。
 // 本函数未考虑冰车碾压。
 void SmartA(int wave = 10, int time = 400, int no_red_time = 550) {
     if (!AGetZombieTypeList()[AHY_32]) time = no_red_time;
@@ -483,26 +483,50 @@ void SmartA(int wave = 10, int time = 400, int no_red_time = 550) {
             if (!ForEndJudge(wave)) return;
             std::vector<APosition> choices = {{2, 9}, {3, 9}, {4, 9}};
             int status[3];
+            memset(status, 0, sizeof(status));
             for (auto &&zombie: aAliveZombieFilter) {
+                if (zombie.AtWave() + 1 != wave) continue;
                 int score = 0;
                 if (zombie.Type() == ABY_23) score = 2;
                 else if (zombie.Type() == AHY_32) score = 3;
-                if (zombie.Row() == 1 || zombie.Row() == 2 || zombie.Row() == 3) {
-                    status[0] += score;
-                }
-                if (zombie.Row() == 2 || zombie.Row() == 3 || zombie.Row() == 4) {
-                    status[1] += score;
-                }
-                if (zombie.Row() == 3 || zombie.Row() == 4 || zombie.Row() == 5) {
-                    status[2] += score;
-                }
+                int row = zombie.Row() + 1;
+                if (row >= 1 && row <= 3) status[0] += score;
+                if (row >= 2 && row <= 4) status[1] += score;
+                if (row >= 3 && row <= 5) status[2] += score;
             }
             std::sort(choices.begin(), choices.end(), [status](APosition a, APosition b){
-                return status[a.row - 2] < status[b.row - 2];
+                return status[a.row - 2] > status[b.row - 2];
             });
             TempC(wave, time - ADT, ACHERRY_BOMB, choices, time + 1);
         });
     }
+}
+
+// 使用智能窝瓜消延迟。
+// 默认有红眼时400cs生效，没有红眼时550cs生效，生效时机延迟200进行铲除动作。
+// 本函数未考虑冰车碾压。
+void SmartSquash(int wave = 10, int time = 400, int no_red_time = 550, int extend_duration = 200) {
+    if (!AGetZombieTypeList()[AHY_32]) time = no_red_time;
+    AConnect(ATime(wave, time - SDT), [=](){
+        if (!ForEndJudge(wave)) return;
+        std::vector<APosition> choices;
+        std::string scene = GetCurrentScene();
+        if (scene == "PE" || scene == "FE") choices = {{1, 9}, {2, 9}, {5, 9}, {6, 9}};
+        else  choices = {{1, 9}, {2, 9}, {3, 9}, {4, 9}, {5, 9}};
+        int status[6];
+        memset(status, 0, sizeof(status));
+        for (auto &&zombie: aAliveZombieFilter) {
+            if (zombie.AtWave() + 1 != wave) continue;
+            int score = 0;
+            if (zombie.Type() == ABY_23) score = 2;
+            else if (zombie.Type() == AHY_32) score = 3;
+            status[zombie.Row()] += score;
+        }
+        std::sort(choices.begin(), choices.end(), [status](APosition a, APosition b){
+            return status[a.row - 1] > status[b.row - 1];
+        });
+        TempC(wave, time - SDT, ASQUASH, choices, time + extend_duration);
+    });
 }
 
 #pragma endregion

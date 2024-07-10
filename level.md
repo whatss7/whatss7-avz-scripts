@@ -20,11 +20,11 @@
 - [FE 神之四炮](./旧阵型/20240312/README.md#fe-神之四炮-邻c6u) [阵图](./考级阵图/L1/FE%20神之四炮.jpg) [【视频】](https://www.bilibili.com/video/BV1UZ421b79c)
 - [PE 冰雨十二炮·改](./旧阵型/20240312/README.md#pe-冰雨十二炮改-p6)* [阵图](./考级阵图/L1/PE%20冰雨十二炮·改.jpg) [【视频】](https://www.bilibili.com/video/BV1mJ4m1G7AA?t=212)
 
-## 2 级 10/14
+## 2 级 11/14
 
 - [DE 前置八炮](./README.md#de-前置八炮-ch5) [阵图](./考级阵图/L2/DE%20前置八炮.jpg)
 - [RE 神之七炮](./旧阵型/20240305/README.md#re-神之七炮-ch5u) [阵图](./考级阵图/L2/RE%20神之七炮.jpg) [【视频】](https://www.bilibili.com/video/BV1UF4m177J7)
-- ~~ME 神之六炮~~ [阵图](./考级阵图/L2/ME%20神之六炮.jpg)
+- [ME 神之六炮](./README.md#me-神之六炮-c7u) [阵图](./考级阵图/L2/ME%20神之六炮.jpg) [【视频】](https://www.bilibili.com/video/BV1WW421R7wT/)
 - [PE 单紫卡十二炮](./旧阵型/20240305/README.md#pe-单紫卡十二炮) [阵图](./考级阵图/L2/PE%20单紫卡十二炮.jpg) [【视频】](https://www.bilibili.com/video/BV1Uz421d7Wu)
 - [PE 无冰瓜二十炮](./README.md#pe-无冰瓜二十炮-p6-2i-挂机) [阵图](./考级阵图/L2/PE%20无冰瓜二十炮.jpg) 挂机
 - ~~PE 经典十八炮~~ [阵图](./考级阵图/L2/PE%20经典十八炮.jpg)
@@ -37,7 +37,7 @@
 - [FE 新磁铁四炮](./README.md#fe-新磁铁四炮-对c6u-不稳定)* [阵图](./考级阵图/L2/FE%20新磁铁四炮.jpg)
 - ~~ME 核聚变六炮*~~ [阵图](./考级阵图/L2/ME%20核聚变六炮.jpg)
 
-## 3 级 5/12
+## 3 级 6/12
 
 - [NE 舞夜惊魂](./README.md#ne-舞夜惊魂-p6) [阵图](./考级阵图/L3/NE%20舞夜惊魂.jpg)
 - ~~PE C2八炮~~ [阵图](./考级阵图/L3/PE%20C2八炮.jpg)
@@ -50,7 +50,7 @@
 - [FE 弦十四炮](./README.md#fe-弦十四炮) [阵图](./考级阵图/L3/FE%20弦十四炮.jpg) [【视频】](https://www.bilibili.com/video/BV1Js421P7MC)
 - [FE 纯三炮](./README.md#fe-纯三炮-c4u-不稳定) !!! [阵图](./考级阵图/L3/FE%20纯三炮.jpg) [【视频】](https://www.bilibili.com/video/BV1mb421n7dx/)
 - ~~PE 半场十二炮*~~ [阵图](./考级阵图/L3/PE%20半场十二炮.jpg)
-- ~~PE 纯二十炮*~~ [阵图](./考级阵图/L3/PE%20纯二十炮.jpg) 
+- [PE 纯二十炮](./README.md#pe-纯二十炮-p5u)* [阵图](./考级阵图/L3/PE%20纯二十炮.jpg) [【视频】](https://www.bilibili.com/video/BV1jm421G7MG)
 
 ## 4 级
 

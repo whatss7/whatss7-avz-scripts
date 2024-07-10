@@ -374,7 +374,7 @@ void AScript() {
     }, "Auto", true);
 
     AConnect(ATime(1, -599), [](){
-        tallnut_fixer.Start(ATALL_NUT, {{1, 1}});
+        tallnut_fixer.Start(ATALL_NUT, {{1, 1}}, 0);
         if (doom_index != 2) squash_runner.Start(AutoSquash);
     });
 
