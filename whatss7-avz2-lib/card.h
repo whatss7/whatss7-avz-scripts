@@ -91,7 +91,7 @@ std::vector<int> waStopGigaBanCols;
 // 持续在最前面的巨人面前种植垫材。
 // 不设置to_time时，一直垫到下波僵尸刷新。
 // 不设置row时，自动寻找巨人；设置row时，只垫对应路巨人。
-void StopGiga(int wave, int time, const std::vector<APlantType> &plants_to_stop, int to_time = -999, int row = -1) {
+void StopGiga(int wave, int time, const std::vector<APlantType> &plants_to_stop, int to_time = -1000, int row = -1) {
     AConnect(ATime(wave, time), [plants_to_stop, row](){
         waStopGiga_last_row = waStopGiga_last_col = -1;
         waStopGigaRunner.Start([plants_to_stop, row](){
@@ -143,7 +143,7 @@ void StopGiga(int wave, int time, const std::vector<APlantType> &plants_to_stop,
             }
         });
     });
-    if (to_time <= -999) {
+    if (to_time <= -1000) {
         if (wave == 20) {
             to_time = 5999;
         } else {

@@ -903,6 +903,23 @@ function parseMultiTime(str) {
     return result;
 }
 
+// 当前模式
+var mode = "cycle";
+
+/**
+ * 切换当前模式为逐波或循环
+ * @returns
+ */
+function changeMode() {
+	if (mode == "cycle") {
+		mode = "perwave";
+		document.getElementById("mode_btn").textContent = "切换模式（当前逐波）";
+	} else {
+		mode = "cycle";
+		document.getElementById("mode_btn").textContent = "切换模式（当前循环）";
+	}
+}
+
 /**
  * 收集输入的信息，确定当前波次
  * @returns {{success: boolean, infos?: [WaveInfo]}}
@@ -1243,12 +1260,13 @@ function calculateOne(input_info, segment_id, segment_no) {
  * @property {number?} time - 时间
  */
 
+
 /**
- * 计算需要多少炮运行节奏，并显示计算结果。
+ * 计算需要多少炮运行循环节奏，并显示计算结果。
  * @param {[CobTime]} cob_uses
  * @param {number} cycle_length
  */
-function calculateCobCount(cob_uses, cycle_length) {
+function calculateCycleCobCount(cob_uses, cycle_length) {
 	// 延长循环到大于3475
 	var extended_uses = cob_uses.slice(), extended_length = cycle_length;
 	while (extended_length < 3475) {
@@ -1377,6 +1395,124 @@ function calculateCobCount(cob_uses, cycle_length) {
 		row.appendChild(cob_bars[i]);
 		document.getElementById(`cooldown`).appendChild(row);
 	}
+}
+
+
+/**
+ * 计算需要多少炮运行逐波节奏，并显示计算结果。
+ * @param {[CobTime]} cob_uses
+ */
+function calculatePerWaveCobCount(cob_uses) {
+	// 贪心算法确定最少炮数
+	var start_time = Math.min(0, cob_uses[0].time);
+	var end_time = cob_uses[cob_uses.length - 1].time + 3475;
+	var cobs = [], used = [], intervals = [];
+	for (var i = 0; i < cob_uses.length; i++) {
+		cobs.push(start_time - 3475);
+		used.push(false);
+	}
+	// 显示上轮循环、本轮循环和下轮循环的用炮情况
+	for (var i = 0; i < cob_uses.length; i++) {
+		var use_time = cob_uses[i].time;
+		var optimal_cob = -1;
+		for (var j = 0; j < cobs.length; j++) {
+			if (use_time - cobs[j] >= 3475) {
+				// 找最短间隔
+				if (optimal_cob < 0 || cobs[j] > cobs[optimal_cob]) {
+					optimal_cob = j;
+				}
+			}
+		}
+		if (cobs[optimal_cob] <= use_time - 3475 * 2 && cobs[optimal_cob] >= start_time) {
+			// 如果发现能额外开炮，将这些可以额外开炮的时机塞进去
+			intervals.push({
+				start: cobs[optimal_cob] + 3475,
+				end: use_time,
+				color: "lightblue",
+				text: use_time - (cobs[optimal_cob] + 3475),
+				info: `额外可用时机：${cobs[optimal_cob] + 3475} ~ ${use_time - 3475}`,
+				type: "filler"
+			});
+		}
+		intervals.push({
+			start: use_time,
+			end: use_time + 3475,
+			color: "green",
+			text: cob_uses[i].text,
+			info: `生效: ${use_time} cs, 可用：${use_time + 3475} cs`,
+			type: "cob"
+		});
+		cobs[optimal_cob] = use_time;
+		used[optimal_cob] = true;
+	}
+	intervals.sort((a, b) => a.start - b.start);
+	console.log(intervals);
+	var min_ok_count = 0;
+	for (var i = 0; i < used.length; i++) {
+		if (used[i]) min_ok_count++;
+	}
+    document.getElementById("reuse_output").innerHTML = `共需要${min_ok_count}炮`;
+	// 贪心算法能找出能塞的炮，但是图很不好看，所以清除在上一步的结果，重新绘图
+	cobs = [];
+	for (var i = 0; i < min_ok_count; i++) {
+		cobs.push(start_time - 3475);
+	}
+	// 绘制图像
+    document.getElementById(`cooldown`).innerHTML = "";
+	var cob_bars = [];
+	for (var i = 0; i < min_ok_count; i++) {
+		var bar = document.createElement('div');
+		bar.style = "width: 500px; height: 20px; border: 1px solid #000; position: relative;";
+		cob_bars.push(bar);
+	}
+	function createDiv(color, use, end, text, info) {
+		var cooldown = document.createElement('div');
+		cooldown.style.height = "20px";
+		cooldown.style.backgroundColor = color;
+		cooldown.style.borderLeft = "1px solid #000"
+		cooldown.style.borderRight = "1px solid #000"
+		cooldown.style.position = "absolute";
+		cooldown.style.left = `${(use - start_time) / (end_time - start_time) * 100}%`;
+		cooldown.style.width = `${(end - use)  / (end_time - start_time) * 100}%`;
+		cooldown.textContent = text;
+		cooldown.title = info;
+		return cooldown;
+	}
+	for (var i = 0; i < intervals.length; i++) {
+		var use_time = intervals[i].start;
+		var cd_finish_time = intervals[i].end;
+		var optimal_cob = -1;
+		for (var j = 0; j < cobs.length; j++) {
+			if (use_time >= cobs[j]) {
+				if (optimal_cob < 0 || cobs[j] < cobs[optimal_cob]) {
+					optimal_cob = j;
+				}
+			}
+		}
+		cobs[optimal_cob] = cd_finish_time;
+		var cooldown = createDiv(intervals[i].color, use_time, cd_finish_time, intervals[i].text, intervals[i].info);
+		cob_bars[optimal_cob].appendChild(cooldown);
+	}
+	for (var i = 0; i < cob_bars.length; i++) {
+		var row = document.createElement("div");
+		row.style = "display: flex; align-items: center;"
+		var name = document.createElement("div");
+		name.textContent = `炮${i+1}：`;
+		name.style = "width: 60px";
+		row.appendChild(name);
+		row.appendChild(cob_bars[i]);
+		document.getElementById(`cooldown`).appendChild(row);
+	}
+}
+
+/**
+ * 计算需要多少炮运行节奏，并显示计算结果。
+ * @param {[CobTime]} cob_uses
+ * @param {number} cycle_length
+ */
+function calculateCobCount(cob_uses, cycle_length) {
+	if (mode == "cycle") calculateCycleCobCount(cob_uses, cycle_length);
+	else calculatePerWaveCobCount(cob_uses);
 }
 
 function calculateAll() {

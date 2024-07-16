@@ -171,6 +171,19 @@ void P(int wave, int time, int row, float col) {
 
 // 从 `aCobManager` 发射一炮。
 // 本函数与 `P()` 完全相同，可用作更好的语义解释。
+void S(int wave, int time, int row, float col) {
+    P(wave, time, row, col);
+}
+
+// 从 `aCobManager` 发射两炮至同一位置。
+// 本函数与调用两次 `P()` 完全相同，可用作更好的语义解释。
+void PS(int wave, int time, int row, float col) {
+    P(wave, time, row, col);
+    S(wave, time, row, col);
+}
+
+// 从 `aCobManager` 发射一炮。
+// 本函数与 `P()` 完全相同，可用作更好的语义解释。
 void B(int wave, int time, int row, float col) {
     P(wave, time, row, col);
 }
@@ -287,6 +300,7 @@ int SchedulePPExceptOne(int wave, int time, float col) {
     std::string scene = GetCurrentScene();
     for (auto &&zombie: aAliveZombieFilter) {
         if (zombie.Type() != AHY_32) continue;
+        if (zombie.AtWave() + 1 != wave) continue;
         dist[zombie.Row() + 1]++;
         sum++;
     }
@@ -403,10 +417,9 @@ int SchedulePPExceptOne(int wave, int time, float col) {
 
 // 对除了某列以外的所有红眼开炮。常用于拖收尾。
 // 若场上没有红眼，且当前是w20，则改为对除了某列以外的所有僵尸开炮。
-// 为了收尾的正常运行，请确保场上的红眼都是本波红眼。
 // 本函数已进行 `ForEnd()` 判定。
 // 若设置 `stop_giga_plants`，则会使用其中的植物阻挡巨人到4300cs或5500cs(w20)。
-void PPExceptOne(int wave, int time, float col = 9, std::vector<APlantType> stop_giga_plants = {}, int stop_giga_to_time = -1) {
+void PPExceptOne(int wave, int time, float col = 9, std::vector<APlantType> stop_giga_plants = {}, int stop_giga_to_time = -1000) {
     std::string scene = GetCurrentScene();
     int VCFT = GetCFT();
     ForEnd(wave, time - VCFT, [=](){
@@ -446,5 +459,119 @@ void PPLast(int wave, int time) {
 }
 
 #pragma endregion
+
+#pragma region 仿轨道语言：屋顶炮相关
+
+// 在屋顶场景使用炮尾在1列的炮发射一炮。
+void P1(int wave, int time, int row, float col) {
+    std::string scene = GetCurrentScene();
+    if (scene != "RE" && scene != "ME") {
+        waLogger.Error("Px(), Bx(), Dx() 和 dx() 只能在屋顶使用");
+        return;
+    }
+    RoofP(wave, time, 1, row, col);
+}
+
+// 在屋顶场景使用炮尾在2列的炮发射一炮。
+void P2(int wave, int time, int row, float col) {
+    std::string scene = GetCurrentScene();
+    if (scene != "RE" && scene != "ME") {
+        waLogger.Error("Px(), Bx(), Dx() 和 dx() 只能在屋顶使用");
+        return;
+    }
+    RoofP(wave, time, 2, row, col);
+}
+
+// 在屋顶场景使用炮尾在3列的炮发射一炮。
+void P3(int wave, int time, int row, float col) {
+    std::string scene = GetCurrentScene();
+    if (scene != "RE" && scene != "ME") {
+        waLogger.Error("Px(), Bx(), Dx() 和 dx() 只能在屋顶使用");
+        return;
+    }
+    RoofP(wave, time, 3, row, col);
+}
+
+// 在屋顶场景使用炮尾在4列的炮发射一炮。
+void P4(int wave, int time, int row, float col) {
+    std::string scene = GetCurrentScene();
+    if (scene != "RE" && scene != "ME") {
+        waLogger.Error("Px(), Bx(), Dx() 和 dx() 只能在屋顶使用");
+        return;
+    }
+    RoofP(wave, time, 4, row, col);
+}
+
+// 在屋顶场景使用炮尾在5列的炮发射一炮。
+void P5(int wave, int time, int row, float col) {
+    std::string scene = GetCurrentScene();
+    if (scene != "RE" && scene != "ME") {
+        waLogger.Error("Px(), Bx(), Dx() 和 dx() 只能在屋顶使用");
+        return;
+    }
+    RoofP(wave, time, 5, row, col);
+}
+
+// 在屋顶场景使用炮尾在6列的炮发射一炮。
+void P6(int wave, int time, int row, float col) {
+    std::string scene = GetCurrentScene();
+    if (scene != "RE" && scene != "ME") {
+        waLogger.Error("Px(), Bx(), Dx() 和 dx() 只能在屋顶使用");
+        return;
+    }
+    RoofP(wave, time, 6, row, col);
+}
+
+// 在屋顶场景使用炮尾在7列的炮发射一炮。
+void P7(int wave, int time, int row, float col) {
+    std::string scene = GetCurrentScene();
+    if (scene != "RE" && scene != "ME") {
+        waLogger.Error("Px(), Bx(), Dx() 和 dx() 只能在屋顶使用");
+        return;
+    }
+    RoofP(wave, time, 7, row, col);
+}
+
+// 在屋顶场景使用炮尾在8列的炮发射一炮。
+void P8(int wave, int time, int row, float col) {
+    std::string scene = GetCurrentScene();
+    if (scene != "RE" && scene != "ME") {
+        waLogger.Error("Px(), Bx(), Dx() 和 dx() 只能在屋顶使用");
+        return;
+    }
+    RoofP(wave, time, 8, row, col);
+}
+
+// 在屋顶场景使用炮尾在指定列的炮发射一炮。与Px()系列函数完全相同，可用作更好的语义解释。
+void B1(int wave, int time, int row, int col) { P1(wave, time, row, col); }
+void B2(int wave, int time, int row, int col) { P2(wave, time, row, col); }
+void B3(int wave, int time, int row, int col) { P3(wave, time, row, col); }
+void B4(int wave, int time, int row, int col) { P4(wave, time, row, col); }
+void B5(int wave, int time, int row, int col) { P5(wave, time, row, col); }
+void B6(int wave, int time, int row, int col) { P6(wave, time, row, col); }
+void B7(int wave, int time, int row, int col) { P7(wave, time, row, col); }
+void B8(int wave, int time, int row, int col) { P8(wave, time, row, col); }
+
+// 在屋顶场景使用炮尾在指定列的炮发射一炮。与Px()系列函数完全相同，可用作更好的语义解释。
+void D1(int wave, int time, int row, int col) { P1(wave, time, row, col); }
+void D2(int wave, int time, int row, int col) { P2(wave, time, row, col); }
+void D3(int wave, int time, int row, int col) { P3(wave, time, row, col); }
+void D4(int wave, int time, int row, int col) { P4(wave, time, row, col); }
+void D5(int wave, int time, int row, int col) { P5(wave, time, row, col); }
+void D6(int wave, int time, int row, int col) { P6(wave, time, row, col); }
+void D7(int wave, int time, int row, int col) { P7(wave, time, row, col); }
+void D8(int wave, int time, int row, int col) { P8(wave, time, row, col); }
+
+// 在屋顶场景使用炮尾在指定列的炮发射一炮。与Px()系列函数完全相同，可用作更好的语义解释。
+void d1(int wave, int time, int row, int col) { P1(wave, time, row, col); }
+void d2(int wave, int time, int row, int col) { P2(wave, time, row, col); }
+void d3(int wave, int time, int row, int col) { P3(wave, time, row, col); }
+void d4(int wave, int time, int row, int col) { P4(wave, time, row, col); }
+void d5(int wave, int time, int row, int col) { P5(wave, time, row, col); }
+void d6(int wave, int time, int row, int col) { P6(wave, time, row, col); }
+void d7(int wave, int time, int row, int col) { P7(wave, time, row, col); }
+void d8(int wave, int time, int row, int col) { P8(wave, time, row, col); }
+
+#pragma region 仿轨道语言：屋顶炮相关
 
 #endif // WALIB_COB_H
