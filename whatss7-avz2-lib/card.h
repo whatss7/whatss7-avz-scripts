@@ -206,6 +206,11 @@ void MaidMove(int wave, int time, int to_time = -1000) {
     }
 }
 
+// 停用女仆秘籍。
+void MaidStop(int wave, int time) {
+    AConnect(ATime(wave, time), [](){ AMaidCheats::Stop(); });
+}
+
 #pragma endregion
 
 
