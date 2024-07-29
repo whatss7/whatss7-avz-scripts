@@ -1,13 +1,9 @@
-#include "../whatss7-avz2-lib/walib.h"
+#include "../walib.h"
 
 void AScript() {
-    WASelectCards({AICE_SHROOM, AM_ICE_SHROOM, ACOFFEE_BEAN, APUMPKIN, ACHERRY_BOMB}, true);
-    WABindKeys();
-    // WASelectZombies();
-    WACheck();
-
-    aIceFiller.Start({{4, 9}});
-    WAFixNuts();
+    Init({AICE_SHROOM, AM_ICE_SHROOM, ACOFFEE_BEAN, APUMPKIN, ACHERRY_BOMB});
+    StartIceFiller({{4, 9}});
+    AutoFixNuts();
     if (AGetZombieTypeList()[AHY_32]) {
         // 有红眼时，双边完美公式
         for (int w: {1, 4, 7, 11, 14, 17}) {
@@ -16,7 +12,7 @@ void AScript() {
         }
         for (int w: {2, 5, 8, 12, 15, 18}) {
             PP(w);
-            I(w, PCP + 4);
+            I(w, PCP);
         }
         for (int w: {3, 6, 9, 10, 13, 16, 19}) {
             PP(w, PCP, 9, {2, 2, 5, 5});
@@ -50,7 +46,7 @@ void AScript() {
             } else {
                 // 测试知非旗帜波必刷新
                 PP(w);
-                PP(w, 400, 9);
+                PP(w, 401, 9);
             }
             if (w == 9 || w == 19 || w == 20) {
                 PPForEnd(w, 601 + PCP);

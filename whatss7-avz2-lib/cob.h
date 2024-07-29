@@ -424,7 +424,7 @@ void PPExceptOne(int wave, int time, float col = 9, std::vector<APlantType> stop
     int VCFT = GetCFT();
     ForEnd(wave, time - VCFT, [=](){
         int choice = SchedulePPExceptOne(wave, time, col);
-        if (!stop_giga_plants.empty()) StopGiga(wave, time, stop_giga_plants, stop_giga_to_time, choice);
+        if (!stop_giga_plants.empty()) StopGiga(wave, time - VCFT, stop_giga_plants, stop_giga_to_time, choice);
     });
 }
 

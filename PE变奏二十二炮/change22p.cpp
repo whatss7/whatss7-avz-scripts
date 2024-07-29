@@ -31,7 +31,8 @@ void AScript() {
             P(w, i_len + 318, 2, 9);
             D(w, i_len + 318 + 220, 1, 9);
             B(w, i_len + 20 + 220, 5, 9);
-            PPExceptOne(w, i_len + 318 + 220, 9, {APUFF_SHROOM, ASUN_SHROOM, ASCAREDY_SHROOM, AFLOWER_POT});
+            PPExceptOne(w, i_len + 318 + 220, 9);
+            StopGiga(w, i_len + 318 + 220, {APUFF_SHROOM, ASUN_SHROOM, ASCAREDY_SHROOM, AFLOWER_POT}, 4300);
             MaidDance(w, i_len + 318 + 220, w + 1, 318 - 460);
             PPLast(w, 4300);
         }
