@@ -433,7 +433,7 @@ void PPExceptOne(int wave, int time, float col = 9, std::vector<APlantType> stop
 // 本函数已进行 `ForEnd()` 判定。
 void PPLast(int wave, int time) {
     std::string scene = GetCurrentScene();
-    int VCFT = (scene == "RE" || scene == "ME" ? 387 : 373);
+    int VCFT = GetCFT();
     ForEnd(wave, time - VCFT, [=](){
         AConnect(ATime(wave, time - VCFT), [wave, time](){
             for (auto &&zombie: aAliveZombieFilter) {

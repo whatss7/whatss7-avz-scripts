@@ -41,7 +41,7 @@
 
 - [NE 舞夜惊魂](./README.md#ne-舞夜惊魂-p6) [阵图](./考级阵图/L3/NE%20舞夜惊魂.jpg)
 - ~~PE C2八炮~~ [阵图](./考级阵图/L3/PE%20C2八炮.jpg)
-- [PE 二十四炮](./旧阵型/20240312/README.md#pe-二十四炮-p6-2i-挂机) [阵图](./考级阵图/L3/PE%20二十四炮.jpg) 挂机
+- [PE 二十四炮](./README.md#pe-二十四炮) [阵图](./考级阵图/L3/PE%20二十四炮.jpg) 挂机 [【视频】](https://www.bilibili.com/video/BV1cwvkeKE6k/)
 - ~~FE 二十四炮~~ [阵图](./考级阵图/L3/FE%20二十四炮.jpg)
 - [PE 变奏二十二炮](./PE变奏二十二炮/change22p.cpp) [阵图](./考级阵图/L3/PE%20变奏二十二炮.jpg) [【视频】](https://www.bilibili.com/video/BV18E421A742/)
 - [RE 椭盘十四炮](./README.md#re-椭盘十四炮-ch4) [阵图](./考级阵图/L3/RE%20椭盘十四炮.jpg) [【视频】](https://www.bilibili.com/video/BV1YM4m1U71a/)
