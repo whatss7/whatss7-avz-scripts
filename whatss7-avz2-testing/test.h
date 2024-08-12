@@ -35,3 +35,22 @@ void InstantKill() {
         zombie.State() = 3;
     }
 }
+
+// 设置一波的波长。
+// 设置不超过2500的波长时，使用AvZ原生函数；设置超过2500的波长时，使用暂停刷新的方式。
+void SetWavelength(int wave, int time) {
+    if (time <= 2500) {
+        ASetWavelength({ATime(wave, time)});
+        AConnect(ATime(wave, time - 200), [](){
+            StopZombieSpawn(ModState::OFF);
+        });
+    } else {
+        AConnect(ATime(wave, 401), [](){
+            StopZombieSpawn(ModState::SCOPED_ON);
+        });
+        AConnect(ATime(wave, time - 200), [](){
+            StopZombieSpawn(ModState::OFF);
+            AGetMainObject()->RefreshCountdown() = 200;
+        });
+    }
+}
