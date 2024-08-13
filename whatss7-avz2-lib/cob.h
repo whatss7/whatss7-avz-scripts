@@ -572,6 +572,12 @@ void d6(int wave, int time, int row, int col) { P6(wave, time, row, col); }
 void d7(int wave, int time, int row, int col) { P7(wave, time, row, col); }
 void d8(int wave, int time, int row, int col) { P8(wave, time, row, col); }
 
+// 使用指定的 ACobManager 对指定位置开炮。与ManualP()完全相同，可用作更好的语义解释。
+void P(int wave, int time, int row, float col, ACobManager &mgr) { ManualP(wave, time, row, col, mgr); }
+void B(int wave, int time, int row, float col, ACobManager &mgr) { ManualP(wave, time, row, col, mgr); }
+void D(int wave, int time, int row, float col, ACobManager &mgr) { ManualP(wave, time, row, col, mgr); }
+void d(int wave, int time, int row, float col, ACobManager &mgr) { ManualP(wave, time, row, col, mgr); }
+
 #pragma region 仿轨道语言：屋顶炮相关
 
 #endif // WALIB_COB_H

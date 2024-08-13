@@ -1,7 +1,10 @@
 #include "../walib.h"
 
 void AScript() {
-    Init({AICE_SHROOM, AM_ICE_SHROOM, ACHERRY_BOMB, APUFF_SHROOM, ASUN_SHROOM, ASCAREDY_SHROOM, AFLOWER_POT});
+    Init({
+        AICE_SHROOM, AM_ICE_SHROOM, ACHERRY_BOMB, APUFF_SHROOM, ASUN_SHROOM,
+        ASCAREDY_SHROOM, AFLOWER_POT, APUMPKIN, AWALL_NUT
+    });
     for (int w: {1, 3, 9, 12, 18}) {
         PP(w, 249, 9, {2, 2, 5, 5});
         DD(w, 249 + 110, 8.7);
@@ -20,14 +23,20 @@ void AScript() {
         D(w, 318 + 110, 5, 9);
     }
     for (int w: {19}) {
-        // TODO
-        // P(w, 359, 2, 9);
-        // D(w, 359 + 107, 1, 7.8125);
-        // P(w, 318, 5, 9);
-        // D(w, 318 + 107, 5, 9);
-        // A(w, 318 + 107 + 107, 5, 9);
-        // P(w, 318, 5, 9);
-        // D(w, 318 + 107, 5, 9);
+        // 炮恢复时机：228 228 335 335 788 788 1389 1389
+        // PD（精舞）/PDA
+        P(w, 359, 2, 9);
+        D(w, 359 + 107, 1, 7.8125);
+        P(w, 318, 5, 9);
+        D(w, 318 + 107, 5, 9);
+        A(w, 318 + 107 + 108, 5, 9);
+        // PDA侧先收掉，精舞侧垫材处理
+        P(w, 788, 5, 9);
+        MultiTempC(w, 714, {ASCAREDY_SHROOM, AFLOWER_POT}, 9, {1, 2}, 814);
+        MultiTempC(w, 1064, {APUFF_SHROOM, ASUN_SHROOM}, 9, {1, 2}, 1165);
+        P(w, 1272, 1, 9);
+        D(w, 1389, 1, 8);
+        S(w, 1389, 1, 8);
     }
     for (int w: {5, 14}) {
         // 分析一下此时的情况
@@ -40,9 +49,8 @@ void AScript() {
         // w10要处理蹦极，有一个PSD/PDD 318 318 318 394....
         // 这里则是 193 193 193 269
         // 无法激活，这里采用的是类似于拦截的方法
-        // 会投出的是w9红，delay 212~229
-        // 下路第一炮在239生效，最早投出的小鬼最晚1447拦截，即245拦截，第一炮239激活，可以
-        // 
+        // 会投出的是w9红，delay 212~232
+        // 下路第一炮在245生效，最早投出的小鬼最晚1450拦截，即248拦截；第二炮263激活，可拦截246~263出手的小鬼，可拦
 
         // 1路不能放冰，否则跳跳偷家
         // 6路不能放冰，否则伴舞啃炮
@@ -56,9 +64,18 @@ void AScript() {
         WhiteI(w, 318, 5, 9);
     }
     for (int w: {7, 16}) {
-        PP(w, 245, 8.6, {2, 2, 5});
-        P(w, 263, 5, 8.6);
+        PP(w, 245, 8.7, {1, 2});
         D(w, 245 + 115, 1, 9);
+        P(w, 245, 5, 8.7);
+        P(w, 263, 5, 8.7);
         D(w, 263 + 110, 5, 9);
+    }
+    for (int w: {20}) {
+        P(w, 225, 4, 7.5875);
+        PP(w, 309, 9, {2, 2, 5, 5});
+        PP(w, 409, 9, {2, 2, 5, 5});
+        PPExceptOne(w, 814);
+        BlockLast(w, 820, 3800);
+        PPLast(w, 3800);
     }
 }
