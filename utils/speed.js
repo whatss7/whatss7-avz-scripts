@@ -756,39 +756,114 @@ var slow_speed_data = [
 ];
 
 var nextSegmentNo = 0;
-var currentSegment = "";
 
+/**
+ * 这是一个表示某一波次输入信息的结构。
+ * @typedef {Object} SegmentInfo
+ * @property {string} ice_time - 用冰时机
+ * @property {string} cob_time - 激活时机
+ * @property {string} throw_time - 投掷时机
+ * @property {string} fodder_time - 垫材时机
+ * @property {string} analyze_time - 计算时机
+ * @property {string} all_cob_time - 用炮时机
+ */
+
+/**
+ * 创建一个波次。
+ * @returns {string} 创建的波次ID。
+ */
 function addSegment() {
-    const segmentNo = nextSegmentNo + 1;
+    const segment_no = nextSegmentNo;
     nextSegmentNo += 1;
-    const segmentId = `segment_${segmentNo}`;
+    const segment_id = `segment_${segment_no}`;
 
     const segmentHTML = `
-        <div class="segment" id="${segmentId}">
-            <label for="${segmentId}_iceTime">用冰时机：</label>
-            <input type="number" id="${segmentId}_iceTime" value="0" placeholder="0">
-            <label for="${segmentId}_cobTime">激活时机：</label>
-            <input type="number" id="${segmentId}_cobTime" value="318" placeholder="318">
-            <label for="${segmentId}_throwTime">投掷时机：</label>
-            <input type="text" id="${segmentId}_throwTime" value="w+1:~" placeholder="w+1:~">
-            <label for="${segmentId}_fodderTime">垫材时机：</label>
-            <input type="text" id="${segmentId}_fodderTime" value="" placeholder="">
-            <label for="${segmentId}_fodderTime">计算时机：</label>
-            <input type="text" id="${segmentId}_analyzeTime" value="w+3:~" placeholder="w+3:~">
-            <button onclick="removeSegment('${segmentId}')">删除</button>
+        <div class="segment" id="${segment_id}">
+            <label for="${segment_id}_iceTime">用冰时机：</label>
+            <input type="number" id="${segment_id}_iceTime" value="0" placeholder="0">
+            <label for="${segment_id}_cobTime">激活时机：</label>
+            <input type="number" id="${segment_id}_cobTime" value="318" placeholder="318">
+            <label for="${segment_id}_throwTime">投掷时机：</label>
+            <input type="text" id="${segment_id}_throwTime" value="w+1:~" placeholder="w+1:~">
+            <label for="${segment_id}_fodderTime">垫材时机：</label>
+            <input type="text" id="${segment_id}_fodderTime" value="" placeholder="">
+            <label for="${segment_id}_analyzeTime">计算时机：</label>
+            <input type="text" id="${segment_id}_analyzeTime" value="w+3:~" placeholder="w+3:~">
+            <button onclick="moveSegmentUp('${segment_id}')">上移</button>
+            <button onclick="moveSegmentDown('${segment_id}')">下移</button>
+            <button onclick="copySegment('${segment_id}')">复制</button>
+            <button onclick="removeSegment('${segment_id}')">删除</button>
             <br/>
-            <label for="${segmentId}_allCobTime">用炮时机：</label>
-            <input type="text" id="${segmentId}_allCobTime" style="width: 280px;" value="~ ~">
+            <label for="${segment_id}_allCobTime">用炮时机：</label>
+            <input type="text" id="${segment_id}_allCobTime" style="width: 280px;" value="~ ~">
             <br/>
-            <p id="${segmentId}_waveLenText">波长：</p>
-            <p id="${segmentId}_resultText">目前没有计算结果</p>
+            <p id="${segment_id}_waveLenText">波长：</p>
+            <p id="${segment_id}_resultText">目前没有计算结果</p>
         </div>`;
 
     document.getElementById('segments').insertAdjacentHTML('beforeend', segmentHTML);
+	return segment_id;
 }
 
-function removeSegment(segmentId) {
-    const segment = document.getElementById(segmentId);
+/**
+ * 获取一个波次的信息。
+ * @param {string} segment_id - 要获取信息的波次。
+ * @returns {SegmentInfo} 转换结果。
+ */
+function getSegmentInfo(segment_id) {
+	return {
+		ice_time: document.getElementById(`${segment_id}_iceTime`).value,
+		cob_time: document.getElementById(`${segment_id}_cobTime`).value,
+		throw_time: document.getElementById(`${segment_id}_throwTime`).value,
+		fodder_time: document.getElementById(`${segment_id}_fodderTime`).value,
+		analyze_time: document.getElementById(`${segment_id}_analyzeTime`).value,
+		all_cob_time: document.getElementById(`${segment_id}_allCobTime`).value
+	};
+}
+
+/**
+ * 根据波次信息设定一个波次。
+ * @param {number} segment_id - 要设定信息的波次。
+ * @param {number} segment_info - 要设定的信息。
+ */
+function setSegmentInfo(segment_id, segment_info) {
+	document.getElementById(`${segment_id}_iceTime`).value = segment_info.ice_time;
+	document.getElementById(`${segment_id}_cobTime`).value = segment_info.cob_time;
+	document.getElementById(`${segment_id}_throwTime`).value = segment_info.throw_time;
+	document.getElementById(`${segment_id}_fodderTime`).value = segment_info.fodder_time;
+	document.getElementById(`${segment_id}_analyzeTime`).value = segment_info.analyze_time;
+	document.getElementById(`${segment_id}_allCobTime`).value = segment_info.all_cob_time;
+}
+
+function moveSegmentUp(segment_id) {
+    const segment = document.getElementById(segment_id);
+	const prevSegment = segment.previousElementSibling;
+	if (prevSegment === null) return;
+	var prev_id = prevSegment.id;
+	var prev_info = getSegmentInfo(prev_id);
+	var current_info = getSegmentInfo(segment_id);
+	setSegmentInfo(prev_id, current_info);
+	setSegmentInfo(segment_id, prev_info);
+}
+
+function moveSegmentDown(segment_id) {
+    const segment = document.getElementById(segment_id);
+	const nextSegment = segment.nextElementSibling;
+	if (nextSegment === null) return;
+	var next_id = nextSegment.id;
+	var next_info = getSegmentInfo(next_id);
+	var current_info = getSegmentInfo(segment_id);
+	setSegmentInfo(next_id, current_info);
+	setSegmentInfo(segment_id, next_info);
+}
+
+function copySegment(segment_id) {
+	var new_id = addSegment();
+	setSegmentInfo(new_id, getSegmentInfo(segment_id));
+}
+
+function removeSegment(segment_id) {
+    const segment = document.getElementById(segment_id);
     segment.remove();
 }
 
@@ -799,6 +874,7 @@ function removeSegment(segmentId) {
  * @property {number?} time - 时间
  * @property {boolean} valid - 是否有效
  * @property {string} type - 时间模式，为"auto"表示自动推导
+ * @property {number?} recover_time - 用炮的恢复时间
  * @property {boolean?} special - 是否特殊（投掷时间的植物激活）
  */
 
@@ -807,9 +883,9 @@ function removeSegment(segmentId) {
  * @typedef {Object} WaveInfo
  * @property {number} ice - 用冰时间
  * @property {number} cob - 本波激活时间
- * @property {[number]} all_cob - 本波用炮时间
  * @property {WaveTime} throw_info - 本波红眼投掷时间
- * @property {[WaveTime]} fodder_info - 本波红眼需要计算的时间
+ * @property {[WaveTime]} all_cob - 本波用炮时间
+ * @property {[WaveTime]} fodder_info - 本波垫材使用时间
  * @property {[WaveTime]} analyze_info - 本波红眼需要计算的时间
  */
 
@@ -845,22 +921,35 @@ function to_str(num) {
  */
 function parseTime(str) {
     var special = false;
+	var recover_time = 3475;
     var type = "normal";
+	// 处理植物激活
     if (str.endsWith("*")) {
         special = true;
         str = str.substring(0, str.length - 1);
     }
+	// 处理铲种标记
+	var recover_index = str.indexOf("'");
+    if (recover_index > 0) {
+		recover_time = 1581;
+		if (recover_index != str.length - 1) {
+			var offset = Number(str.substring(recover_index + 1));
+			if (!isNaN(offset)) recover_time += offset;
+		}
+		str = str.substring(0, recover_index);
+    }
+
     if (str == "") return { valid: false };
 
     var [wave, time] = str.split(':');
     // 如果没有冒号，可能是本波内的时机
     if (time === undefined) {
         if (str == "~") {
-            return { wave: 0, time: 0, valid: true, type: "auto", special: special };
+            return { wave: 0, time: 0, valid: true, type: "auto", recover_time: recover_time, special: special };
         } else if (str[0] == "~" && (str[1] == "+" || str[1] == "-") && !isNaN(Number(str.substring(1)))) {
-            return { wave: 0, time: Number(str.substring(1)), valid: true, type: "auto", special: special };
+            return { wave: 0, time: Number(str.substring(1)), valid: true, type: "auto", recover_time: recover_time, special: special };
         } else if (!isNaN(Number(str))) {
-            return { wave: 0, time: Number(str), valid: true, type: "normal", special: special };
+            return { wave: 0, time: Number(str), valid: true, type: "normal", recover_time: recover_time, special: special };
         } else {
             return { valid: false };
         }
@@ -921,7 +1010,7 @@ function changeMode() {
 }
 
 /**
- * 收集输入的信息，确定当前波次
+ * 收集并初步处理输入的信息。
  * @returns {{success: boolean, infos?: [WaveInfo]}}
  */
 function collectInfo() {
@@ -939,19 +1028,19 @@ function collectInfo() {
         };
         // 顺便计算一下波长
         document.getElementById(`${segment.id}_waveLenText`).textContent = `波长：${info.cob < 401 ? 601 : info.cob + 200}`
-		var all_cob_time_number = [];
-		// 将all_cob列表转换为Number
+		// 推导all_cob列表中需要推导的时机
 		for (var i of info.all_cob) {
 			if (i.wave != 0) {
 				document.getElementById(`${segment.id}_resultText`).textContent = "用炮时机只能是本波时机"
 				fail = true;
 				break;
 			} else if (!i.special) {
-				if (i.type == "auto") all_cob_time_number.push(info.cob + i.time);
-				else all_cob_time_number.push(i.time);
+				if (i.type == "auto") {
+					i.type = "normal";
+					i.time += info.cob;
+				}
 			}
 		}
-		info.all_cob = all_cob_time_number;
         // throw_info无效时，可能是被瞬杀，不视作失败
         if ((isNaN(info.ice) || isNaN(info.cob))) {
             document.getElementById(`${segment.id}_resultText`).textContent = "本波数据存在问题"
@@ -978,7 +1067,7 @@ function collectInfo() {
 function extractEvents(input_info, current_wave_no) {
     var infos = input_info.infos.slice();
     // 提取出其中存在的事件
-    // 支持以下事件：冰冻、投掷、锤垫（目前认为垫材秒铲）、统计
+    // 支持以下事件：冰冻、投掷、锤垫（目前认为垫材垫到所有巨人且秒铲）、统计
     var original_length = infos.length;
     var events = [];
     var waiting_events = [];
@@ -1162,6 +1251,12 @@ function gigaStep(giga, slow) {
     if (giga.phase >= 0 && giga.smash > 208) giga.smash -= 1;
 }
 
+/**
+ * 计算一波的巨人情况。
+ * @param {{success: boolean, infos?: [WaveInfo]}} input_info
+ * @param {string} segment_id
+ * @param {number} segment_no
+ */
 function calculateOne(input_info, segment_id, segment_no) {
     const events = extractEvents(input_info, segment_no);
 
@@ -1258,6 +1353,7 @@ function calculateOne(input_info, segment_id, segment_no) {
  * @typedef {Object} CobTime
  * @property {string} text - 标签
  * @property {number?} time - 时间
+ * @property {number?} recover_time - 恢复所需时间
  */
 
 
@@ -1266,93 +1362,91 @@ function calculateOne(input_info, segment_id, segment_no) {
  * @param {[CobTime]} cob_uses
  * @param {number} cycle_length
  */
-function calculateCycleCobCount(cob_uses, cycle_length) {
-	// 延长循环到大于3475
+function calculateCobCount(cob_uses, cycle_length) {
+	console.log(cycle_length, cob_uses);
 	var extended_uses = cob_uses.slice(), extended_length = cycle_length;
-	while (extended_length < 3475) {
-		for (var i of cob_uses) {
-			var new_t = { time: i.time + extended_length, text: i.text };
-			extended_uses.push(new_t);
-		}
-		extended_length += cycle_length;
-	}
-	extended_uses.sort((a, b) => a.time - b.time);
-	console.log(extended_length, extended_uses);
-	// 计算炮数至少需要多少成立
-	var min_ok_count = 0;
-	for (var i = 1; i < extended_uses.length; i++) {
-		var fail = false;
-		for (var j = 0; j < extended_uses.length; j++) {
-			var current_time = extended_uses[j].time;
-			var next_index = j + extended_uses.length - i;
-			var next_time = extended_uses[next_index % extended_uses.length].time;
-			if (next_index >= extended_uses.length) {
-				next_time += extended_length;
+	// 若是循环，延长循环到大于3475
+	if (mode == "cycle") {
+		while (extended_length < 3475) {
+			for (var i of cob_uses) {
+				var new_t = { time: i.time + extended_length, text: i.text, recover_time: i.recover_time };
+				extended_uses.push(new_t);
 			}
-			if (next_time - current_time < 3475) {
-				fail = true;
-				break;
-			}
+			extended_length += cycle_length;
 		}
-		if (fail) {
-			min_ok_count = extended_uses.length - i + 1;
-			break;
-		}
+		extended_uses.sort((a, b) => a.time - b.time);
+		console.log(extended_length, extended_uses);
 	}
-    document.getElementById("reuse_output").innerHTML = `共需要${min_ok_count}炮，循环总长${cycle_length}`;
-	// 贪心算法初步排表
-	var start_time = extended_uses[0].time - extended_length;
-	var end_time = extended_uses[extended_uses.length - 1].time + extended_length + 3475;
+	// 贪心算法寻找最少炮数，探测可以塞的炮
+	var graph_start_time = extended_uses[0].time - extended_length;
+	var graph_end_time = extended_uses[extended_uses.length - 1].time + extended_length + 3475;
 	var cobs = [], intervals = [];
-	for (var i = 0; i < min_ok_count; i++) {
-		cobs.push(start_time - 3475);
+	var iter_start = 1, iter_end = 2;
+	if (mode == "cycle") {
+		// 开始时间为上一循环第一炮发出时间
+		graph_start_time = extended_uses[0].time - extended_length;
+		// 结束时间为下一循环最后一炮发出后等待3475
+		graph_end_time = extended_uses[extended_uses.length - 1].time + extended_length + 3475;
+		iter_start = 0;
+		iter_end = 3;
+	} else {
+		// 开始时间为上第一炮发出时间
+		graph_start_time = extended_uses[0].time;
+		// 结束时间为最后一炮发出后等待3475
+		graph_end_time = extended_uses[extended_uses.length - 1].time + 3475;
 	}
-	for (var iter = 0; iter < 3; iter++) {
+	for (var iter = iter_start; iter < iter_end; iter++) {
 		// 显示上轮循环、本轮循环和下轮循环的用炮情况
 		for (var i = 0; i < extended_uses.length; i++) {
 			var use_time = extended_uses[i].time + (iter - 1) * extended_length;
+			var end_time = use_time + extended_uses[i].recover_time;
 			var optimal_cob = -1;
 			for (var j = 0; j < cobs.length; j++) {
-				if (use_time - cobs[j] >= 3475) {
+				if (use_time >= cobs[j]) {
 					// 找最短间隔
-					if (optimal_cob < 0 || cobs[j] > cobs[optimal_cob]) {
+					if (optimal_cob < 0 || cobs[j] >= cobs[optimal_cob]) {
 						optimal_cob = j;
 					}
 				}
 			}
-			if (cobs[optimal_cob] <= use_time - 3475 * 2 && cobs[optimal_cob] >= start_time) {
+			if (optimal_cob < 0) {
+				optimal_cob = cobs.length;
+				cobs.push(graph_start_time);
+			}
+			if (cobs[optimal_cob] <= use_time - 3475 && cobs[optimal_cob] > graph_start_time) {
 				// 将这些可以额外开炮的时机塞进去
 				intervals.push({
-					start: cobs[optimal_cob] + 3475,
+					start: cobs[optimal_cob],
 					end: use_time,
 					color: "lightblue",
-					text: use_time - (cobs[optimal_cob] + 3475),
-					info: `额外可用时机：${cobs[optimal_cob] + 3475} ~ ${use_time - 3475}`,
+					text: use_time - (cobs[optimal_cob]),
+					info: `额外可用时机：${cobs[optimal_cob]} ~ ${use_time - 3475}`,
 					type: "filler"
 				});
 			}
 			intervals.push({
 				start: use_time,
-				end: use_time + 3475,
+				end: end_time,
 				color: iter == 1 ? "green" : "yellow",
 				text: extended_uses[i].text,
-				info: `生效: ${use_time} cs, 可用：${use_time + 3475} cs`,
+				info: `生效: ${use_time} cs, 可用：${end_time} cs`,
 				type: "cob"
 			});
-			cobs[optimal_cob] = use_time;
+			cobs[optimal_cob] = end_time;
 		}
 	}
 	intervals.sort((a, b) => a.start - b.start);
 	console.log(intervals);
+    document.getElementById("reuse_output").innerHTML = `共需要${cobs.length}炮`;
+	if (mode == "cycle") document.getElementById("reuse_output").innerHTML += `，循环总长${cycle_length}`;
 	// 贪心算法能找出能塞的炮，但是图很不好看，所以清除在上一步的结果，重新绘图
-	cobs = [];
-	for (var i = 0; i < min_ok_count; i++) {
-		cobs.push(start_time - 3475);
+	for (var i = 0; i < cobs.length; i++) {
+		cobs[i] = graph_start_time;
 	}
 	// 绘制图像
     document.getElementById(`cooldown`).innerHTML = "";
 	var cob_bars = [];
-	for (var i = 0; i < min_ok_count; i++) {
+	for (var i = 0; i < cobs.length; i++) {
 		var bar = document.createElement('div');
 		bar.style = "width: 500px; height: 20px; border: 1px solid #000; position: relative;";
 		cob_bars.push(bar);
@@ -1364,8 +1458,8 @@ function calculateCycleCobCount(cob_uses, cycle_length) {
 		cooldown.style.borderLeft = "1px solid #000"
 		cooldown.style.borderRight = "1px solid #000"
 		cooldown.style.position = "absolute";
-		cooldown.style.left = `${(use - start_time) / (end_time - start_time) * 100}%`;
-		cooldown.style.width = `${(end - use)  / (end_time - start_time) * 100}%`;
+		cooldown.style.left = `${(use - graph_start_time) / (graph_end_time - graph_start_time) * 100}%`;
+		cooldown.style.width = `${(end - use)  / (graph_end_time - graph_start_time) * 100}%`;
 		cooldown.textContent = text;
 		cooldown.title = info;
 		return cooldown;
@@ -1395,124 +1489,6 @@ function calculateCycleCobCount(cob_uses, cycle_length) {
 		row.appendChild(cob_bars[i]);
 		document.getElementById(`cooldown`).appendChild(row);
 	}
-}
-
-
-/**
- * 计算需要多少炮运行逐波节奏，并显示计算结果。
- * @param {[CobTime]} cob_uses
- */
-function calculatePerWaveCobCount(cob_uses) {
-	// 贪心算法确定最少炮数
-	var start_time = Math.min(0, cob_uses[0].time);
-	var end_time = cob_uses[cob_uses.length - 1].time + 3475;
-	var cobs = [], used = [], intervals = [];
-	for (var i = 0; i < cob_uses.length; i++) {
-		cobs.push(start_time - 3475);
-		used.push(false);
-	}
-	// 显示上轮循环、本轮循环和下轮循环的用炮情况
-	for (var i = 0; i < cob_uses.length; i++) {
-		var use_time = cob_uses[i].time;
-		var optimal_cob = -1;
-		for (var j = 0; j < cobs.length; j++) {
-			if (use_time - cobs[j] >= 3475) {
-				// 找最短间隔
-				if (optimal_cob < 0 || cobs[j] > cobs[optimal_cob]) {
-					optimal_cob = j;
-				}
-			}
-		}
-		if (cobs[optimal_cob] <= use_time - 3475 * 2 && cobs[optimal_cob] >= start_time) {
-			// 如果发现能额外开炮，将这些可以额外开炮的时机塞进去
-			intervals.push({
-				start: cobs[optimal_cob] + 3475,
-				end: use_time,
-				color: "lightblue",
-				text: use_time - (cobs[optimal_cob] + 3475),
-				info: `额外可用时机：${cobs[optimal_cob] + 3475} ~ ${use_time - 3475}`,
-				type: "filler"
-			});
-		}
-		intervals.push({
-			start: use_time,
-			end: use_time + 3475,
-			color: "green",
-			text: cob_uses[i].text,
-			info: `生效: ${use_time} cs, 可用：${use_time + 3475} cs`,
-			type: "cob"
-		});
-		cobs[optimal_cob] = use_time;
-		used[optimal_cob] = true;
-	}
-	intervals.sort((a, b) => a.start - b.start);
-	console.log(intervals);
-	var min_ok_count = 0;
-	for (var i = 0; i < used.length; i++) {
-		if (used[i]) min_ok_count++;
-	}
-    document.getElementById("reuse_output").innerHTML = `共需要${min_ok_count}炮`;
-	// 贪心算法能找出能塞的炮，但是图很不好看，所以清除在上一步的结果，重新绘图
-	cobs = [];
-	for (var i = 0; i < min_ok_count; i++) {
-		cobs.push(start_time - 3475);
-	}
-	// 绘制图像
-    document.getElementById(`cooldown`).innerHTML = "";
-	var cob_bars = [];
-	for (var i = 0; i < min_ok_count; i++) {
-		var bar = document.createElement('div');
-		bar.style = "width: 500px; height: 20px; border: 1px solid #000; position: relative;";
-		cob_bars.push(bar);
-	}
-	function createDiv(color, use, end, text, info) {
-		var cooldown = document.createElement('div');
-		cooldown.style.height = "20px";
-		cooldown.style.backgroundColor = color;
-		cooldown.style.borderLeft = "1px solid #000"
-		cooldown.style.borderRight = "1px solid #000"
-		cooldown.style.position = "absolute";
-		cooldown.style.left = `${(use - start_time) / (end_time - start_time) * 100}%`;
-		cooldown.style.width = `${(end - use)  / (end_time - start_time) * 100}%`;
-		cooldown.textContent = text;
-		cooldown.title = info;
-		return cooldown;
-	}
-	for (var i = 0; i < intervals.length; i++) {
-		var use_time = intervals[i].start;
-		var cd_finish_time = intervals[i].end;
-		var optimal_cob = -1;
-		for (var j = 0; j < cobs.length; j++) {
-			if (use_time >= cobs[j]) {
-				if (optimal_cob < 0 || cobs[j] < cobs[optimal_cob]) {
-					optimal_cob = j;
-				}
-			}
-		}
-		cobs[optimal_cob] = cd_finish_time;
-		var cooldown = createDiv(intervals[i].color, use_time, cd_finish_time, intervals[i].text, intervals[i].info);
-		cob_bars[optimal_cob].appendChild(cooldown);
-	}
-	for (var i = 0; i < cob_bars.length; i++) {
-		var row = document.createElement("div");
-		row.style = "display: flex; align-items: center;"
-		var name = document.createElement("div");
-		name.textContent = `炮${i+1}：`;
-		name.style = "width: 60px";
-		row.appendChild(name);
-		row.appendChild(cob_bars[i]);
-		document.getElementById(`cooldown`).appendChild(row);
-	}
-}
-
-/**
- * 计算需要多少炮运行节奏，并显示计算结果。
- * @param {[CobTime]} cob_uses
- * @param {number} cycle_length
- */
-function calculateCobCount(cob_uses, cycle_length) {
-	if (mode == "cycle") calculateCycleCobCount(cob_uses, cycle_length);
-	else calculatePerWaveCobCount(cob_uses);
 }
 
 function calculateAll() {
@@ -1526,7 +1502,11 @@ function calculateAll() {
         calculateOne(input_info, segment.id, segment_no);
 		var activate = input_info.infos[segment_no].cob;
 		for (var i of input_info.infos[segment_no].all_cob) {
-			all_cob_uses.push({time: all_cycle_length + i, text: `w${segment_no + 1}:${i}`});
+			all_cob_uses.push({
+				time: all_cycle_length + i.time,
+				text: `w${segment_no + 1}:${i.time}`,
+				recover_time: i.recover_time
+			});
 		}
 		all_cycle_length += activate < 401 ? 601 : activate + 200;
         segment_no += 1;
