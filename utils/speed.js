@@ -994,10 +994,10 @@ function parseMultiTime(str) {
 
 // 当前模式
 var mode = "cycle";
+var long_interval_mode = "show";
 
 /**
- * 切换当前模式为逐波或循环
- * @returns
+ * 切换当前模式为逐波或循环。
  */
 function changeMode() {
 	if (mode == "cycle") {
@@ -1006,6 +1006,16 @@ function changeMode() {
 	} else {
 		mode = "cycle";
 		document.getElementById("mode_btn").textContent = "切换模式（当前循环）";
+	}
+}
+
+function changeLongIntervalMode() {
+	if (long_interval_mode == "hide") {
+		long_interval_mode = "show";
+		document.getElementById("li_mode_btn").textContent = "切换过长间隙显示（当前显示）";
+	} else {
+		long_interval_mode = "hide";
+		document.getElementById("li_mode_btn").textContent = "切换过长间隙显示（当前隐藏）";
 	}
 }
 
@@ -1358,13 +1368,35 @@ function calculateOne(input_info, segment_id, segment_no) {
 
 
 /**
- * 计算需要多少炮运行循环节奏，并显示计算结果。
- * @param {[CobTime]} cob_uses
- * @param {number} cycle_length
+ * 将相对于指定波次的时间转换为对应波次的时间
+ * @param {number} time
+ * @param {[number]} wave_lengths
+ * @param {number} start_wave
+ * @returns {string}
  */
-function calculateCobCount(cob_uses, cycle_length) {
+function getTimeAtWave(time, wave_lengths, start_wave) {
+	var past_time = 0;
+	for (var i = 0; i < 100; i++) {
+		if (past_time + wave_lengths[(start_wave + i) % wave_lengths.length] > time) {
+			return `w${i + 1}:${time - past_time}`;
+		}
+		past_time += wave_lengths[(start_wave + i) % wave_lengths.length];
+	}
+	return "NaN";
+}
+
+/**
+ * 计算需要多少炮运行节奏，并显示计算结果。
+ * @param {[CobTime]} cob_uses
+ * @param {[number]} wave_lengths
+ */
+function calculateCobCount(cob_uses, wave_lengths) {
+	var cycle_length = 0;
+	for (var i of wave_lengths) {
+		cycle_length += i;
+	}
 	console.log(cycle_length, cob_uses);
-	var extended_uses = cob_uses.slice(), extended_length = cycle_length;
+	var extended_uses = cob_uses.slice(), extended_length = cycle_length, extended_wavelen = wave_lengths.slice();
 	// 若是循环，延长循环到大于3475
 	if (mode == "cycle") {
 		while (extended_length < 3475) {
@@ -1378,11 +1410,13 @@ function calculateCobCount(cob_uses, cycle_length) {
 		console.log(extended_length, extended_uses);
 	}
 	// 贪心算法寻找最少炮数，探测可以塞的炮
+	var wave_start_time = -extended_length;
 	var graph_start_time = extended_uses[0].time - extended_length;
 	var graph_end_time = extended_uses[extended_uses.length - 1].time + extended_length + 3475;
 	var cobs = [], intervals = [];
 	var iter_start = 1, iter_end = 2;
 	if (mode == "cycle") {
+		wave_start_time = -extended_length;
 		// 开始时间为上一循环第一炮发出时间
 		graph_start_time = extended_uses[0].time - extended_length;
 		// 结束时间为下一循环最后一炮发出后等待3475
@@ -1390,6 +1424,7 @@ function calculateCobCount(cob_uses, cycle_length) {
 		iter_start = 0;
 		iter_end = 3;
 	} else {
+		wave_start_time = 0;
 		// 开始时间为上第一炮发出时间
 		graph_start_time = extended_uses[0].time;
 		// 结束时间为最后一炮发出后等待3475
@@ -1413,14 +1448,18 @@ function calculateCobCount(cob_uses, cycle_length) {
 				optimal_cob = cobs.length;
 				cobs.push(graph_start_time);
 			}
-			if (cobs[optimal_cob] <= use_time - 3475 && cobs[optimal_cob] > graph_start_time) {
+			if (cobs[optimal_cob] <= use_time - 3475 && cobs[optimal_cob] > graph_start_time && long_interval_mode == "show") {
 				// 将这些可以额外开炮的时机塞进去
 				intervals.push({
 					start: cobs[optimal_cob],
 					end: use_time,
 					color: "lightblue",
 					text: use_time - (cobs[optimal_cob]),
-					info: `额外可用时机：${cobs[optimal_cob]} ~ ${use_time - 3475}`,
+					info: `额外可用时机：${cobs[optimal_cob]} (${
+						getTimeAtWave(cobs[optimal_cob] - wave_start_time, wave_lengths, 0)
+					}) ~ ${use_time - 3475} (${
+						getTimeAtWave(use_time - 3475 - wave_start_time, wave_lengths, 0)
+					})`,
 					type: "filler"
 				});
 			}
@@ -1428,8 +1467,12 @@ function calculateCobCount(cob_uses, cycle_length) {
 				start: use_time,
 				end: end_time,
 				color: iter == 1 ? "green" : "yellow",
-				text: extended_uses[i].text,
-				info: `生效: ${use_time} cs, 可用：${end_time} cs`,
+				text: getTimeAtWave(use_time - wave_start_time, wave_lengths, 0),
+				info: `生效: ${use_time} (${
+					getTimeAtWave(use_time - wave_start_time, wave_lengths, 0)
+				}), 可用：${end_time} (${
+					getTimeAtWave(end_time - wave_start_time, wave_lengths, 0)
+				})`,
 				type: "cob"
 			});
 			cobs[optimal_cob] = end_time;
@@ -1440,8 +1483,10 @@ function calculateCobCount(cob_uses, cycle_length) {
     document.getElementById("reuse_output").innerHTML = `共需要${cobs.length}炮`;
 	if (mode == "cycle") document.getElementById("reuse_output").innerHTML += `，循环总长${cycle_length}`;
 	// 贪心算法能找出能塞的炮，但是图很不好看，所以清除在上一步的结果，重新绘图
+	var last_use_id = [], next_use_id = 1;
 	for (var i = 0; i < cobs.length; i++) {
 		cobs[i] = graph_start_time;
+		last_use_id.push(0);
 	}
 	// 绘制图像
     document.getElementById(`cooldown`).innerHTML = "";
@@ -1470,11 +1515,13 @@ function calculateCobCount(cob_uses, cycle_length) {
 		var optimal_cob = -1;
 		for (var j = 0; j < cobs.length; j++) {
 			if (use_time >= cobs[j]) {
-				if (optimal_cob < 0 || cobs[j] < cobs[optimal_cob]) {
+				if (optimal_cob < 0 || cobs[j] < cobs[optimal_cob] || cobs[j] == cobs[optimal_cob] && last_use_id[j] < last_use_id[optimal_cob]) {
 					optimal_cob = j;
 				}
 			}
 		}
+		last_use_id[optimal_cob] = next_use_id;
+		next_use_id++;
 		cobs[optimal_cob] = cd_finish_time;
 		var cooldown = createDiv(intervals[i].color, use_time, cd_finish_time, intervals[i].text, intervals[i].info);
 		cob_bars[optimal_cob].appendChild(cooldown);
@@ -1496,22 +1543,24 @@ function calculateAll() {
     if (!input_info.success) return;
     const segments = document.querySelectorAll('.segment');
     var segment_no = 0;
-	var all_cycle_length = 0;
+	var cycle_length = 0;
+	var wave_lengths = [];
 	var all_cob_uses = [];
     segments.forEach(segment => {
         calculateOne(input_info, segment.id, segment_no);
 		var activate = input_info.infos[segment_no].cob;
 		for (var i of input_info.infos[segment_no].all_cob) {
 			all_cob_uses.push({
-				time: all_cycle_length + i.time,
+				time: cycle_length + i.time,
 				text: `w${segment_no + 1}:${i.time}`,
 				recover_time: i.recover_time
 			});
 		}
-		all_cycle_length += activate < 401 ? 601 : activate + 200;
+		cycle_length += activate < 401 ? 601 : activate + 200;
+		wave_lengths.push(activate < 401 ? 601 : activate + 200);
         segment_no += 1;
     });
-	calculateCobCount(all_cob_uses, all_cycle_length);
+	calculateCobCount(all_cob_uses, wave_lengths);
 }
 
 function runSplitter() {

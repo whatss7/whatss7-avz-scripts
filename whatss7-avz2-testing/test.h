@@ -45,7 +45,7 @@ void SetWavelength(int wave, int time) {
             StopZombieSpawn(ModState::OFF);
         });
     } else {
-        AConnect(ATime(wave, 401), [](){
+        AConnect(ATime(wave, 1), [](){
             StopZombieSpawn(ModState::SCOPED_ON);
         });
         AConnect(ATime(wave, time - 200), [](){
