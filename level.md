@@ -22,7 +22,7 @@
 
 ## 2 级 11/14
 
-- [DE 前置八炮](./README.md#de-前置八炮-ch5) [阵图](./考级阵图/L2/DE%20前置八炮.jpg)
+- [DE 前置八炮](./README.md#de-前置八炮-ch5) [阵图](./考级阵图/L2/DE%20前置八炮.jpg) [【视频】](https://www.bilibili.com/video/BV1pKsxewEbC)
 - [RE 神之七炮](./旧阵型/20240305/README.md#re-神之七炮-ch5u) [阵图](./考级阵图/L2/RE%20神之七炮.jpg) [【视频】](https://www.bilibili.com/video/BV1UF4m177J7)
 - [ME 神之六炮](./README.md#me-神之六炮-c7u) [阵图](./考级阵图/L2/ME%20神之六炮.jpg) [【视频】](https://www.bilibili.com/video/BV1WW421R7wT/)
 - [PE 单紫卡十二炮](./旧阵型/20240305/README.md#pe-单紫卡十二炮) [阵图](./考级阵图/L2/PE%20单紫卡十二炮.jpg) [【视频】](https://www.bilibili.com/video/BV1Uz421d7Wu)
