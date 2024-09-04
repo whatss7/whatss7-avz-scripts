@@ -1368,7 +1368,7 @@ function calculateOne(input_info, segment_id, segment_no) {
 
 
 /**
- * 将相对于指定波次的时间转换为对应波次的时间
+ * 将相对于指定波次的时间转换为对应波次的时间。
  * @param {number} time
  * @param {[number]} wave_lengths
  * @param {number} start_wave
@@ -1475,6 +1475,11 @@ function calculateCobCount(cob_uses, wave_lengths) {
 				})`,
 				type: "cob"
 			});
+			if (use_time - 3475 - wave_start_time >= 0) {
+				intervals[intervals.length - 1].info += `, 上次：${use_time - 3475} (${
+					getTimeAtWave(use_time - 3475 - wave_start_time, wave_lengths, 0)
+				})`
+			}
 			cobs[optimal_cob] = end_time;
 		}
 	}
@@ -1823,6 +1828,7 @@ function runRoofRanger() {
 		result += `<tr><td>${zombie_name}</td>`
 
 		const hit = function(zombie_x, zombie_y) {
+			// 限制坐标在可伤域内
 			if (zombie_x + zombie_x_offset > 800) return false;
 			var left = zombie_x + zombie_x_offset;
 			var right = left + zombie_x_width;
@@ -1982,7 +1988,9 @@ function runRanger() {
 				var zombie_x_left_range = zombie_x_range + zombie_x_offset + zombie_x_width;
 				var zombie_x_right_range = zombie_x_range - zombie_x_offset;
 				var lbound = center_x - zombie_x_left_range;
-				var rbound = Math.min(800 - zombie_x_offset, center_x + zombie_x_right_range);
+				var rbound = center_x + zombie_x_right_range;
+				// 限制坐标在可伤域内
+				rbound = Math.min(800 - zombie_x_offset, rbound);
 				if (lbound < rbound) {
 					result += `<td>[${lbound},${rbound}]</td>`;
 				} else {
