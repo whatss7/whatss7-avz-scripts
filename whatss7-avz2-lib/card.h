@@ -387,6 +387,26 @@ void Remove(int wave, int time, APlantType card, int row, float col) {
     Remove(wave, time, std::vector<APlantType>{card}, row, col);
 }
 
+void MultiRemove(int wave, int time, std::vector<APlantType> cards, int row, float col) {
+    AConnect(ATime(wave, time), [row, col, cards](){
+        for (APlantType card: cards) {
+            ARemovePlant(row, col, std::vector<int>{card});
+        }
+    });
+}
+
+void RM(int wave, int time, std::vector<APlantType> cards, int row, float col) {
+    Remove(wave, time, cards, row, col);
+}
+
+void RM(int wave, int time, APlantType card, int row, float col) {
+    Remove(wave, time, card, row, col);
+}
+
+void MultiRM(int wave, int time, std::vector<APlantType> cards, int row, float col) {
+    MultiRemove(wave, time, cards, row, col);
+}
+
 #pragma endregion
 
 #endif // WALIB_CARD_H

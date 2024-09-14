@@ -18,6 +18,21 @@ void ActivateP(int w, int time, int row) {
     });
 }
 
+void MoveZomboni() {
+    AConnect(ATime(7, 1), [](){
+        for (auto &zombie: aAliveZombieFilter) {
+            if (zombie.Type() == ABC_12 && zombie.Row() == 4 - 1) {
+                int new_row = rand() % 4;
+                if (new_row == 4 - 1) new_row += 1;
+                int diff = new_row - zombie.Row();
+                zombie.Row() = new_row;
+                zombie.Ordinate() += 85 * diff;
+                zombie.MRef<int>(0x20) += 10000 * diff;
+            }
+        }
+    });
+}
+
 void AScript() {
     Init({AICE_SHROOM, AM_ICE_SHROOM, AFLOWER_POT, ACHERRY_BOMB, ADOOM_SHROOM, AJALAPENO, ASQUASH, APUFF_SHROOM});
     StartReloadMode();
@@ -25,6 +40,8 @@ void AScript() {
     C(1, -599, AFLOWER_POT, 1, 1);
     C(10, 1420, AFLOWER_POT, 1, 1);
     Remove(20, 1721, AFLOWER_POT, 1, 1);
+
+    MoveZomboni();
 
     // 冰波
     for (int w: {1, 5, 6, 11, 15, 16}) {

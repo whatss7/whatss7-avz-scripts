@@ -8,6 +8,8 @@
 #pragma region 仿轨道语言：炮相关
 
 bool RoofCMUsed[9];
+// 屋顶使用的炮管理器。
+// `waRoofCobManager[col]` 表示炮尾在第 `col` 列的炮。
 ACobManager waRoofCobManager[9];
 
 // 自动管理全场炮。若需要使用后续轨道语言函数，则此处必须进行自动管理。
@@ -24,6 +26,9 @@ void AutoManageCob() {
             }
             for (int i = 1; i <= 8; i++) {
                 if (!grids[i].empty()) {
+                    std::sort(grids[i].begin(), grids[i].end(), [](const AGrid &a, const AGrid &b){
+                        return a.row == b.row ? a.col < b.col : a.row < b.row;
+                    });
                     waRoofCobManager[i].SetList(grids[i]);
                     #ifdef WALIB_DEBUG
                     waDebugLogger.Info("Added # cobs to col #", grids[i].size(), i);
@@ -543,34 +548,34 @@ void P8(int wave, int time, int row, float col) {
 }
 
 // 在屋顶场景使用炮尾在指定列的炮发射一炮。与Px()系列函数完全相同，可用作更好的语义解释。
-void B1(int wave, int time, int row, int col) { P1(wave, time, row, col); }
-void B2(int wave, int time, int row, int col) { P2(wave, time, row, col); }
-void B3(int wave, int time, int row, int col) { P3(wave, time, row, col); }
-void B4(int wave, int time, int row, int col) { P4(wave, time, row, col); }
-void B5(int wave, int time, int row, int col) { P5(wave, time, row, col); }
-void B6(int wave, int time, int row, int col) { P6(wave, time, row, col); }
-void B7(int wave, int time, int row, int col) { P7(wave, time, row, col); }
-void B8(int wave, int time, int row, int col) { P8(wave, time, row, col); }
+void B1(int wave, int time, int row, float col) { P1(wave, time, row, col); }
+void B2(int wave, int time, int row, float col) { P2(wave, time, row, col); }
+void B3(int wave, int time, int row, float col) { P3(wave, time, row, col); }
+void B4(int wave, int time, int row, float col) { P4(wave, time, row, col); }
+void B5(int wave, int time, int row, float col) { P5(wave, time, row, col); }
+void B6(int wave, int time, int row, float col) { P6(wave, time, row, col); }
+void B7(int wave, int time, int row, float col) { P7(wave, time, row, col); }
+void B8(int wave, int time, int row, float col) { P8(wave, time, row, col); }
 
 // 在屋顶场景使用炮尾在指定列的炮发射一炮。与Px()系列函数完全相同，可用作更好的语义解释。
-void D1(int wave, int time, int row, int col) { P1(wave, time, row, col); }
-void D2(int wave, int time, int row, int col) { P2(wave, time, row, col); }
-void D3(int wave, int time, int row, int col) { P3(wave, time, row, col); }
-void D4(int wave, int time, int row, int col) { P4(wave, time, row, col); }
-void D5(int wave, int time, int row, int col) { P5(wave, time, row, col); }
-void D6(int wave, int time, int row, int col) { P6(wave, time, row, col); }
-void D7(int wave, int time, int row, int col) { P7(wave, time, row, col); }
-void D8(int wave, int time, int row, int col) { P8(wave, time, row, col); }
+void D1(int wave, int time, int row, float col) { P1(wave, time, row, col); }
+void D2(int wave, int time, int row, float col) { P2(wave, time, row, col); }
+void D3(int wave, int time, int row, float col) { P3(wave, time, row, col); }
+void D4(int wave, int time, int row, float col) { P4(wave, time, row, col); }
+void D5(int wave, int time, int row, float col) { P5(wave, time, row, col); }
+void D6(int wave, int time, int row, float col) { P6(wave, time, row, col); }
+void D7(int wave, int time, int row, float col) { P7(wave, time, row, col); }
+void D8(int wave, int time, int row, float col) { P8(wave, time, row, col); }
 
 // 在屋顶场景使用炮尾在指定列的炮发射一炮。与Px()系列函数完全相同，可用作更好的语义解释。
-void d1(int wave, int time, int row, int col) { P1(wave, time, row, col); }
-void d2(int wave, int time, int row, int col) { P2(wave, time, row, col); }
-void d3(int wave, int time, int row, int col) { P3(wave, time, row, col); }
-void d4(int wave, int time, int row, int col) { P4(wave, time, row, col); }
-void d5(int wave, int time, int row, int col) { P5(wave, time, row, col); }
-void d6(int wave, int time, int row, int col) { P6(wave, time, row, col); }
-void d7(int wave, int time, int row, int col) { P7(wave, time, row, col); }
-void d8(int wave, int time, int row, int col) { P8(wave, time, row, col); }
+void d1(int wave, int time, int row, float col) { P1(wave, time, row, col); }
+void d2(int wave, int time, int row, float col) { P2(wave, time, row, col); }
+void d3(int wave, int time, int row, float col) { P3(wave, time, row, col); }
+void d4(int wave, int time, int row, float col) { P4(wave, time, row, col); }
+void d5(int wave, int time, int row, float col) { P5(wave, time, row, col); }
+void d6(int wave, int time, int row, float col) { P6(wave, time, row, col); }
+void d7(int wave, int time, int row, float col) { P7(wave, time, row, col); }
+void d8(int wave, int time, int row, float col) { P8(wave, time, row, col); }
 
 // 使用指定的 ACobManager 对指定位置开炮。与ManualP()完全相同，可用作更好的语义解释。
 void P(int wave, int time, int row, float col, ACobManager &mgr) { ManualP(wave, time, row, col, mgr); }
