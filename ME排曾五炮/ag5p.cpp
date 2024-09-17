@@ -15,7 +15,7 @@ void AScript() {
 
     // 第三加速波 PP
     for (int w: {1, 6, 13, 18, 20}) {
-        if (w != 20) ASetWavelength({ATime(w, 601)});
+        // if (w != 20) ASetWavelength({ATime(w, 601)});
         // 屋顶具体分离时间不清楚，选择在落地瞬间修补，此处铲种的使用时间非常宽松
         AConnect(ATime(w, 401), [](){
             waRoofCobManager[2].FixLatest();
@@ -45,7 +45,7 @@ void AScript() {
 
     // 第一冰波 I-PP
     for (int w: {2, 7, 14, 19}) {
-        if (w != 19) ASetWavelength({ATime(w, i_len)});
+        // if (w != 19) ASetWavelength({ATime(w, i_len)});
         WhiteI(w, 1, 2, 1, 601);
         // 炸25路，收上波撑杆，放过3路撑杆和部分橄榄给下一波收
         PP(w, i_len - 200, 8.7125, {2, 5});
@@ -62,7 +62,7 @@ void AScript() {
         }
     }
     for (int w: {3, 8, 10, 15}) {
-        ASetWavelength({ATime(w, i_len)});
+        // ASetWavelength({ATime(w, i_len)});
         // w3漏的撑杆在N波可收，w10漏的撑杆在PA波可收
         // 其他波会漏一堆，但1-4路不漏扶梯小丑，在PA波可收
         if (w == 3) {
@@ -85,7 +85,7 @@ void AScript() {
         }
     }
     for (int w: {4, 9, 11, 16}) {
-        if (w != 9) ASetWavelength({ATime(w, 601)});
+        // if (w != 9) ASetWavelength({ATime(w, 601)});
         if (w == 4) {
             // P炸5防止漏炸N波巨人
             // w3不会漏炸小丑，A可以放4路
@@ -112,7 +112,7 @@ void AScript() {
         }
     }
     for (int w: {5, 12, 17}) {
-        ASetWavelength({ATime(w, n_len)});
+        // ASetWavelength({ATime(w, n_len)});
         if (w == 5) N(w, 546, 4, 8);
         if (w == 12) N(w, 546, 3, 7);
         if (w == 17) N(w, 546, 2, 8);
