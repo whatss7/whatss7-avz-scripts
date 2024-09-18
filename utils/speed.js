@@ -779,26 +779,48 @@ function addSegment() {
 
     const segmentHTML = `
         <div class="segment" id="${segment_id}">
-            <label for="${segment_id}_iceTime">用冰时机：</label>
-            <input type="number" id="${segment_id}_iceTime" value="0" placeholder="0">
-            <label for="${segment_id}_cobTime">激活时机：</label>
-            <input type="number" id="${segment_id}_cobTime" value="318" placeholder="318">
-            <label for="${segment_id}_throwTime">投掷时机：</label>
-            <input type="text" id="${segment_id}_throwTime" value="w+1:~" placeholder="w+1:~">
-            <label for="${segment_id}_fodderTime">垫材时机：</label>
-            <input type="text" id="${segment_id}_fodderTime" value="" placeholder="">
-            <label for="${segment_id}_analyzeTime">计算时机：</label>
-            <input type="text" id="${segment_id}_analyzeTime" value="w+3:~" placeholder="w+3:~">
-            <button onclick="moveSegmentUp('${segment_id}')">上移</button>
-            <button onclick="moveSegmentDown('${segment_id}')">下移</button>
-            <button onclick="copySegment('${segment_id}')">复制</button>
-            <button onclick="removeSegment('${segment_id}')">删除</button>
-            <br/>
-            <label for="${segment_id}_allCobTime">用炮时机：</label>
-            <input type="text" id="${segment_id}_allCobTime" style="width: 280px;" value="~ ~">
-            <br/>
-            <p id="${segment_id}_waveLenText">波长：</p>
-            <p id="${segment_id}_resultText">目前没有计算结果</p>
+			<div class="segment-input-area">
+				<div style="display: flex; margin-bottom: 5px;">
+					<label for="${segment_id}_iceTime" class="long-label">用冰时机：</label>
+					<label for="${segment_id}_iceTime" class="short-label">用冰：</label>
+					<input type="number" id="${segment_id}_iceTime" style="flex: 1; width: 45px;" value="0" placeholder="0">
+					<label for="${segment_id}_cobTime" class="long-label">激活时机：</label>
+					<label for="${segment_id}_cobTime" class="short-label">激活：</label>
+					<input type="number" id="${segment_id}_cobTime" style="flex: 1; width: 45px;" value="318" placeholder="318">
+					<label for="${segment_id}_throwTime" class="long-label">投掷时机：</label>
+					<label for="${segment_id}_throwTime" class="short-label">投掷：</label>
+					<input type="text" id="${segment_id}_throwTime" style="flex: 1; width: 45px;" value="w+1:~" placeholder="w+1:~">
+				</div>
+				<div style="display: flex; margin-bottom: 5px;">
+					<label for="${segment_id}_allCobTime" class="long-label">用炮时机：</label>
+					<label for="${segment_id}_allCobTime" class="short-label">用炮：</label>
+					<input type="text" id="${segment_id}_allCobTime" style="flex: 1;" value="~ ~">
+				</div>
+				<div style="display: flex; margin-bottom: 5px;">
+					<label for="${segment_id}_analyzeTime" class="long-label">计算时机：</label>
+					<label for="${segment_id}_analyzeTime" class="short-label">计算：</label>
+					<input type="text" id="${segment_id}_analyzeTime" style="flex: 1;" value="w+3:~" placeholder="w+3:~">
+					<label for="${segment_id}_fodderTime" class="long-label">垫材时机：</label>
+					<label for="${segment_id}_fodderTime" class="short-label">垫材：</label>
+					<input type="text" id="${segment_id}_fodderTime" style="flex: 1;" value="">
+				</div>
+			</div>
+			<div class="segment-output-area">
+				<div style="display: grid; grid-template-columns: auto 50px; align-items: center; margin-bottom: 5px;">
+					<div id="${segment_id}_waveLenText" style="display: inline-block;">波长：</div>
+					<div><button onclick="showSegmentDetails('${segment_id}')" style="float: right;">详细</button></div>
+				</div>
+				<div id="${segment_id}_resultText">目前没有计算结果</div>
+				<div id="${segment_id}_detailText" hidden>目前没有详细计算结果</div>
+			</div>
+			<div class="segment-control-area">
+				<div class="control-area">
+					<div><button onclick="moveSegmentUp('${segment_id}')">上移</button></div>
+					<div><button onclick="moveSegmentDown('${segment_id}')">下移</button></div>
+					<div><button onclick="copySegment('${segment_id}')">复制</button></div>
+					<div><button onclick="removeSegment('${segment_id}')">删除</button></div>
+				</div>
+			</div>
         </div>`;
 
     document.getElementById('segments').insertAdjacentHTML('beforeend', segmentHTML);
@@ -865,6 +887,13 @@ function copySegment(segment_id) {
 function removeSegment(segment_id) {
     const segment = document.getElementById(segment_id);
     segment.remove();
+}
+
+function showSegmentDetails(segment_id) {
+    const segment_result_div = document.getElementById(`${segment_id}_resultText`);
+    const segment_detail_div = document.getElementById(`${segment_id}_detailText`);
+	segment_result_div.hidden = !segment_result_div.hidden;
+	segment_detail_div.hidden = !segment_detail_div.hidden;
 }
 
 /**
@@ -1272,7 +1301,8 @@ function calculateOne(input_info, segment_id, segment_no) {
 
     var analyze = false;
     var analyze_str = "";
-    var result_str = "";
+    var result_str = "<style scoped>table,th,td{border: 1px solid black;border-collapse: collapse;}</style><table>";
+    var detail_str = "";
     var fast_giga = generateGiga(845);
     var slow_giga = generateGiga(854);
 
@@ -1344,18 +1374,28 @@ function calculateOne(input_info, segment_id, segment_no) {
                     }
                 }
             }
-            if (result_str.length != 0) result_str += "<br>";
-            result_str += `(${analyze_str}: [${to_str(fast_giga.pos)},${to_str(slow_giga.pos)}] `;
-            result_str += `WF=[${fast_giga.walk_formula}]=[`;
+	
+            if (detail_str.length != 0) detail_str += "<br>";
+
+            result_str += `<tr><td>${analyze_str}</td><td>[${to_str(fast_giga.pos)},${to_str(slow_giga.pos)}]</td></tr>`;
+
+			detail_str += `<style scoped>table,th,td{border: 1px solid black;border-collapse: collapse;} td:nth-child(1){min-width: 35px;}</style><table>`
+            detail_str += `<tr><td>时间</td><td>${analyze_str}</td></tr>`;
+			detail_str += `<tr><td>位置</td><td>[${to_str(fast_giga.pos)},${to_str(slow_giga.pos)}]</td></tr>`;
+            detail_str += `<tr><td>分段</td><td>[${fast_giga.walk_formula}]</td></tr>`;
+			detail_str += `<tr><td>详细</td><td>[`;
 			for (var i = 0; i < fast_giga.walk_formula.length; i++) {
-				result_str += `(${fast_giga.walk_formula_fast[i]}+${fast_giga.walk_formula_slow[i]}/2)`;
-				if (i != fast_giga.walk_formula.length - 1) result_str += ',';
+				detail_str += `(${fast_giga.walk_formula_fast[i]}+${fast_giga.walk_formula_slow[i]}/2)`;
+				if (i != fast_giga.walk_formula.length - 1) detail_str += ',';
 			}
-			result_str += `] `;
-            result_str += `SAFE=${Math.round(fast_safe * 1000) / 1000})`;
+			detail_str += `]</td>`;
+            detail_str += `<tr><td>安全</td><td>${Math.round(fast_safe * 1000) / 1000}</td></tr></table>`;
         }
     }
+
+	result_str += `</table>`;
     document.getElementById(`${segment_id}_resultText`).innerHTML = result_str;
+    document.getElementById(`${segment_id}_detailText`).innerHTML = detail_str;
 }
 
 /**
@@ -1386,11 +1426,69 @@ function getTimeAtWave(time, wave_lengths, start_wave) {
 }
 
 /**
- * 计算需要多少炮运行节奏，并显示计算结果。
+ * 计算需要多少炮运行节奏。
  * @param {[CobTime]} cob_uses
  * @param {[number]} wave_lengths
+ * @param {[number]} expected_cob_count
  */
 function calculateCobCount(cob_uses, wave_lengths) {
+	var cycle_length = 0;
+	for (var i of wave_lengths) {
+		cycle_length += i;
+	}
+	var extended_uses = cob_uses.slice(), extended_length = cycle_length;
+	// 若是循环，延长循环到大于3475
+	if (mode == "cycle") {
+		while (extended_length < 3475) {
+			for (var i of cob_uses) {
+				var new_t = { time: i.time + extended_length, text: i.text, recover_time: i.recover_time };
+				extended_uses.push(new_t);
+			}
+			extended_length += cycle_length;
+		}
+		extended_uses.sort((a, b) => a.time - b.time);
+	}
+	// 贪心算法寻找最少炮数
+	var wave_start_time = -extended_length;
+	var cobs = [];
+	var iter_start = 1, iter_end = 2;
+	if (mode == "cycle") {
+		iter_start = 0;
+		iter_end = 3;
+	}
+	// 逐波计算一轮，循环计算三轮用炮情况
+	for (var iter = iter_start; iter < iter_end; iter++) {
+		for (var i = 0; i < extended_uses.length; i++) {
+			var use_time = extended_uses[i].time + (iter - 1) * extended_length;
+			var end_time = use_time + extended_uses[i].recover_time;
+			var optimal_cob = -1;
+			for (var j = 0; j < cobs.length; j++) {
+				if (use_time >= cobs[j]) {
+					// 找最短间隔
+					if (optimal_cob < 0 || cobs[j] >= cobs[optimal_cob]) {
+						optimal_cob = j;
+					}
+				}
+			}
+			if (optimal_cob < 0) {
+				optimal_cob = cobs.length;
+				cobs.push(wave_start_time);
+			}
+			cobs[optimal_cob] = end_time;
+		}
+	}
+    document.getElementById("reuse_output").innerHTML = `共需要${cobs.length}炮`;
+	if (mode == "cycle") document.getElementById("reuse_output").innerHTML += `，循环总长${cycle_length}`;
+}
+
+/**
+ * 计算需要多少炮运行节奏，并画出复用图。
+ * @param {[CobTime]} cob_uses
+ * @param {[number]} wave_lengths
+ * @param {[number]} expected_cob_count
+ */
+function drawCobGraph(cob_uses, wave_lengths, expected_cob_count) {
+	calculateCobCount(cob_uses, wave_lengths);
 	var cycle_length = 0;
 	for (var i of wave_lengths) {
 		cycle_length += i;
@@ -1413,7 +1511,6 @@ function calculateCobCount(cob_uses, wave_lengths) {
 	var wave_start_time = -extended_length;
 	var graph_start_time = extended_uses[0].time - extended_length;
 	var graph_end_time = extended_uses[extended_uses.length - 1].time + extended_length + 3475;
-	var cobs = [], intervals = [];
 	var iter_start = 1, iter_end = 2;
 	if (mode == "cycle") {
 		wave_start_time = -extended_length;
@@ -1425,11 +1522,13 @@ function calculateCobCount(cob_uses, wave_lengths) {
 		iter_end = 3;
 	} else {
 		wave_start_time = 0;
-		// 开始时间为上第一炮发出时间
+		// 开始时间为第一炮发出时间
 		graph_start_time = extended_uses[0].time;
 		// 结束时间为最后一炮发出后等待3475
 		graph_end_time = extended_uses[extended_uses.length - 1].time + 3475;
 	}
+	var cobs = [graph_start_time], intervals = [];
+
 	for (var iter = iter_start; iter < iter_end; iter++) {
 		// 显示上轮循环、本轮循环和下轮循环的用炮情况
 		for (var i = 0; i < extended_uses.length; i++) {
@@ -1437,19 +1536,26 @@ function calculateCobCount(cob_uses, wave_lengths) {
 			var end_time = use_time + extended_uses[i].recover_time;
 			var optimal_cob = -1;
 			for (var j = 0; j < cobs.length; j++) {
-				if (use_time >= cobs[j]) {
-					// 找最短间隔
-					if (optimal_cob < 0 || cobs[j] >= cobs[optimal_cob]) {
+				// 找可以用炮的最短间隔；若找不到，找最长间隔
+				if (optimal_cob >= 0 && use_time >= cobs[optimal_cob]) {
+					if (use_time >= cobs[j] && (optimal_cob < 0 || cobs[j] >= cobs[optimal_cob])) {
+						optimal_cob = j;
+					}
+				} else {
+					if (optimal_cob < 0 || cobs[j] < cobs[optimal_cob]) {
 						optimal_cob = j;
 					}
 				}
 			}
-			if (optimal_cob < 0) {
-				optimal_cob = cobs.length;
-				cobs.push(graph_start_time);
+			if (use_time < cobs[optimal_cob]) {
+				if (cobs.length < expected_cob_count || expected_cob_count == 0) {
+					// 若没有已恢复的炮，且炮数小于期望，则加炮
+					optimal_cob = cobs.length;
+					cobs.push(graph_start_time);
+				}
 			}
 			if (cobs[optimal_cob] <= use_time - 3475 && cobs[optimal_cob] > graph_start_time && long_interval_mode == "show") {
-				// 将这些可以额外开炮的时机塞进去
+				// 若可以额外开炮，将这些可以额外开炮的时机塞进去
 				intervals.push({
 					start: cobs[optimal_cob],
 					end: use_time,
@@ -1463,30 +1569,44 @@ function calculateCobCount(cob_uses, wave_lengths) {
 					type: "filler"
 				});
 			}
-			intervals.push({
-				start: use_time,
-				end: end_time,
-				color: iter == 1 ? "green" : "yellow",
-				text: getTimeAtWave(use_time - wave_start_time, wave_lengths, 0),
-				info: `生效: ${use_time} (${
-					getTimeAtWave(use_time - wave_start_time, wave_lengths, 0)
-				}), 可用：${end_time} (${
-					getTimeAtWave(end_time - wave_start_time, wave_lengths, 0)
-				})`,
-				type: "cob"
-			});
+			if (use_time >= cobs[optimal_cob]) {
+				intervals.push({
+					start: use_time,
+					end: end_time,
+					color: iter == 1 ? "green" : "yellow",
+					text: getTimeAtWave(use_time - wave_start_time, wave_lengths, 0),
+					info: `生效: ${use_time} (${
+						getTimeAtWave(use_time - wave_start_time, wave_lengths, 0)
+					}), 可用：${end_time} (${
+						getTimeAtWave(end_time - wave_start_time, wave_lengths, 0)
+					})`,
+					type: "cob"
+				});
+			} else {
+				intervals.push({
+					start: cobs[optimal_cob],
+					end: end_time,
+					color: "red",
+					text: getTimeAtWave(use_time - wave_start_time, wave_lengths, 0),
+					info: `生效: ${use_time} (${
+						getTimeAtWave(use_time - wave_start_time, wave_lengths, 0)
+					}), 可用：${end_time} (${
+						getTimeAtWave(end_time - wave_start_time, wave_lengths, 0)
+					})`,
+					type: "cob"
+				});
+			}
 			if (use_time - 3475 - wave_start_time >= 0) {
 				intervals[intervals.length - 1].info += `, 上次：${use_time - 3475} (${
 					getTimeAtWave(use_time - 3475 - wave_start_time, wave_lengths, 0)
 				})`
 			}
 			cobs[optimal_cob] = end_time;
+			console.log(cobs);
 		}
 	}
 	intervals.sort((a, b) => a.start - b.start);
 	console.log(intervals);
-    document.getElementById("reuse_output").innerHTML = `共需要${cobs.length}炮`;
-	if (mode == "cycle") document.getElementById("reuse_output").innerHTML += `，循环总长${cycle_length}`;
 	// 贪心算法能找出能塞的炮，但是图很不好看，所以清除在上一步的结果，重新绘图
 	var last_use_id = [], next_use_id = 1;
 	for (var i = 0; i < cobs.length; i++) {
@@ -1547,6 +1667,8 @@ function calculateAll() {
     const input_info = collectInfo();
     if (!input_info.success) return;
     const segments = document.querySelectorAll('.segment');
+    var expected_cob_count = document.getElementById('reuse_expect_input').value;
+	if (isNaN(expected_cob_count)) expected_cob_count = 0;
     var segment_no = 0;
 	var cycle_length = 0;
 	var wave_lengths = [];
@@ -1565,7 +1687,7 @@ function calculateAll() {
 		wave_lengths.push(activate < 401 ? 601 : activate + 200);
         segment_no += 1;
     });
-	calculateCobCount(all_cob_uses, wave_lengths);
+	drawCobGraph(all_cob_uses, wave_lengths, expected_cob_count);
 }
 
 function runSplitter() {
