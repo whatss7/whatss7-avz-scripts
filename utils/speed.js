@@ -1301,7 +1301,7 @@ function calculateOne(input_info, segment_id, segment_no) {
 
     var analyze = false;
     var analyze_str = "";
-    var result_str = "<style scoped>table,th,td{border: 1px solid black;border-collapse: collapse;}</style><table>";
+    var result_str = "<style scoped>table,th,td{border: 1px solid black;border-collapse: collapse;}</style><table><tr><th>时间</th><th>位置</th><th>安全</th></tr>";
     var detail_str = "";
     var fast_giga = generateGiga(845);
     var slow_giga = generateGiga(854);
@@ -1377,19 +1377,19 @@ function calculateOne(input_info, segment_id, segment_no) {
 	
             if (detail_str.length != 0) detail_str += "<br>";
 
-            result_str += `<tr><td>${analyze_str}</td><td>[${to_str(fast_giga.pos)},${to_str(slow_giga.pos)}]</td></tr>`;
+            result_str += `<tr><td>${analyze_str}</td><td>[${to_str(fast_giga.pos)},${to_str(slow_giga.pos)}]</td><td>${Math.round(fast_safe * 1000) / 1000}</td></tr>`;
 
-			detail_str += `<style scoped>table,th,td{border: 1px solid black;border-collapse: collapse;} td:nth-child(1){min-width: 35px;}</style><table>`
-            detail_str += `<tr><td>时间</td><td>${analyze_str}</td></tr>`;
-			detail_str += `<tr><td>位置</td><td>[${to_str(fast_giga.pos)},${to_str(slow_giga.pos)}]</td></tr>`;
-            detail_str += `<tr><td>分段</td><td>[${fast_giga.walk_formula}]</td></tr>`;
-			detail_str += `<tr><td>详细</td><td>[`;
+			detail_str += `<style scoped>table, th, td { border: 1px solid black; border-collapse: collapse; } th { min-width: 35px; }</style><table>`
+            detail_str += `<tr><th>时间</th><td>${analyze_str}</td></tr>`;
+			detail_str += `<tr><th>位置</th><td>[${to_str(fast_giga.pos)},${to_str(slow_giga.pos)}]</td></tr>`;
+            detail_str += `<tr><th>分段</th><td>[${fast_giga.walk_formula}]</td></tr>`;
+			detail_str += `<tr><th>详细</th><td>[`;
 			for (var i = 0; i < fast_giga.walk_formula.length; i++) {
 				detail_str += `(${fast_giga.walk_formula_fast[i]}+${fast_giga.walk_formula_slow[i]}/2)`;
 				if (i != fast_giga.walk_formula.length - 1) detail_str += ',';
 			}
 			detail_str += `]</td>`;
-            detail_str += `<tr><td>安全</td><td>${Math.round(fast_safe * 1000) / 1000}</td></tr></table>`;
+            detail_str += `<tr><th>安全</th><td>${Math.round(fast_safe * 1000) / 1000}</td></tr></table>`;
         }
     }
 
@@ -1570,6 +1570,7 @@ function drawCobGraph(cob_uses, wave_lengths, expected_cob_count) {
 				});
 			}
 			if (use_time >= cobs[optimal_cob]) {
+				// 第二波显示为绿色，第一/三波显示为黄色
 				intervals.push({
 					start: use_time,
 					end: end_time,
@@ -1583,6 +1584,7 @@ function drawCobGraph(cob_uses, wave_lengths, expected_cob_count) {
 					type: "cob"
 				});
 			} else {
+				// 若出现无法复用的问题，用红色标记
 				intervals.push({
 					start: cobs[optimal_cob],
 					end: end_time,
@@ -1590,7 +1592,7 @@ function drawCobGraph(cob_uses, wave_lengths, expected_cob_count) {
 					text: getTimeAtWave(use_time - wave_start_time, wave_lengths, 0),
 					info: `生效: ${use_time} (${
 						getTimeAtWave(use_time - wave_start_time, wave_lengths, 0)
-					}), 可用：${end_time} (${
+					}), 差 ${cobs[optimal_cob] - use_time}, 可用：${end_time} (${
 						getTimeAtWave(end_time - wave_start_time, wave_lengths, 0)
 					})`,
 					type: "cob"
@@ -1602,7 +1604,6 @@ function drawCobGraph(cob_uses, wave_lengths, expected_cob_count) {
 				})`
 			}
 			cobs[optimal_cob] = end_time;
-			console.log(cobs);
 		}
 	}
 	intervals.sort((a, b) => a.start - b.start);
