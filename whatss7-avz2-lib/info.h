@@ -235,4 +235,35 @@ void UntilOneLeft(int wave, int start_time,
 
 #pragma endregion
 
+#pragma region 僵尸行数确保
+
+// 将一个僵尸从一行移至另一行。
+void MoveZombie(AZombie &zombie, int to_row) {
+    int diff = to_row - (zombie.Row() + 1);
+    zombie.Row() = to_row - 1;
+    if (IsFrontyardScene()) zombie.Ordinate() += 100 * diff;
+    else zombie.Ordinate() += 85 * diff;
+    zombie.MRef<int>(0x20) += 10000 * diff;
+}
+
+// 在这波开始时，若指定行不存在指定僵尸，将一个指定僵尸移至此行。
+void EnsureZombieExist(int wave, AZombieType type, int row) {
+    AConnect(ATime(wave, 1), [=](){
+        std::vector<AZombie *> candidates;
+        for (auto &zombie: aAliveZombieFilter) {
+            if (zombie.AtWave() + 1 == wave && zombie.Type() == type) {
+                if (zombie.Row() + 1 == row) {
+                    return;
+                }
+                candidates.push_back(&zombie);
+            }
+        }
+        if (!candidates.empty()) {
+            MoveZombie(*candidates[rand() % candidates.size()], row);
+        }
+    });
+}
+
+#pragma endregion
+
 #endif // WALIB_INFO_H

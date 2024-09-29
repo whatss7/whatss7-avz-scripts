@@ -548,6 +548,16 @@ void P8(int wave, int time, int row, float col) {
 }
 
 // 在屋顶场景使用炮尾在指定列的炮发射一炮。与Px()系列函数完全相同，可用作更好的语义解释。
+void S1(int wave, int time, int row, float col) { P1(wave, time, row, col); }
+void S2(int wave, int time, int row, float col) { P2(wave, time, row, col); }
+void S3(int wave, int time, int row, float col) { P3(wave, time, row, col); }
+void S4(int wave, int time, int row, float col) { P4(wave, time, row, col); }
+void S5(int wave, int time, int row, float col) { P5(wave, time, row, col); }
+void S6(int wave, int time, int row, float col) { P6(wave, time, row, col); }
+void S7(int wave, int time, int row, float col) { P7(wave, time, row, col); }
+void S8(int wave, int time, int row, float col) { P8(wave, time, row, col); }
+
+// 在屋顶场景使用炮尾在指定列的炮发射一炮。与Px()系列函数完全相同，可用作更好的语义解释。
 void B1(int wave, int time, int row, float col) { P1(wave, time, row, col); }
 void B2(int wave, int time, int row, float col) { P2(wave, time, row, col); }
 void B3(int wave, int time, int row, float col) { P3(wave, time, row, col); }
@@ -579,9 +589,14 @@ void d8(int wave, int time, int row, float col) { P8(wave, time, row, col); }
 
 // 使用指定的 ACobManager 对指定位置开炮。与ManualP()完全相同，可用作更好的语义解释。
 void P(int wave, int time, int row, float col, ACobManager &mgr) { ManualP(wave, time, row, col, mgr); }
+void S(int wave, int time, int row, float col, ACobManager &mgr) { ManualP(wave, time, row, col, mgr); }
 void B(int wave, int time, int row, float col, ACobManager &mgr) { ManualP(wave, time, row, col, mgr); }
 void D(int wave, int time, int row, float col, ACobManager &mgr) { ManualP(wave, time, row, col, mgr); }
 void d(int wave, int time, int row, float col, ACobManager &mgr) { ManualP(wave, time, row, col, mgr); }
+void PS(int wave, int time, int row, float col, ACobManager &mgr) {
+    ManualP(wave, time, row, col, mgr);
+    ManualP(wave, time, row, col, mgr);
+}
 
 #pragma region 仿轨道语言：屋顶炮相关
 

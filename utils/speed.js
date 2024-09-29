@@ -855,6 +855,9 @@ function setSegmentInfo(segment_id, segment_info) {
 	document.getElementById(`${segment_id}_fodderTime`).value = segment_info.fodder_time;
 	document.getElementById(`${segment_id}_analyzeTime`).value = segment_info.analyze_time;
 	document.getElementById(`${segment_id}_allCobTime`).value = segment_info.all_cob_time;
+	document.getElementById(`${segment_id}_resultText`).innerHTML = "目前没有计算结果";
+	document.getElementById(`${segment_id}_detailText`).innerHTML = "目前没有详细计算结果";
+	document.getElementById(`${segment_id}_waveLenText`).innerHTML = "波长：";
 }
 
 function moveSegmentUp(segment_id) {
@@ -1489,6 +1492,10 @@ function calculateCobCount(cob_uses, wave_lengths) {
  */
 function drawCobGraph(cob_uses, wave_lengths, expected_cob_count) {
 	calculateCobCount(cob_uses, wave_lengths);
+	if (cob_uses.length == 0) {
+		document.getElementById(`cooldown`).innerHTML = "";
+		return;
+	}
 	var cycle_length = 0;
 	for (var i of wave_lengths) {
 		cycle_length += i;
