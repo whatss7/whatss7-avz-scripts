@@ -247,21 +247,74 @@ void MoveZombie(AZombie &zombie, int to_row) {
 }
 
 // 在这波开始时，若指定行不存在指定僵尸，将一个指定僵尸移至此行。
-void EnsureZombieExist(int wave, AZombieType type, int row) {
-    AConnect(ATime(wave, 1), [=](){
-        std::vector<AZombie *> candidates;
-        for (auto &zombie: aAliveZombieFilter) {
-            if (zombie.AtWave() + 1 == wave && zombie.Type() == type) {
-                if (zombie.Row() + 1 == row) {
-                    return;
-                }
-                candidates.push_back(&zombie);
+void EnsureZombieExist(int wave, AZombieType type, std::vector<int> rows) {
+    for (auto row: rows) {
+        if (IsBackyardScene()) {
+            if (row < 1 || row > 6) {
+                waLogger.Error("EnsureZombieExist(): 行数超出范围：#", row);
+                return;
+            }
+        } else {
+            if (row < 1 || row > 5) {
+                waLogger.Error("EnsureZombieExist(): 行数超出范围：#", row);
+                return;
             }
         }
-        if (!candidates.empty()) {
-            MoveZombie(*candidates[rand() % candidates.size()], row);
+    }
+    AConnect(ATime(wave, 1), [=](){
+        std::vector<AZombie *> candidates;
+        std::vector<int> fulfilled_rows, target_rows;
+        for (auto &zombie: aAliveZombieFilter) {
+            if (zombie.AtWave() + 1 == wave && zombie.Type() == type) {
+                #ifdef WALIB_DEBUG
+                waDebugLogger.Info("Found zombie at row #", zombie.Row() + 1);
+                #endif
+                if (std::find(rows.begin(), rows.end(), zombie.Row() + 1) != rows.end()) {
+                    if (std::find(fulfilled_rows.begin(), fulfilled_rows.end(), zombie.Row() + 1) != fulfilled_rows.end()) {
+                        candidates.push_back(&zombie);
+                    } else {
+                        fulfilled_rows.push_back(zombie.Row() + 1);
+                    }
+                } else {
+                    candidates.push_back(&zombie);
+                }
+            }
         }
+        for (auto row: rows) {
+            if (std::find(fulfilled_rows.begin(), fulfilled_rows.end(), row) == fulfilled_rows.end()) {
+                target_rows.push_back(row);
+            }
+        }
+        #ifdef WALIB_DEBUG
+        for (auto zombie: candidates) {
+            waDebugLogger.Info("candidates at row #", zombie->Row() + 1);
+        }
+        for (auto row: target_rows) {
+            waDebugLogger.Info("targets at row #", row);
+        }
+        #endif
+        if (target_rows.size() > candidates.size()) {
+            waLogger.Error("EnsureZombieExist(): 僵尸数量不足以完成保证，目标：#个，僵尸：#个", target_rows.size(), candidates.size());
+            return;
+        }
+        std::default_random_engine rng(std::chrono::system_clock::now().time_since_epoch().count());
+        std::shuffle(candidates.begin(), candidates.end(), rng);
+        for (int i = 0; i < target_rows.size(); i++) {
+            MoveZombie(*candidates[i], target_rows[i]);
+        }
+        #ifdef WALIB_DEBUG
+        for (auto &zombie: aAliveZombieFilter) {
+            if (zombie.AtWave() + 1 == wave && zombie.Type() == type) {
+                waDebugLogger.Info("After move, found zombie at row #", zombie.Row() + 1);
+            }
+        }
+        #endif
     });
+}
+
+// 在这波开始时，若指定行不存在指定僵尸，将一个指定僵尸移至此行。
+void EnsureZombieExist(int wave, AZombieType type, int row) {
+    EnsureZombieExist(wave, type, std::vector<int>{row});
 }
 
 #pragma endregion
